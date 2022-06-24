@@ -1,8 +1,10 @@
 
-import NMRHamiltonianSimulator
+# Under construction. paused.
 
-include("../src/NMRSignalModels.jl")
-import .NMRSignalModels
+import NMRHamiltonian
+
+include("../src/NMRSignalSimulator.jl")
+import .NMRSignalSimulator
 
 using LinearAlgebra
 using FFTW
@@ -59,14 +61,14 @@ hz2ppmfunc = uu->(uu - ν_0ppm)*SW/fs
 ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 
 println("Timing: mag equivalence")
-@time MEs = NMRHamiltonianSimulator.getmageqinfomixture(molecule_names,
+@time MEs = NMRHamiltonian.getmageqinfomixture(molecule_names,
     H_params_path,
     dict_compound_to_filename;
     unique_cs_atol = 1e-6)
 
 #
 println("Timing: setupmixtureproxies()")
-@time mixture_params = NMRHamiltonianSimulator.setupmixtureSH(molecule_names,
+@time mixture_params = NMRHamiltonian.setupmixtureSH(molecule_names,
     H_params_path, dict_compound_to_filename, fs, SW,
     ν_0ppm;
     MEs = MEs,
@@ -76,11 +78,11 @@ println("Timing: setupmixtureproxies()")
     Δc_partition_radius = Δc_partition_radius)
 As = mixture_params
 
-dummy_SSFID = NMRSignalModels.SpinSysParamsType1(0.0)
+dummy_SSFID = NMRSignalSimulator.SpinSysParamsType1(0.0)
 u_min = ppm2hzfunc(-0.5)
 u_max = ppm2hzfunc(4.0)
 
-Bs = NMRSignalModels.fitproxies(As, dummy_SSFID, λ0;
+Bs = NMRSignalSimulator.fitproxies(As, dummy_SSFID, λ0;
     names = molecule_names,
     config_path = surrogate_config_path,
     Δcs_max_scalar_default = Δcs_max_scalar_default,
@@ -101,93 +103,4 @@ B.ss_params.κs_λ[:] = rand(length(B.ss_params.κs_λ)) .+ 1
 B.ss_params.κs_β[:] = collect( rand(length(B.ss_params.κs_β[i])) .* (2*π) for i = 1:length(B.ss_params.κs_β) )
 
 
-f = uu->NMRSignalModels.evalFIDmixture(uu, mixture_params, Bs)
-@assert 1==2
-# test params.
-#ΩS_ppm = collect( hz2ppmfunc.( NMRSpectraSimulator.combinevectors(A.Ωs) ./ (2*π) ) for A in mixture_params )
-#ΩS_ppm_flat = NMRSpectraSimulator.combinevectors(ΩS_ppm)
-
-
-P = LinRange(hz2ppmfunc(u_min), hz2ppmfunc(u_max), 50000)
-U = ppm2hzfunc.(P)
-U_rad = U .* (2*π)
-
-## parameters that affect qs.
-# A.d, A.κs_λ, A.κs_β
-# A.d_singlets, A.αs_singlets, A.Ωs_singlets, A.β_singlets, A.λ0, A.κs_λ_singlets
-q = uu->NMRSignalModels.evalclproxymixture(uu, mixture_params, Bs)
-
-Es = collect( NMRSignalModels.καCompoundType(Bs[i]) for i = 1:length(Bs) )
-q = uu->NMRSignalModels.evalclproxymixture(uu, mixture_params, Es)
-
-f_U = f.(U_rad)
-q_U = q.(U_rad)
-
-
-discrepancy = abs.(f_U-q_U)
-max_val, ind = findmax(discrepancy)
-println("relative discrepancy = ", norm(discrepancy)/norm(f_U))
-println("max discrepancy: ", max_val)
-println()
-
-# ## remove areas with low signal from plotting to reduce plot size.
-# reduction_factor = 100
-# threshold_factor =  α_relative_threshold/10
-# inds, keep_inds, inds_for_reducing = NMRSpectraSimulator.prunelowsignalentries(q_U, threshold_factor, reduction_factor)
-#
-# q_U_display = q_U[inds]
-# f_U_display = f_U[inds]
-# P_display = P[inds]
-
-q_U_display = q_U
-f_U_display = f_U
-P_display = P
-
-## visualize.
-PyPlot.figure(fig_num)
-fig_num += 1
-
-# PyPlot.plot(P, real.(f_U), label = "f")
-# PyPlot.plot(P, real.(q_U), label = "q")
-PyPlot.plot(P_display, real.(f_U_display), label = "f")
-PyPlot.plot(P_display, real.(q_U_display), label = "q")
-PyPlot.plot(P_display, real.(q_U_display), "x")
-
-PyPlot.legend()
-PyPlot.xlabel("ppm")
-PyPlot.ylabel("real")
-PyPlot.title("f vs q")
-
-
-## visualize. zoom in.
-
-inds = findall(xx->(2.5<xx<3.9), P_display)
-
-PyPlot.figure(fig_num)
-fig_num += 1
-
-PyPlot.plot(P_display[inds], real.(f_U_display[inds]), label = "f")
-PyPlot.plot(P_display[inds], real.(q_U_display[inds]), label = "q")
-
-PyPlot.legend()
-PyPlot.xlabel("ppm")
-PyPlot.ylabel("real")
-PyPlot.title("f vs q")
-
-
-# using BenchmarkTools
-#
-# m = 1
-# A = As[1];
-#
-# println("qs[i][k], gs eval:")
-# r0 = 2*π*U[m] - A.ss_params.d[1]
-# @btime A.qs[1][1](r0, 1.0)
-# @btime A.gs[1][1](r0, 1.0)
-#
-# println("q eval.")
-# @btime q.(U_rad[m]);
-#
-# println("q_U eval")
-# @btime q.(U_rad);
-# println()
+f = uu->NMRSignalSimulator.evalFIDmixture(uu, mixture_params, Bs)

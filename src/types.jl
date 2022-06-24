@@ -1,6 +1,6 @@
 
 # reduce clutter in code.
-SHType = NMRHamiltonianSimulator.SHType
+SHType = NMRHamiltonian.SHType
 
 ### model.
 

@@ -1,6 +1,6 @@
-using NMRSignalModels
+using NMRSignalSimulator
 using Test
 
-@testset "NMRSignalModels.jl" begin
+@testset "NMRSignalSimulator.jl" begin
     # Write your tests here.
 end
