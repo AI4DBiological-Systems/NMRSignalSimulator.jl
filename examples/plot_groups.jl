@@ -48,14 +48,19 @@ surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_config
 
 #molecule_names = ["L-Valine"; ]
 #molecule_names = ["L-Isoleucine"; ]
-molecule_names = ["L-Leucine"; ]
+#molecule_names = ["L-Leucine"; ]
 #molecule_names = ["alpha-D-Glucose"; ]
 #molecule_names = ["beta-D-Glucose"; ]
 #molecule_names = ["L-Phenylalanine"; ]
+#molecule_names = ["L-Glutamine"; ]
 #molecule_names = ["Ethanol"; ]
 #molecule_names = ["L-Serine"; ]
 #molecule_names = ["DSS"; ]
 #molecule_names = ["ATP"; ] # idea: coherence is the compensation for intensity.
+molecule_names = ["L(-)-Glutathione, oxidized"; ]
+# molecule_names = ["L(-)-Glutathione, reduced"; ]
+# molecule_names = ["beta-Alanine"; ]
+# molecule_names = ["L-Alanine"; ]
 
 # machine values taken from the BMRB 700 MHz 20 mM glucose experiment.
 fs = 14005.602240896402
