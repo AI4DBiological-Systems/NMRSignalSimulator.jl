@@ -18,23 +18,17 @@ using Plots; plotly()
 include("../examples/helpers/plot_partition.jl")
 include("../examples/helpers/utils.jl")
 
-
 import Random
 Random.seed!(25)
-
-PyPlot.close("all")
-fig_num = 1
-
-PyPlot.matplotlib["rcParams"][:update](["font.size" => 22, "font.family" => "serif"])
 
 ### user inputs.
 
 save_folder = "/home/roy/MEGAsync/outputs/NMR/groups"
 
-tol_coherence = 1e-2 # resonances are pairs of eigenvalues of the Hamiltonian that have quantum numbers that differ by -1. This is the tolerance away from -1 that is allowed.
-#α_relative_threshold = 0.05 # resonances with relative amplitude less than this factor compared to the maximum resonance in the spin group will be removed. Set to 0.0 to see every single resonance component.
-α_relative_threshold = 0.0
-Δc_partition_radius = 0.3 # determines how many resonances get grouped together. Larger number means less groups and thus more resonances per group.
+tol_coherence_default = 1e-2 # resonances are pairs of eigenvalues of the Hamiltonian that have quantum numbers that differ by -1. This is the tolerance away from -1 that is allowed.
+#α_relative_threshold_default = 0.05 # resonances with relative amplitude less than this factor compared to the maximum resonance in the spin group will be removed. Set to 0.0 to see every single resonance component.
+α_relative_threshold_default = 0.0
+Δc_partition_radius_default = 0.3 # determines how many resonances get grouped together. Larger number means less groups and thus more resonances per group.
 λ0 = 3.4
 
 Δr_default = 1.0 # the samples used to build the surrogate is taken every `Δr` radian on the frequency axis. Decrease for improved accuracy at the expense of computation resources.
@@ -57,10 +51,10 @@ surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_config
 #molecule_names = ["L-Serine"; ]
 #molecule_names = ["DSS"; ]
 #molecule_names = ["ATP"; ] # idea: coherence is the compensation for intensity.
-molecule_names = ["L(-)-Glutathione, oxidized"; ]
-# molecule_names = ["L(-)-Glutathione, reduced"; ]
-# molecule_names = ["beta-Alanine"; ]
-# molecule_names = ["L-Alanine"; ]
+#molecule_names = ["L-Glutathione oxidized"; ]
+#molecule_names = ["L-Glutathione reduced"; ]
+#molecule_names = ["beta-Alanine"; ]
+molecule_names = ["L-Alanine"; ]
 
 # machine values taken from the BMRB 700 MHz 20 mM glucose experiment.
 fs = 14005.602240896402
@@ -100,14 +94,14 @@ println("Timing: setupmixtureSH()")
     ν_0ppm;
     MEs = MEs,
     config_path = SH_config_path,
-    # tol_coherence = tol_coherence,
-    # α_relative_threshold = α_relative_threshold,
-    # Δc_partition_radius = Δc_partition_radius,
+    # tol_coherence = tol_coherence_default,
+    # α_relative_threshold = α_relative_threshold_default,
+    # Δc_partition_radius = Δc_partition_radius_default,
     prune_combo_Δc_bar_flag = true)
 As = mixture_params
 
-##prunecombocoherences!(As[1], α_relative_threshold, tol_coherence, Δc_partition_radius)
-#prunecombocoherencesbar!(As[1], α_relative_threshold, tol_coherence, Δc_partition_radius)
+##prunecombocoherences!(As[1], α_relative_threshold_default, tol_coherence_default, Δc_partition_radius_default)
+#prunecombocoherencesbar!(As[1], α_relative_threshold_default, tol_coherence_default, Δc_partition_radius_default)
 
 dummy_SSFID = NMRSignalSimulator.SpinSysParamsType1(0.0)
 
@@ -123,13 +117,13 @@ println("fitproxies():")
 @time Bs = NMRSignalSimulator.fitproxies(As, dummy_SSFID, λ0;
     names = molecule_names,
     config_path = surrogate_config_path,
-    Δcs_max_scalar_default = Δcs_max_scalar_default,
-    κ_λ_lb_default = κ_λ_lb_default,
-    κ_λ_ub_default = κ_λ_ub_default,
+    # Δcs_max_scalar_default = Δcs_max_scalar_default,
+    # κ_λ_lb_default = κ_λ_lb_default,
+    # κ_λ_ub_default = κ_λ_ub_default,
     u_min = u_min,
-    u_max = u_max,
-    Δr_default = Δr_default,
-    Δκ_λ_default = Δκ_λ_default)
+    u_max = u_max)#,
+    # Δr_default = Δr_default,
+    # Δκ_λ_default = Δκ_λ_default)
 
 #
 ### plot.
@@ -179,7 +173,7 @@ println("sanity check. This should be numerically zero: ", discrepancy)
 
 # reduce the plotting positions for low signal regions. Otherwise the plot store size will be too large, and the time to load the plot will be long.
 display_reduction_factor = 100
-display_threshold_factor =  α_relative_threshold/10
+display_threshold_factor =  α_relative_threshold_default/10
 
 inds, _ = prunelowsignalentries(q_U, display_threshold_factor, display_reduction_factor)
 P_display = P[inds]
@@ -188,10 +182,20 @@ U_display = U[inds]
 canvas_size = (1000, 400)
 
 
-plots_save_path = joinpath(save_folder, "$(molecule_names[1])_groups_real.html")
+save_molecule_name = replace("$(molecule_names[1])", ","=>"-", " "=>"-")
+plots_save_path = joinpath(save_folder, "$(save_molecule_name)_groups_real.html")
 title_string = "Resonance groups, real part: $(molecule_names[1])"
 plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P_display, U_display, q, qs, q_singlets, real, P[1]; canvas_size = canvas_size)
 Plots.savefig(plot_obj, plots_save_path)
 display(plot_obj)
 
-include("radius_strategies.jl")
+println("Resonance group sizes for this compound, per spin system: ", collect(collect(length(qs[i]) for i = 1:length(qs) ) ))
+
+
+# could try different Δc_bar grouping strategies based on the following information from simulation.
+println("name = ", molecule_names[1])
+println("length.(A.αs)  = ", length.(A.αs))
+println("Number of spins in each spin system of this compound: ", A.N_spins_sys)
+println("Total number of spins for this compound: ", sum(A.N_spins_sys))
+Cs = collect( array2matrix(A.Δc_bar[i]) for i = 1:length(A.Δc_bar) )
+displaymatrix(Cs[1])
