@@ -48,19 +48,25 @@ surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_config
 
 #molecule_names = ["L-Valine"; ]
 #molecule_names = ["L-Isoleucine"; ]
-#molecule_names = ["L-Leucine"; ]
+molecule_names = ["L-Leucine"; ]
 #molecule_names = ["alpha-D-Glucose"; ]
 #molecule_names = ["beta-D-Glucose"; ]
 #molecule_names = ["L-Phenylalanine"; ]
 #molecule_names = ["Ethanol"; ]
 #molecule_names = ["L-Serine"; ]
 #molecule_names = ["DSS"; ]
-molecule_names = ["ATP"; ] # idea: coherence is the compensation for intensity.
+#molecule_names = ["ATP"; ] # idea: coherence is the compensation for intensity.
 
 # machine values taken from the BMRB 700 MHz 20 mM glucose experiment.
 fs = 14005.602240896402
 SW = 20.0041938620844
 ν_0ppm = 10656.011933076665
+
+# # # machine values taken from the BMRB 700 MHz 20 mM ATP experiment.
+# fs = 14005.602240896402
+# SW = 20.0041938620844
+# ν_0ppm = 10654.75043163717
+
 
 # # machine values for the BMRB 500 MHz glucose experiment.
 # ν_0ppm = 6752.490995937095
@@ -83,15 +89,15 @@ println("Timing: mag equivalence")
     unique_cs_atol = 1e-6)
 
 #
-println("Timing: setupmixtureproxies()")
+println("Timing: setupmixtureSH()")
 @time mixture_params = NMRHamiltonian.setupmixtureSH(molecule_names,
     H_params_path, dict_compound_to_filename, fs, SW,
     ν_0ppm;
     MEs = MEs,
     config_path = SH_config_path,
-    tol_coherence = tol_coherence,
-    α_relative_threshold = α_relative_threshold,
-    Δc_partition_radius = Δc_partition_radius,
+    # tol_coherence = tol_coherence,
+    # α_relative_threshold = α_relative_threshold,
+    # Δc_partition_radius = Δc_partition_radius,
     prune_combo_Δc_bar_flag = true)
 As = mixture_params
 
@@ -108,7 +114,8 @@ u_offset = 0.2 # in units ppm.
 u_min = ppm2hzfunc(ΩS_ppm_sorted[1] - u_offset)
 u_max = ppm2hzfunc(ΩS_ppm_sorted[end] + u_offset)
 
-Bs = NMRSignalSimulator.fitproxies(As, dummy_SSFID, λ0;
+println("fitproxies():")
+@time Bs = NMRSignalSimulator.fitproxies(As, dummy_SSFID, λ0;
     names = molecule_names,
     config_path = surrogate_config_path,
     Δcs_max_scalar_default = Δcs_max_scalar_default,
