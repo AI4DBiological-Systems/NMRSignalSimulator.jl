@@ -1,6 +1,7 @@
 
 # reduce clutter in code.
-SHType = NMRHamiltonian.SHType
+#SHType = NMRHamiltonian.SHType
+const SHType{T} = NMRHamiltonian.SHType{T} where T
 
 ### model.
 

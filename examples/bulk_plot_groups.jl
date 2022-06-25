@@ -22,14 +22,19 @@ include("../examples/helpers/utils.jl")
 import Random
 Random.seed!(25)
 
-save_folder = "/home/roy/MEGAsync/outputs/NMR/groups/700MHz"
+#save_folder = "/home/roy/MEGAsync/outputs/NMR/groups/700MHz"
+#SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compounds_SH_configs_reduce.json"
+
+save_folder = "/home/roy/MEGAsync/outputs/NMR/groups/700MHz_low_intensity_threshold"
+SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compounds_SH_configs_low_intensity_threshold.json"
+
+isdir(save_folder) || mkpath(save_folder)
 
 λ0 = 3.4
 unique_cs_atol = 1e-6
 prune_combo_Δc_bar_flag = true
 u_offset = 0.2
 
-SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compounds_SH_configs_reduce.json"
 surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_configs/select_compounds_SH_configs.json"
 
 # machine values taken from the BMRB 700 MHz 20 mM glucose experiment.
@@ -156,22 +161,24 @@ function plotgroups(name::String,
     title_string = "Resonance groups, real part: $(molecule_names[1])"
     plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P_display, U_display, q, qs, q_singlets, real, P[1]; canvas_size = canvas_size)
     Plots.savefig(plot_obj, plots_save_path)
-    display(plot_obj)
 
     save_molecule_name = replace("$(molecule_names[1])", ","=>"-", " "=>"-")
+    println("name = ", save_molecule_name)
+
     if length(A.N_spins_sys) > 0
-        println("name = ", save_molecule_name)
         println("Number of non-singlet spin systems: ", length(A.N_spins_sys))
         println("Resonance group sizes for each system: ", collect(collect(length(qs[i]) for i = 1:length(qs) ) ))
         println("Number of spins for each system: ", A.N_spins_sys)
         println("Number of resonance components for each system: ", length.(A.αs))
         println("Number of resonance components in each resonance group (inner index), for each system (outer index): ", collect( length.(A.part_inds_compound[i]) for i = 1:length(A.part_inds_compound)))
-        println()
-    else
-        println("name = ", save_molecule_name)
-        println("Number of non-singlet spin systems: 0")
-        println()
+        println("summed intensity of each system: ", sum.(A.αs))
     end
+
+    if length(A.αs_singlets) > 0
+        println("intensity of singlets: ", A.αs_singlets)
+    end
+    println()
+
 end
 
 # molecule_names = ["beta-Alanine";

@@ -24,20 +24,22 @@ Random.seed!(25)
 ### user inputs.
 
 save_folder = "/home/roy/MEGAsync/outputs/NMR/groups"
+save_fig_flag = false #true
 
-tol_coherence_default = 1e-2 # resonances are pairs of eigenvalues of the Hamiltonian that have quantum numbers that differ by -1. This is the tolerance away from -1 that is allowed.
-#α_relative_threshold_default = 0.05 # resonances with relative amplitude less than this factor compared to the maximum resonance in the spin group will be removed. Set to 0.0 to see every single resonance component.
-α_relative_threshold_default = 0.0
-Δc_partition_radius_default = 0.3 # determines how many resonances get grouped together. Larger number means less groups and thus more resonances per group.
+# tol_coherence_default = 1e-2 # resonances are pairs of eigenvalues of the Hamiltonian that have quantum numbers that differ by -1. This is the tolerance away from -1 that is allowed.
+# #α_relative_threshold_default = 0.05 # resonances with relative amplitude less than this factor compared to the maximum resonance in the spin group will be removed. Set to 0.0 to see every single resonance component.
+# α_relative_threshold_default = 0.0
+# Δc_partition_radius_default = 0.3 # determines how many resonances get grouped together. Larger number means less groups and thus more resonances per group.
 λ0 = 3.4
 
-Δr_default = 1.0 # the samples used to build the surrogate is taken every `Δr` radian on the frequency axis. Decrease for improved accuracy at the expense of computation resources.
-Δκ_λ_default = 0.05 # the samples used to build thes urrogate for κ_λ are taken at this sampling spacing. Decrease for improved accuracy at the expense of computation resources.
-Δcs_max_scalar_default = 0.2 # In units of ppm. interpolation border that is added to the lowest and highest resonance frequency component of the mixture being simulated.
-κ_λ_lb_default = 0.5 # interpolation lower limit for κ_λ.
-κ_λ_ub_default = 2.5 # interpolation upper limit for κ_λ.
+# Δr_default = 1.0 # the samples used to build the surrogate is taken every `Δr` radian on the frequency axis. Decrease for improved accuracy at the expense of computation resources.
+# Δκ_λ_default = 0.05 # the samples used to build thes urrogate for κ_λ are taken at this sampling spacing. Decrease for improved accuracy at the expense of computation resources.
+# Δcs_max_scalar_default = 0.2 # In units of ppm. interpolation border that is added to the lowest and highest resonance frequency component of the mixture being simulated.
+# κ_λ_lb_default = 0.5 # interpolation lower limit for κ_λ.
+# κ_λ_ub_default = 2.5 # interpolation upper limit for κ_λ.
 
-SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compounds_SH_configs_reduce.json"
+#SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compounds_SH_configs_reduce.json"
+SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compounds_SH_configs_low_intensity_threshold.json"
 surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_configs/select_compounds_SH_configs.json"
 
 #molecule_names = ["L-Valine"; ]
@@ -49,12 +51,12 @@ surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_config
 #molecule_names = ["L-Glutamine"; ]
 #molecule_names = ["Ethanol"; ]
 #molecule_names = ["L-Serine"; ]
-#molecule_names = ["DSS"; ]
+molecule_names = ["DSS"; ]
 #molecule_names = ["ATP"; ] # idea: coherence is the compensation for intensity.
 #molecule_names = ["L-Glutathione oxidized"; ]
 #molecule_names = ["L-Glutathione reduced"; ]
 #molecule_names = ["beta-Alanine"; ]
-molecule_names = ["L-Alanine"; ]
+#molecule_names = ["L-Alanine"; ]
 
 # machine values taken from the BMRB 700 MHz 20 mM glucose experiment.
 fs = 14005.602240896402
@@ -173,7 +175,7 @@ println("sanity check. This should be numerically zero: ", discrepancy)
 
 # reduce the plotting positions for low signal regions. Otherwise the plot store size will be too large, and the time to load the plot will be long.
 display_reduction_factor = 100
-display_threshold_factor =  α_relative_threshold_default/10
+display_threshold_factor =  0.01/10
 
 inds, _ = prunelowsignalentries(q_U, display_threshold_factor, display_reduction_factor)
 P_display = P[inds]
@@ -186,7 +188,10 @@ save_molecule_name = replace("$(molecule_names[1])", ","=>"-", " "=>"-")
 plots_save_path = joinpath(save_folder, "$(save_molecule_name)_groups_real.html")
 title_string = "Resonance groups, real part: $(molecule_names[1])"
 plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P_display, U_display, q, qs, q_singlets, real, P[1]; canvas_size = canvas_size)
-#Plots.savefig(plot_obj, plots_save_path)
+
+if save_fig_flag
+    Plots.savefig(plot_obj, plots_save_path)
+end
 display(plot_obj)
 
 
@@ -199,6 +204,7 @@ println("Resonance group sizes for each system: ", collect(collect(length(qs[i])
 println("Number of spins for each system: ", A.N_spins_sys)
 println("Number of resonance components for each system: ", length.(A.αs))
 println("Number of resonance components in each resonance group (inner index), for each system (outer index): ", collect( length.(A.part_inds_compound[i]) for i = 1:length(A.part_inds_compound)))
+println("summed intensity of each system: ", sum.(A.αs))
 println()
 
 Cs = collect( array2matrix(A.Δc_bar[i]) for i = 1:length(A.Δc_bar) )
