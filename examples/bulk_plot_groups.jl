@@ -156,8 +156,22 @@ function plotgroups(name::String,
     title_string = "Resonance groups, real part: $(molecule_names[1])"
     plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P_display, U_display, q, qs, q_singlets, real, P[1]; canvas_size = canvas_size)
     Plots.savefig(plot_obj, plots_save_path)
-    #display(plot_obj)
-    println("Resonance group sizes for $(save_molecule_name), per spin system: ", collect(collect(length(qs[i]) for i = 1:length(qs) ) ))
+    display(plot_obj)
+
+    save_molecule_name = replace("$(molecule_names[1])", ","=>"-", " "=>"-")
+    if length(A.N_spins_sys) > 0
+        println("name = ", save_molecule_name)
+        println("Number of non-singlet spin systems: ", length(A.N_spins_sys))
+        println("Resonance group sizes for each system: ", collect(collect(length(qs[i]) for i = 1:length(qs) ) ))
+        println("Number of spins for each system: ", A.N_spins_sys)
+        println("Number of resonance components for each system: ", length.(A.αs))
+        println("Number of resonance components in each resonance group (inner index), for each system (outer index): ", collect( length.(A.part_inds_compound[i]) for i = 1:length(A.part_inds_compound)))
+        println()
+    else
+        println("name = ", save_molecule_name)
+        println("Number of non-singlet spin systems: 0")
+        println()
+    end
 end
 
 # molecule_names = ["beta-Alanine";

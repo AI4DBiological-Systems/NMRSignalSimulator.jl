@@ -186,16 +186,20 @@ save_molecule_name = replace("$(molecule_names[1])", ","=>"-", " "=>"-")
 plots_save_path = joinpath(save_folder, "$(save_molecule_name)_groups_real.html")
 title_string = "Resonance groups, real part: $(molecule_names[1])"
 plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P_display, U_display, q, qs, q_singlets, real, P[1]; canvas_size = canvas_size)
-Plots.savefig(plot_obj, plots_save_path)
+#Plots.savefig(plot_obj, plots_save_path)
 display(plot_obj)
 
-println("Resonance group sizes for this compound, per spin system: ", collect(collect(length(qs[i]) for i = 1:length(qs) ) ))
 
 
 # could try different Δc_bar grouping strategies based on the following information from simulation.
-println("name = ", molecule_names[1])
-println("length.(A.αs)  = ", length.(A.αs))
-println("Number of spins in each spin system of this compound: ", A.N_spins_sys)
-println("Total number of spins for this compound: ", sum(A.N_spins_sys))
+save_molecule_name = replace("$(molecule_names[1])", ","=>"-", " "=>"-")
+println("name = ", save_molecule_name)
+println("Number of non-singlet spin systems: ", length(A.N_spins_sys))
+println("Resonance group sizes for each system: ", collect(collect(length(qs[i]) for i = 1:length(qs) ) ))
+println("Number of spins for each system: ", A.N_spins_sys)
+println("Number of resonance components for each system: ", length.(A.αs))
+println("Number of resonance components in each resonance group (inner index), for each system (outer index): ", collect( length.(A.part_inds_compound[i]) for i = 1:length(A.part_inds_compound)))
+println()
+
 Cs = collect( array2matrix(A.Δc_bar[i]) for i = 1:length(A.Δc_bar) )
 displaymatrix(Cs[1])
