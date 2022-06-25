@@ -141,7 +141,7 @@ function plotgroupsfullscript(plot_title, molecule_names,
     q_singlets = ωω->NMRSignalSimulator.evalsinglets(ωω, A.d_singlets, A.αs_singlets, A.Ωs_singlets, A.β_singlets, A.λ0, A.κs_λ_singlets)
 
     # create the function for the entire compound.
-    q = uu->NMRSignalSimulator.evalitpproxymixture(uu, As[1:1])
+    q = uu->NMRSignalSimulator.evalclproxymixture(uu, As[1:1])
 
     # evaluate at the plotting positions.
     q_U = q.(U_rad)
