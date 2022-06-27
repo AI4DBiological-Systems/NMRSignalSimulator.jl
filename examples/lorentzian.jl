@@ -76,7 +76,8 @@ println("Timing: setupmixtureproxies()")
     Δc_partition_radius = Δc_partition_radius)
 As = mixture_params
 
-dummy_SSFID = NMRSignalSimulator.SpinSysParamsType1(0.0)
+#dummy_SSFID = NMRSignalSimulator.SpinSysParamsType1(0.0)
+dummy_SSFID = NMRSignalSimulator.SpinSysParamsType2(0.0)
 u_min = ppm2hzfunc(-0.5)
 u_max = ppm2hzfunc(4.0)
 
@@ -96,7 +97,11 @@ Bs = NMRSignalSimulator.fitproxies(As, dummy_SSFID, λ0;
 
 # purposely distort the spectra by assigning random values to model parameters.
 B = Bs[1]
-B.ss_params.d[:] = rand(length(B.ss_params.d))
+if typeof(dummy_SSFID) <: NMRSignalSimulator.SpinSysParamsType1
+    B.ss_params.d[:] = rand(length(B.ss_params.d))
+elseif typeof(dummy_SSFID) <: NMRSignalSimulator.SpinSysParamsType2
+    B.ss_params.d[:] = collect( rand(length(B.ss_params.d[i])) .* (2*π) for i = 1:length(B.ss_params.d) )
+end
 B.ss_params.κs_λ[:] = rand(length(B.ss_params.κs_λ)) .+ 1
 B.ss_params.κs_β[:] = collect( rand(length(B.ss_params.κs_β[i])) .* (2*π) for i = 1:length(B.ss_params.κs_β) )
 
@@ -117,8 +122,8 @@ U_rad = U .* (2*π)
 # A.d_singlets, A.αs_singlets, A.Ωs_singlets, A.β_singlets, A.λ0, A.κs_λ_singlets
 q = uu->NMRSignalSimulator.evalclproxymixture(uu, mixture_params, Bs)
 
-Es = collect( NMRSignalSimulator.καCompoundType(Bs[i]) for i = 1:length(Bs) )
-q = uu->NMRSignalSimulator.evalclproxymixture(uu, mixture_params, Es)
+#Es = collect( NMRSignalSimulator.καCompoundType(Bs[i]) for i = 1:length(Bs) )
+#q = uu->NMRSignalSimulator.evalclproxymixture(uu, mixture_params, Es)
 
 f_U = f.(U_rad)
 q_U = q.(U_rad)

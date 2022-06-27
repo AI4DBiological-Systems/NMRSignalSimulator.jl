@@ -51,10 +51,11 @@ struct SpinSysParamsType2{T}
     κs_λ::Vector{T} # a multiplier for each (spin group.
     κs_β::Vector{Vector{T}} # a vector coefficient for each (spin group). vector length: number of spins in the spin group.
     d::Vector{Vector{T}} # a multiplier for each (spin group, partition element).
+    κs_d::Vector{Vector{T}} # same size as κs_β. # intermediate buffer for d.
 end
 
 function SpinSysParamsType2(x::T) where T
-    return SpinSysParamsType2(Vector{T}(undef,0), Vector{Vector{T}}(undef, 0), Vector{Vector{T}}(undef, 0))
+    return SpinSysParamsType2(Vector{T}(undef,0), Vector{Vector{T}}(undef, 0), Vector{Vector{T}}(undef, 0), Vector{Vector{T}}(undef, 0))
 end
 
 struct SpinSysParamsType1{T}
@@ -71,9 +72,9 @@ function constructorSSFID(x::SpinSysParamsType1{T}, y...)::SpinSysParamsType1{T}
     return SpinSysParamsType1(y...)
 end
 
-# function constructorSSFID(x::SpinSysFIDType2{T}, y...)::SpinSysFIDType2{T} where T
-#     return SpinSysFIDType2(y...)
-# end
+function constructorSSFID(x::SpinSysParamsType2{T}, y...)::SpinSysParamsType2{T} where T
+    return SpinSysParamsType2(y...)
+end
 
 ########### more elaborate constructors.
 
@@ -101,6 +102,7 @@ function setupSSFIDparams(dummy_SSFID::SpinSysParamsType2{T}, part_inds_compound
     end
 
     κs_β = collect( zeros(T, N_β_vars_sys[i]) for i = 1:length(N_β_vars_sys))
+    κs_d = collect( zeros(T, N_β_vars_sys[i]) for i = 1:length(N_β_vars_sys))
 
-    return constructorSSFID(dummy_SSFID, κs_λ, κs_β, d)
+    return constructorSSFID(dummy_SSFID, κs_λ, κs_β, d, κs_d)
 end
