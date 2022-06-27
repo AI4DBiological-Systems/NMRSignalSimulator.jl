@@ -58,11 +58,12 @@ function evalclspinsystem(u_rad,
     for i = 1:length(αs)
         r = u_rad - x.d[i]
 
+        λ = x.κs_λ[i]*λ0
         for k = 1:length(part_inds_compound[i])
             inds = part_inds_compound[i][k]
 
             out += evalclpartitionelement(r, αs[i][inds],
-                Ωs[i][inds], x.κs_λ[i]*λ0)*cis(dot(x.κs_β[i], c[i][k]))
+                Ωs[i][inds], λ)*cis(dot(x.κs_β[i], c[i][k]))
         end
     end
 
@@ -79,12 +80,13 @@ function evalclspinsystem(u_rad,
     out = zero(Complex{T})
     for i = 1:length(αs)
 
+        λ = x.κs_λ[i]*λ0
         for k = 1:length(part_inds_compound[i])
             r = u_rad - x.d[i][k]
             inds = part_inds_compound[i][k]
 
             out += evalclpartitionelement(r, αs[i][inds],
-                Ωs[i][inds], x.κs_λ[i][k]*λ0)*cis(dot(x.κs_β[i], c[i][k]))
+                Ωs[i][inds], λ)*cis(dot(x.κs_β[i], c[i][k]))
         end
     end
 

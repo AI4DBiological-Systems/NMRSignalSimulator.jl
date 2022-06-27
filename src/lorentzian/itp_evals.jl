@@ -46,9 +46,6 @@ function evalclproxysys(qs::Vector{Vector{Function}},
         end
     end
 
-    ## slower possibly due to r = u_rad - d[i] being evaluated every time qs is called.
-    #out = sum( sum(qs[i][k](u_rad - d[i], κs_λ[i]) for k = 1:length(qs[i])) for i = 1:length(qs) )
-
     return out
 end
 
@@ -69,8 +66,7 @@ function evalclproxysys(qs::Vector{Vector{Function}},
         for k = 1:length(qs[i])
             r = u_rad - d[i][k]
 
-            #out += qs[i][k](r, κs_λ[i][k], κs_β[i])
-            out += qs[i][k](r, κs_λ[i][k])
+            out += qs[i][k](r, κs_λ[i])
         end
     end
 
@@ -93,7 +89,7 @@ function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}
         r = u_rad - d[i]
 
         for k = 1:length(qs[i])
-            #out += κ_α[i][k]*qs[i][k](r, κs_λ[i], κs_β[i])
+
             out += κ_α[i][k]*qs[i][k](r, κs_λ[i])
         end
     end
@@ -117,8 +113,7 @@ function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}
         for k = 1:length(qs[i])
             r = u_rad - d[i][k]
 
-            #out += κ_α[i][k]*qs[i][k](r, κs_λ[i][k], κs_β[i])
-            out += κ_α[i][k]*qs[i][k](r, κs_λ[i][k])
+            out += κ_α[i][k]*qs[i][k](r, κs_λ[i])
         end
     end
 

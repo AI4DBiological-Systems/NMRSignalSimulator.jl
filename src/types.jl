@@ -48,13 +48,13 @@ end
 
 ### different parameterizations of the spin system FID parameters.
 struct SpinSysParamsType2{T}
-    κs_λ::Vector{Vector{T}} # a multiplier for each (spin group, partition element).
+    κs_λ::Vector{T} # a multiplier for each (spin group.
     κs_β::Vector{Vector{T}} # a vector coefficient for each (spin group). vector length: number of spins in the spin group.
     d::Vector{Vector{T}} # a multiplier for each (spin group, partition element).
 end
 
 function SpinSysParamsType2(x::T) where T
-    return SpinSysParamsType2(Vector{Vector{T}}(undef,0), Vector{Vector{T}}(undef, 0), Vector{Vector{T}}(undef, 0))
+    return SpinSysParamsType2(Vector{T}(undef,0), Vector{Vector{T}}(undef, 0), Vector{Vector{T}}(undef, 0))
 end
 
 struct SpinSysParamsType1{T}
@@ -91,13 +91,12 @@ end
 function setupSSFIDparams(dummy_SSFID::SpinSysParamsType2{T}, part_inds_compound::Vector{Vector{Vector{Int}}}, N_β_vars_sys)::SpinSysParamsType2{T} where T
 
     N_sys = length(part_inds_compound)
-    κs_λ = Vector{Vector{T}}(undef, N_sys)
+    κs_λ = ones(T, N_sys)
     d = Vector{Vector{T}}(undef, N_sys)
 
     for i = 1:length(d)
         N_partition_elements = length(part_inds_compound[i])
 
-        κs_λ[i] = ones(T, N_partition_elements)
         d[i] = zeros(T, N_partition_elements)
     end
 
