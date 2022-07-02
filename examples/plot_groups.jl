@@ -83,8 +83,8 @@ dict_compound_to_filename = JSON.parsefile("/home/roy/Documents/repo/NMRData/inp
 hz2ppmfunc = uu->(uu - ν_0ppm)*SW/fs
 ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 
-println("Timing: mag equivalence")
-@time MEs = NMRHamiltonian.getmageqinfomixture(molecule_names,
+println("Timing: getphysicalparameters")
+@time Phys = NMRHamiltonian.getphysicalparameters(molecule_names,
     H_params_path,
     dict_compound_to_filename;
     unique_cs_atol = 1e-6)
@@ -92,9 +92,8 @@ println("Timing: mag equivalence")
 #
 println("Timing: setupmixtureSH()")
 @time mixture_params = NMRHamiltonian.setupmixtureSH(molecule_names,
-    H_params_path, dict_compound_to_filename, fs, SW,
-    ν_0ppm;
-    MEs = MEs,
+    fs, SW, ν_0ppm,
+    Phys;
     config_path = SH_config_path,
     # tol_coherence = tol_coherence_default,
     # α_relative_threshold = α_relative_threshold_default,

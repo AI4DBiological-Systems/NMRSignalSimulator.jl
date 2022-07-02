@@ -90,15 +90,14 @@ function plotgroups(name::String,
     ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 
     molecule_names = [name;]
-    MEs = NMRHamiltonian.getmageqinfomixture(molecule_names,
+    Phys = NMRHamiltonian.getphysicalparameters(molecule_names,
         H_params_path,
         dict_compound_to_filename;
         unique_cs_atol = unique_cs_atol)
 
     mixture_params = NMRHamiltonian.setupmixtureSH(molecule_names,
-        H_params_path, dict_compound_to_filename, fs, SW,
-        ν_0ppm;
-        MEs = MEs,
+        fs, SW, ν_0ppm,
+        Phys;
         config_path = SH_config_path,
         prune_combo_Δc_bar_flag = prune_combo_Δc_bar_flag)
     As = mixture_params
