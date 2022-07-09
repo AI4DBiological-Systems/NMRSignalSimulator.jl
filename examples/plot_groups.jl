@@ -98,7 +98,7 @@ println("Timing: setupmixtureSH()")
     # tol_coherence = tol_coherence_default,
     # α_relative_threshold = α_relative_threshold_default,
     # Δc_partition_radius = Δc_partition_radius_default,
-    prune_combo_Δc_bar_flag = true)
+    prune_combo_Δc_flag = true)
 As = mixture_params
 
 ##prunecombocoherences!(As[1], α_relative_threshold_default, tol_coherence_default, Δc_partition_radius_default)

@@ -32,7 +32,7 @@ isdir(save_folder) || mkpath(save_folder)
 
 λ0 = 3.4
 unique_cs_atol = 1e-6
-prune_combo_Δc_bar_flag = true
+prune_combo_Δc_flag = true
 u_offset = 0.2
 
 surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_configs/select_compounds_SH_configs.json"
@@ -53,7 +53,7 @@ function plotgroupsbulk(molecule_names::Vector{String},
         H_params_path, SH_config_path,
         fs, SW, ν_0ppm;
         unique_cs_atol = 1e-6,
-        prune_combo_Δc_bar_flag = true,
+        prune_combo_Δc_flag = true,
         u_offset = 0.2,
         display_reduction_factor = 100,
         display_threshold_factor =  0.01/10,
@@ -65,7 +65,7 @@ function plotgroupsbulk(molecule_names::Vector{String},
             H_params_path, SH_config_path,
             fs, SW, ν_0ppm;
             unique_cs_atol = unique_cs_atol,
-            prune_combo_Δc_bar_flag = prune_combo_Δc_bar_flag,
+            prune_combo_Δc_flag = prune_combo_Δc_flag,
             u_offset = u_offset,
             display_reduction_factor = display_reduction_factor,
             display_threshold_factor = display_threshold_factor,
@@ -79,7 +79,7 @@ function plotgroups(name::String,
     H_params_path, SH_config_path,
     fs, SW, ν_0ppm;
     unique_cs_atol = 1e-6,
-    prune_combo_Δc_bar_flag = true,
+    prune_combo_Δc_flag = true,
     u_offset = 0.2,
     display_reduction_factor = 100,
     display_threshold_factor =  0.01/10,
@@ -99,7 +99,7 @@ function plotgroups(name::String,
         fs, SW, ν_0ppm,
         Phys;
         config_path = SH_config_path,
-        prune_combo_Δc_bar_flag = prune_combo_Δc_bar_flag)
+        prune_combo_Δc_flag = prune_combo_Δc_flag)
     As = mixture_params
 
     dummy_SSFID = NMRSignalSimulator.SpinSysParamsType1(0.0)
@@ -190,7 +190,7 @@ println("Timing: plotgroupsbulk()")
         H_params_path, SH_config_path,
         fs, SW, ν_0ppm;
         unique_cs_atol = 1e-6,
-        prune_combo_Δc_bar_flag = true,
+        prune_combo_Δc_flag = true,
         u_offset = 0.2,
         display_reduction_factor = 100,
         display_threshold_factor =  0.01/10,
