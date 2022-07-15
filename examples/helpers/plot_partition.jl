@@ -63,13 +63,13 @@ end
 only plots the first compound in molecule_names.
 """
 function plotgroupsfullscript(plot_title, molecule_names,
-    H_params_path, project_path, tol_coherence, α_relative_threshold,
+    H_params_path, project_path, tol_coherence, α_relative_lower_threshold,
     Δc_partition_radius, Δcs_max, κ_λ_lb, κ_λ_ub,
     fs, SW, ν_0ppm, λ_0ppm, save_folder;
     display_flag = false,
     prune_low_signal_for_display_flag::Bool = false,
     display_reduction_factor = 100,
-    display_threshold_factor =  α_relative_threshold/10,
+    display_threshold_factor =  α_relative_lower_threshold/10,
     canvas_size = (1600, 900),
     reset_plot_dir_flag = true,
     plot_imag_and_mag_flag = false,
@@ -99,7 +99,7 @@ function plotgroupsfullscript(plot_title, molecule_names,
         H_params_path, ppm2hzfunc, fs, SW,
         λ_0ppm, ν_0ppm, dummy_SSFID;
         tol_coherence = tol_coherence,
-        α_relative_threshold = α_relative_threshold,
+        α_relative_lower_threshold = α_relative_lower_threshold,
         Δc_partition_radius = Δc_partition_radius)
     As = mixture_params
     A = As[1]
@@ -222,11 +222,11 @@ I.e., a folder containing an experiment of L-Serine and L-Histidine should have 
 """
 function batchplotgroups(plot_title, root_path,
     H_params_path, tol_coherence,
-    α_relative_threshold, Δc_partition_radius, Δcs_max, κ_λ_lb, κ_λ_ub;
+    α_relative_lower_threshold, Δc_partition_radius, Δcs_max, κ_λ_lb, κ_λ_ub;
     display_flag = false,
     prune_low_signal_for_display_flag::Bool = false,
     display_reduction_factor = 100,
-    display_threshold_factor =  α_relative_threshold/10,
+    display_threshold_factor =  α_relative_lower_threshold/10,
     canvas_size = (1600, 900),
     reset_plot_dir_flag = true,
     plot_imag_and_mag_flag = false,
@@ -256,7 +256,7 @@ function batchplotgroups(plot_title, root_path,
         # decide if we should simulate and plot.
         if typeof(k) != Nothing
             plotgroupsfullscript(plot_title, [compound_name;],
-                H_params_path, project_path, tol_coherence, α_relative_threshold,
+                H_params_path, project_path, tol_coherence, α_relative_lower_threshold,
                 Δc_partition_radius, Δcs_max, κ_λ_lb, κ_λ_ub;
                 display_flag = display_flag,
                 prune_low_signal_for_display_flag = prune_low_signal_for_display_flag,

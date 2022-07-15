@@ -25,7 +25,7 @@ PyPlot.matplotlib["rcParams"][:update](["font.size" => 22, "font.family" => "ser
 ### user inputs.
 
 tol_coherence = 1e-2 # resonances are pairs of eigenvalues of the Hamiltonian that have quantum numbers that differ by -1. This is the tolerance away from -1 that is allowed.
-α_relative_threshold = 0.05 # resonances with relative amplitude less than this factor compared to the maximum resonance in the spin group will be removed. Set to 0.0 to see every single resonance component.
+α_relative_lower_threshold = 0.05 # resonances with relative amplitude less than this factor compared to the maximum resonance in the spin group will be removed. Set to 0.0 to see every single resonance component.
 Δc_partition_radius = 0.3 # determines how many resonances get grouped together. Larger number means less groups and thus more resonances per group.
 λ0 = 3.4
 
@@ -73,7 +73,7 @@ println("Timing: setupmixtureSH()")
     Phys;
     config_path = SH_config_path,
     tol_coherence = tol_coherence,
-    α_relative_threshold = α_relative_threshold,
+    α_relative_lower_threshold = α_relative_lower_threshold,
     Δc_partition_radius = Δc_partition_radius)
 As = mixture_params
 

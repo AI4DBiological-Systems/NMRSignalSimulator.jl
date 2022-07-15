@@ -27,8 +27,8 @@ save_folder = "/home/roy/MEGAsync/outputs/NMR/groups"
 save_fig_flag = false #true
 
 # tol_coherence_default = 1e-2 # resonances are pairs of eigenvalues of the Hamiltonian that have quantum numbers that differ by -1. This is the tolerance away from -1 that is allowed.
-# #α_relative_threshold_default = 0.05 # resonances with relative amplitude less than this factor compared to the maximum resonance in the spin group will be removed. Set to 0.0 to see every single resonance component.
-# α_relative_threshold_default = 0.0
+# #α_relative_lower_threshold_default = 0.05 # resonances with relative amplitude less than this factor compared to the maximum resonance in the spin group will be removed. Set to 0.0 to see every single resonance component.
+# α_relative_lower_threshold_default = 0.0
 # Δc_partition_radius_default = 0.3 # determines how many resonances get grouped together. Larger number means less groups and thus more resonances per group.
 λ0 = 3.4
 
@@ -96,13 +96,13 @@ println("Timing: setupmixtureSH()")
     Phys;
     config_path = SH_config_path,
     # tol_coherence = tol_coherence_default,
-    # α_relative_threshold = α_relative_threshold_default,
+    # α_relative_lower_threshold = α_relative_lower_threshold_default,
     # Δc_partition_radius = Δc_partition_radius_default,
     prune_combo_Δc_flag = true)
 As = mixture_params
 
-##prunecombocoherences!(As[1], α_relative_threshold_default, tol_coherence_default, Δc_partition_radius_default)
-#prunecombocoherencesbar!(As[1], α_relative_threshold_default, tol_coherence_default, Δc_partition_radius_default)
+##prunecombocoherences!(As[1], α_relative_lower_threshold_default, tol_coherence_default, Δc_partition_radius_default)
+#prunecombocoherencesbar!(As[1], α_relative_lower_threshold_default, tol_coherence_default, Δc_partition_radius_default)
 
 dummy_SSFID = NMRSignalSimulator.SpinSysParamsType1(0.0)
 
