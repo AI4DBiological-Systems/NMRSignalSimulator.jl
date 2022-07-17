@@ -32,7 +32,7 @@ isdir(save_folder) || mkpath(save_folder)
 
 λ0 = 3.4
 unique_cs_atol = 1e-6
-prune_Δc_option = 4
+prune_Δc_option = 5
 u_offset = 0.2
 
 surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_configs/select_compounds_SH_configs.json"
@@ -53,7 +53,7 @@ function plotgroupsbulk(molecule_names::Vector{String},
         H_params_path, SH_config_path,
         fs, SW, ν_0ppm;
         unique_cs_atol = 1e-6,
-        prune_Δc_option = 4,
+        prune_Δc_option = 5,
         u_offset = 0.2,
         display_reduction_factor = 100,
         display_threshold_factor =  0.01/10,
@@ -79,7 +79,7 @@ function plotgroups(name::String,
     H_params_path, SH_config_path,
     fs, SW, ν_0ppm;
     unique_cs_atol = 1e-6,
-    prune_Δc_option = 4,
+    prune_Δc_option = 5,
     u_offset = 0.2,
     display_reduction_factor = 100,
     display_threshold_factor =  0.01/10,
@@ -190,7 +190,7 @@ println("Timing: plotgroupsbulk()")
         H_params_path, SH_config_path,
         fs, SW, ν_0ppm;
         unique_cs_atol = 1e-6,
-        prune_Δc_option = 4,
+        prune_Δc_option = 5,
         u_offset = 0.2,
         display_reduction_factor = 100,
         display_threshold_factor =  0.01/10,
