@@ -1,22 +1,22 @@
 
-function evalFIDcompound(u_rad, A::SHType{T}, B::CompoundType{T,SST})::Complex{T} where {T <: Real, SST}
+function evalFIDcompound(t, A::SHType{T}, B::CompoundType{T,SST})::Complex{T} where {T <: Real, SST}
 
-    out_sys = evalFIDspinsystem(u_rad, A.αs, A.Ωs, B.ss_params,
+    out_sys = evalFIDspinsystem(t, A.αs, A.Ωs, B.ss_params,
     B.λ0, A.Δc_bar, A.part_inds_compound)
 
-    out_singlets = evalFIDsinglets(u_rad, B.d_singlets, A.αs_singlets, A.Ωs_singlets,
+    out_singlets = evalFIDsinglets(t, B.d_singlets, A.αs_singlets, A.Ωs_singlets,
     B.β_singlets, B.λ0, B.κs_λ_singlets)
 
     return out_sys + out_singlets
 end
 
-function evalFIDmixture(u_rad, As::Vector{SHType{T}}, Bs::Vector{CompoundType{T,SST}};
+function evalFIDmixture(t, As::Vector{SHType{T}}, Bs::Vector{CompoundType{T,SST}};
     w::Vector{T} = ones(T, length(As)))::Complex{T} where {T <: Real, SST}
 
     out = zero(Complex{T})
     for n = 1:length(As)
 
-        out += w[n]*evalFIDcompound(u_rad, As[n], Bs[n])
+        out += w[n]*evalFIDcompound(t, As[n], Bs[n])
     end
 
     return out

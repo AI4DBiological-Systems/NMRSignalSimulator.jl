@@ -114,8 +114,8 @@ u_offset = 0.2 # in units ppm.
 u_min = ppm2hzfunc(ΩS_ppm_sorted[1] - u_offset)
 u_max = ppm2hzfunc(ΩS_ppm_sorted[end] + u_offset)
 
-println("fitproxies():")
-@time Bs = NMRSignalSimulator.fitproxies(As, dummy_SSFID, λ0;
+println("fitclproxies():")
+@time Bs = NMRSignalSimulator.fitclproxies(As, dummy_SSFID, λ0;
     names = molecule_names,
     config_path = surrogate_config_path,
     # Δcs_max_scalar_default = Δcs_max_scalar_default,

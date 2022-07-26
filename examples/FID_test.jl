@@ -41,15 +41,21 @@ surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_config
 #molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS"; "Ethanol"; "L-Isoleucine"]
 molecule_names = ["D-(+)-Glucose"; "DSS"]
 
-# machine values taken from the BMRB 700 MHz 20 mM glucose experiment.
-fs = 14005.602240896402
-SW = 20.0041938620844
-ν_0ppm = 10656.011933076665
+# # machine values taken from the BMRB 700 MHz 20 mM glucose experiment.
+# fs = 14005.602240896402
+# SW = 20.0041938620844
+# ν_0ppm = 10656.011933076665
 
 # # machine values for the BMRB 500 MHz glucose experiment.
 # ν_0ppm = 6752.490995937095
 # SW = 16.0196917451925
 # fs = 9615.38461538462
+
+# machine values for the NRC-2022 mixture experiment. 600 MHz.
+ν_0ppm = 6753.577042707225
+SW = 16.0196918511501
+fs = 9615.38461538462
+t = LinRange(0, 1.693536, 16285)
 
 # path to the json file that provides the mapping from a compound name to its spin system info file name.
 H_params_path = "/home/roy/Documents/repo/NMRData/input/coupling_info"
@@ -81,7 +87,7 @@ dummy_SSFID = NMRSignalSimulator.SpinSysParamsType1(0.0)
 u_min = ppm2hzfunc(-0.5)
 u_max = ppm2hzfunc(4.0)
 
-Bs = NMRSignalSimulator.fitproxies(As, dummy_SSFID, λ0;
+Bs = NMRSignalSimulator.fitclproxies(As, dummy_SSFID, λ0;
     names = molecule_names,
     config_path = surrogate_config_path,
     Δcs_max_scalar_default = Δcs_max_scalar_default,
@@ -103,3 +109,17 @@ B.ss_params.κs_β[:] = collect( rand(length(B.ss_params.κs_β[i])) .* (2*π) f
 
 
 f = uu->NMRSignalSimulator.evalFIDmixture(uu, mixture_params, Bs)
+f_t = f.(t)
+
+PyPlot.figure(fig_num)
+fig_num += 1
+
+PyPlot.plot(t, real.(f_t), label = "real", linewidth = "2")
+PyPlot.plot(t, abs.(f_t), label = "abs", linewidth = "2")
+
+PyPlot.legend()
+PyPlot.xlabel("sec")
+PyPlot.ylabel("intensity")
+PyPlot.title("f")
+
+# TODO Next, surrogate version matching f. Then move onto RateConversion.jl

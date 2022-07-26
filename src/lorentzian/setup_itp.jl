@@ -1,5 +1,5 @@
 
-function fitproxies(As::Vector{SHType{T}},
+function fitclproxies(As::Vector{SHType{T}},
     dummy_SSFID::SST,
     λ0::T;
     names::Vector{String} = Vector{String}(undef, 0),

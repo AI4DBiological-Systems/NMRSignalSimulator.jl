@@ -80,7 +80,7 @@ dummy_SSFID = NMRSignalSimulator.SpinSysParamsType2(0.0)
 u_min = ppm2hzfunc(-0.5)
 u_max = ppm2hzfunc(4.0)
 
-Bs = NMRSignalSimulator.fitproxies(As, dummy_SSFID, λ0;
+Bs = NMRSignalSimulator.fitclproxies(As, dummy_SSFID, λ0;
     names = molecule_names,
     config_path = surrogate_config_path,
     Δcs_max_scalar_default = Δcs_max_scalar_default,

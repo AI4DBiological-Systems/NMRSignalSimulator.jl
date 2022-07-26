@@ -111,7 +111,7 @@ function plotgroups(name::String,
     u_min = ppm2hzfunc(ΩS_ppm_sorted[1] - u_offset)
     u_max = ppm2hzfunc(ΩS_ppm_sorted[end] + u_offset)
 
-    Bs = NMRSignalSimulator.fitproxies(As, dummy_SSFID, λ0;
+    Bs = NMRSignalSimulator.fitclproxies(As, dummy_SSFID, λ0;
         names = molecule_names,
         config_path = surrogate_config_path,
         u_min = u_min,

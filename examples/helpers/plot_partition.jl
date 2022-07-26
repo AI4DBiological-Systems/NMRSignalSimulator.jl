@@ -120,7 +120,7 @@ function plotgroupsfullscript(plot_title, molecule_names,
 
     ## end frequency locations.
 
-    # println("Timing: fitproxies()")
+    # println("Timing: fitclproxies()")
     # @time NMRSignalSimulator.fitproxies!(As;
     NMRSignalSimulator.fitproxies!(As;
         κ_λ_lb = κ_λ_lb,
