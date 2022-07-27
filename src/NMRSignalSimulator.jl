@@ -17,7 +17,7 @@ include("./lorentzian/setup_itp.jl")
 include("./lorentzian/itp_evals.jl")
 
 include("./FID/FID.jl")
-#include("./FID/setup_itp.jl")
-#include("./FID/itp_evals.jl")
+include("./FID/setup_FID_itp.jl")
+include("./FID/FID_itp_evals.jl")
 
 end

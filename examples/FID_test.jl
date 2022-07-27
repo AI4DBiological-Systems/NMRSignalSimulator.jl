@@ -39,7 +39,8 @@ SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compo
 surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_configs/select_compounds_SH_configs.json"
 
 #molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS"; "Ethanol"; "L-Isoleucine"]
-molecule_names = ["D-(+)-Glucose"; "DSS"]
+#molecule_names = ["D-(+)-Glucose"; "DSS"]
+molecule_names = ["L-Serine";]
 
 # # machine values taken from the BMRB 700 MHz 20 mM glucose experiment.
 # fs = 14005.602240896402
@@ -74,20 +75,22 @@ println("Timing: getphysicalparameters")
 
 #
 println("Timing: setupmixtureSH()")
-@time mixture_params = NMRHamiltonian.setupmixtureSH(molecule_names,
+@time As = NMRHamiltonian.setupmixtureSH(molecule_names,
     fs, SW, ν_0ppm,
     Phys;
     config_path = SH_config_path,
     tol_coherence = tol_coherence,
     α_relative_lower_threshold = α_relative_lower_threshold,
     Δc_partition_radius = Δc_partition_radius)
-As = mixture_params
 
 dummy_SSFID = NMRSignalSimulator.SpinSysParamsType1(0.0)
-u_min = ppm2hzfunc(-0.5)
-u_max = ppm2hzfunc(4.0)
+# u_min = ppm2hzfunc(-0.5)
+# u_max = ppm2hzfunc(4.0)
+u_min = ppm2hzfunc(3.5)
+u_max = ppm2hzfunc(4.2)
 
-Bs = NMRSignalSimulator.fitclproxies(As, dummy_SSFID, λ0;
+println("fitclproxies():")
+@time Bs_cl = NMRSignalSimulator.fitclproxies(As, dummy_SSFID, λ0;
     names = molecule_names,
     config_path = surrogate_config_path,
     Δcs_max_scalar_default = Δcs_max_scalar_default,
@@ -99,27 +102,55 @@ Bs = NMRSignalSimulator.fitclproxies(As, dummy_SSFID, λ0;
     Δκ_λ_default = Δκ_λ_default)
 
 #
+t_test = t[1:500] # 150 sec for glucose + DSS.
+println("fitFIDproxies():")
+@time Bs = NMRSignalSimulator.fitFIDproxies(As, dummy_SSFID, λ0;
+    names = molecule_names,
+    config_path = surrogate_config_path,
+    Δcs_max_scalar_default = 0.2,
+    #t_lb_default = t[1],
+    #t_ub_default = t[end],
+    t_lb_default = t_test[1],
+    t_ub_default = t_test[end],
+    u_min = u_min,
+    u_max = u_max,
+    Δr_default = 1.0,
+    #Δr_default = 0.1,
+    #Δt_default = 0.01)
+    Δt_default = 1e-5)
+
+
 ### plot.
 
-# purposely distort the spectra by assigning random values to model parameters.
+# # purposely distort the spectra by assigning random values to model parameters.
+# B = Bs[1]
+# B.ss_params.d[:] = rand(length(B.ss_params.d))
+# B.ss_params.κs_λ[:] = rand(length(B.ss_params.κs_λ)) .+ 1
+# B.ss_params.κs_β[:] = collect( rand(length(B.ss_params.κs_β[i])) .* (2*π) for i = 1:length(B.ss_params.κs_β) )
+
 B = Bs[1]
-B.ss_params.d[:] = rand(length(B.ss_params.d))
-B.ss_params.κs_λ[:] = rand(length(B.ss_params.κs_λ)) .+ 1
-B.ss_params.κs_β[:] = collect( rand(length(B.ss_params.κs_β[i])) .* (2*π) for i = 1:length(B.ss_params.κs_β) )
+f = uu->NMRSignalSimulator.evalFIDmixture(uu, As, Bs)
+f_t = f.(t_test)
 
+q = uu->NMRSignalSimulator.evalFIDproxymixture(uu, As, Bs)
+q_t = q.(t_test)
 
-f = uu->NMRSignalSimulator.evalFIDmixture(uu, mixture_params, Bs)
-f_t = f.(t)
+discrepancy = norm(q_t-f_t)
+println("discrepancy = ", discrepancy)
+println()
 
 PyPlot.figure(fig_num)
 fig_num += 1
 
-PyPlot.plot(t, real.(f_t), label = "real", linewidth = "2")
-PyPlot.plot(t, abs.(f_t), label = "abs", linewidth = "2")
+PyPlot.plot(t_test, real.(f_t), label = "f", linewidth = "2")
+PyPlot.plot(t_test, real.(q_t), label = "q", linewidth = "2", "--")
 
 PyPlot.legend()
 PyPlot.xlabel("sec")
 PyPlot.ylabel("intensity")
-PyPlot.title("f")
+PyPlot.title("real part")
 
 # TODO Next, surrogate version matching f. Then move onto RateConversion.jl
+ # see if we can find parametric expression for filtering.
+ # alternatively, a series of filtering so that we can keep t resolution low.
+# need 1-parameter family of filters.

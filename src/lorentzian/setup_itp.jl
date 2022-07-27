@@ -25,7 +25,7 @@ function fitclproxies(As::Vector{SHType{T}},
         A = As[n]
 
         # fit surrogate, save into `core`.
-        cores[n] = fitproxy(dummy_SSFID, A, λ0, config_dict;
+        cores[n] = fitclproxy(dummy_SSFID, A, λ0, config_dict;
         compound_name = names[n],
         Δcs_max_scalar_default = Δcs_max_scalar_default,
         κ_λ_lb_default = κ_λ_lb_default,
@@ -40,7 +40,7 @@ function fitclproxies(As::Vector{SHType{T}},
 end
 
 
-function fitproxy(dummy_SSFID::SST,
+function fitclproxy(dummy_SSFID::SST,
     A::SHType{T},
     λ0::T,
     config_dict;
@@ -104,7 +104,7 @@ function fitproxy(dummy_SSFID::SST,
         u_max = ppm2hzfunc(max_ppm)
     end
 
-    qs = setupcompoundpartitionitp(d_max,
+    qs = setupclcompoundpartitionitp(d_max,
         SSFID_obj.κs_β,
         A.Δc_bar,
         A.part_inds_compound,
@@ -121,7 +121,7 @@ function fitproxy(dummy_SSFID::SST,
     return core
 end
 
-function setuppartitionitp(α::Vector{T}, Ω::Vector{T}, d_max::T, λ0::T,
+function setupclpartitionitp(α::Vector{T}, Ω::Vector{T}, d_max::T, λ0::T,
     u_min::T, u_max::T;
     κ_λ_lb = 0.5,
     κ_λ_ub = 2.5,
@@ -169,7 +169,7 @@ function setuppartitionitp(α::Vector{T}, Ω::Vector{T}, d_max::T, λ0::T,
     return real_setp, imag_setp
 end
 
-function setupcompoundpartitionitp(d_max::Vector{T},
+function setupclcompoundpartitionitp(d_max::Vector{T},
     κs_β::Vector{Vector{T}},
     #Δc_m_compound::Vector{Vector{Vector{T}}},
     Δc_bar::Vector{Vector{Vector{T}}},
@@ -197,13 +197,11 @@ function setupcompoundpartitionitp(d_max::Vector{T},
             α = αs[i][inds]
             Ω = Ωs[i][inds]
 
-            real_sitp, imag_sitp = setuppartitionitp(α, Ω,
+            real_sitp, imag_sitp = setupclpartitionitp(α, Ω,
             d_max[i], λ0, u_min, u_max; κ_λ_lb = κ_λ_lb, κ_λ_ub = κ_λ_ub,
             Δr = Δr, Δκ_λ = Δκ_λ)
 
             qs[i][k] = (rr, ξξ)->evalq(real_sitp, imag_sitp, rr, ξξ, κs_β[i], Δc_bar[i][k])
-
-
         end
     end
 

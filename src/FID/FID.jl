@@ -33,6 +33,14 @@ r := 2*π*u-d, d is chem shift of this element in radians.
 Does not evaluate the complex phase β.
 """
 function evalFIDpartitionelement(t,
+    α::Vector{T}, Ω::Vector{T}, r::T)::Complex{T} where T <: Real
+
+    out = sum( α[l]*cis((Ω[l]-r)*t) for l = 1:length(α) )
+
+    return out
+end
+
+function evalFIDpartitionelement(t,
     α::Vector{T}, Ω::Vector{T})::Complex{T} where T <: Real
 
     out = sum( α[l]*cis(Ω[l]*t) for l = 1:length(α) )
@@ -54,8 +62,10 @@ function evalFIDspinsystem(t,
         for k = 1:length(part_inds_compound[i])
             inds = part_inds_compound[i][k]
 
+            # sys_sum += evalFIDpartitionelement(t, αs[i][inds],
+            #     Ωs[i][inds] .- x.d[i])*cis(dot(x.κs_β[i], c[i][k]))
             sys_sum += evalFIDpartitionelement(t, αs[i][inds],
-                Ωs[i][inds] .- x.d[i])*cis(dot(x.κs_β[i], c[i][k]))
+                Ωs[i][inds], x.d[i])*cis(dot(x.κs_β[i], c[i][k]))
         end
 
         out += sys_sum*exp(-x.κs_λ[i]*λ0*t)
@@ -99,17 +109,18 @@ function evalFIDsinglets(t::T, d::Vector{T}, αs_singlets::Vector{T}, Ωs_single
     return out
 end
 
-function evalFIDsinglets(t::T, d::Vector{T},
-    αs_singlets::Vector{T}, Ωs_singlets,
-    βs_singlets, λ0::T, λ_multipliers::Vector{T},
-    κ_α_singlets::Vector{T}) where T <: Real
-
-    out = zero(Complex{T})
-    for i = 1:length(αs_singlets)
-
-        λ = λ0*λ_multipliers[i]
-        Ω = Ωs_singlets[i] - d[i]
-        out += κ_α_singlets[i]*αs_singlets[i]*cis(Ω*t+βs_singlets[i])*exp(-λ*t)
-    end
-    return out
-end
+## not implementing κ_α compensation for now.
+# function evalFIDsinglets(t::T, d::Vector{T},
+#     αs_singlets::Vector{T}, Ωs_singlets,
+#     βs_singlets, λ0::T, λ_multipliers::Vector{T},
+#     κ_α_singlets::Vector{T}) where T <: Real
+#
+#     out = zero(Complex{T})
+#     for i = 1:length(αs_singlets)
+#
+#         λ = λ0*λ_multipliers[i]
+#         Ω = Ωs_singlets[i] - d[i]
+#         out += κ_α_singlets[i]*αs_singlets[i]*cis(Ω*t+βs_singlets[i])*exp(-λ*t)
+#     end
+#     return out
+# end
