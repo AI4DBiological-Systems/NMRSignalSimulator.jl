@@ -40,7 +40,7 @@ function evalFIDproxysys(qs::Vector{Vector{Function}},
         sys_sum = zero(Complex{T})
         for k = 1:length(qs[i])
 
-            out += qs[i][k](r, t)
+            sys_sum += qs[i][k](r, t)
         end
         out += sys_sum*exp(-x.κs_λ[i]*λ0*t)
     end

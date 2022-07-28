@@ -148,18 +148,23 @@ function setupFIDcompoundpartitionitp(d_max::Vector{T},
             α = αs[i][inds]
             Ω = Ωs[i][inds]
 
-            real_sitp, imag_sitp = setupFIDpartitionitp(α, Ω,
-            d_max[i], λ0, u_min, u_max; t_lb = t_lb, t_ub = t_ub,
-            Δr = Δr, Δt = Δt)
+            # real_sitp, imag_sitp = setupFIDpartitionitp(α, Ω,
+            # d_max[i], u_min, u_max; t_lb = t_lb, t_ub = t_ub,
+            # Δr = Δr, Δt = Δt)
+            #
+            # qs[i][k] = (rr, ξξ)->evalq(real_sitp, imag_sitp, rr, ξξ, κs_β[i], Δc_bar[i][k])
 
-            qs[i][k] = (rr, ξξ)->evalq(real_sitp, imag_sitp, rr, ξξ, κs_β[i], Δc_bar[i][k])
+            real_sitp, imag_sitp = setupFIDpartitionitp1(α, Ω,
+            d_max[i]; t_lb = t_lb, t_ub = t_ub, Δt = Δt)
+
+            qs[i][k] = (rr, ξξ)->evalq1(real_sitp, imag_sitp, rr, ξξ, κs_β[i], Δc_bar[i][k])
         end
     end
 
     return qs
 end
 
-function setupFIDpartitionitp(α::Vector{T}, Ω::Vector{T}, d_max::T, λ0::T,
+function setupFIDpartitionitp(α::Vector{T}, Ω::Vector{T}, d_max::T,
     u_min::T, u_max::T;
     t_lb = 0.0,
     t_ub = 3.0,
@@ -188,6 +193,41 @@ function setupFIDpartitionitp(α::Vector{T}, Ω::Vector{T}, d_max::T, λ0::T,
     imag_itp = Interpolations.interpolate(imag.(A), Interpolations.BSpline(Interpolations.Quadratic(Interpolations.Line(Interpolations.OnGrid()))))
     imag_sitp = Interpolations.scale(imag_itp, A_r, A_ξ)
     imag_setp = Interpolations.extrapolate(imag_sitp, 0.0) # zero outside interp range.
+
+    return real_setp, imag_setp
+end
+
+function evalq1(real_sitp, imag_sitp, r::T, t::T, b::Vector{T}, c)::Complex{T} where T <: Real
+
+    return (real_sitp(t)+im*imag_sitp(t))*cis(dot(b, c)-r*t)
+    #return (real_sitp(t)+im*imag_sitp(t)) # debug.
+end
+
+function setupFIDpartitionitp1(α::Vector{T}, Ω::Vector{T}, d_max::T;
+    t_lb = 0.0,
+    t_ub = 3.0,
+    Δt = 0.01) where T <: Real
+
+    # set up bounds.
+    A_ξ = t_lb:Δt:t_ub
+
+    # create complex-valued oracle and get values from it.
+    f = tt->evalFIDpartitionelement(tt, α, Ω)
+    A = [f(x2) for x2 in A_ξ]
+
+    # fit an interpolation function to the real and imaginary parts of the oracle.
+    real_itp = Interpolations.interpolate(real.(A), Interpolations.BSpline(Interpolations.Cubic(Interpolations.Line(Interpolations.OnGrid()))))
+    real_sitp = Interpolations.scale(real_itp, A_ξ)
+    real_setp = Interpolations.extrapolate(real_sitp, 0.0) # zero outside interp range.
+
+    imag_itp = Interpolations.interpolate(imag.(A), Interpolations.BSpline(Interpolations.Cubic(Interpolations.Line(Interpolations.OnGrid()))))
+    imag_sitp = Interpolations.scale(imag_itp, A_ξ)
+    imag_setp = Interpolations.extrapolate(imag_sitp, 0.0) # zero outside interp range.
+
+    ## debug.
+    # println("A_ξ = ", A_ξ)
+    # println("α = ", α)
+    # println("Ω = ", Ω)
 
     return real_setp, imag_setp
 end

@@ -17,6 +17,9 @@ import Statistics
 import Random
 Random.seed!(25)
 
+
+include("helpers/utils.jl")
+
 PyPlot.close("all")
 fig_num = 1
 
@@ -38,9 +41,9 @@ tol_coherence = 1e-2 # resonances are pairs of eigenvalues of the Hamiltonian th
 SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compounds_SH_configs.json"
 surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_configs/select_compounds_SH_configs.json"
 
-#molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS"; "Ethanol"; "L-Isoleucine"]
+molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS"; "Ethanol"; "L-Isoleucine"]
 #molecule_names = ["D-(+)-Glucose"; "DSS"]
-molecule_names = ["L-Serine";]
+#molecule_names = ["L-Serine";]
 
 # # machine values taken from the BMRB 700 MHz 20 mM glucose experiment.
 # fs = 14005.602240896402
@@ -102,7 +105,12 @@ println("fitclproxies():")
     Δκ_λ_default = Δκ_λ_default)
 
 #
-t_test = t[1:500] # 150 sec for glucose + DSS.
+#t_test = t[1:500] # 150 sec for glucose + DSS. v 1.
+t_test = t[1:8000] # v2.
+
+#t_test = t[500:1000] # v2.
+delta_t = t[2]-t[1]
+
 println("fitFIDproxies():")
 @time Bs = NMRSignalSimulator.fitFIDproxies(As, dummy_SSFID, λ0;
     names = molecule_names,
@@ -116,8 +124,7 @@ println("fitFIDproxies():")
     u_max = u_max,
     Δr_default = 1.0,
     #Δr_default = 0.1,
-    #Δt_default = 0.01)
-    Δt_default = 1e-5)
+    Δt_default = delta_t*0.5)
 
 
 ### plot.
@@ -144,13 +151,9 @@ fig_num += 1
 
 PyPlot.plot(t_test, real.(f_t), label = "f", linewidth = "2")
 PyPlot.plot(t_test, real.(q_t), label = "q", linewidth = "2", "--")
+PyPlot.plot(t_test, real.(f_t), "x")
 
 PyPlot.legend()
 PyPlot.xlabel("sec")
 PyPlot.ylabel("intensity")
 PyPlot.title("real part")
-
-# TODO Next, surrogate version matching f. Then move onto RateConversion.jl
- # see if we can find parametric expression for filtering.
- # alternatively, a series of filtering so that we can keep t resolution low.
-# need 1-parameter family of filters.

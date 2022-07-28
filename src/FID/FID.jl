@@ -57,15 +57,19 @@ function evalFIDspinsystem(t,
     out = zero(Complex{T})
     for i = 1:length(αs)
 
+        rt = x.d[i]*t
+
         sys_sum = zero(Complex{T})
 
         for k = 1:length(part_inds_compound[i])
             inds = part_inds_compound[i][k]
 
-            # sys_sum += evalFIDpartitionelement(t, αs[i][inds],
-            #     Ωs[i][inds] .- x.d[i])*cis(dot(x.κs_β[i], c[i][k]))
             sys_sum += evalFIDpartitionelement(t, αs[i][inds],
-                Ωs[i][inds], x.d[i])*cis(dot(x.κs_β[i], c[i][k]))
+                Ωs[i][inds])*cis(dot(x.κs_β[i], c[i][k])-rt)
+
+            ## debug.
+            # sys_sum += evalFIDpartitionelement(t, αs[i][inds],
+            #     Ωs[i][inds])
         end
 
         out += sys_sum*exp(-x.κs_λ[i]*λ0*t)

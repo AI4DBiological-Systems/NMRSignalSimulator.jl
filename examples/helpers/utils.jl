@@ -60,7 +60,3 @@ function displaymatrix(A::Matrix{T}; display_width::Int = 10) where T
 
     return nothing
 end
-
-
-
-#### move later.
