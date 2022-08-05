@@ -33,11 +33,11 @@ tol_coherence = 1e-2 # resonances are pairs of eigenvalues of the Hamiltonian th
 κ_λ_lb_default = 0.5 # interpolation lower limit for κ_λ.
 κ_λ_ub_default = 2.5 # interpolation upper limit for κ_λ.
 
-SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compounds_SH_configs_reduce.json"
+SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compounds_SH_configs.json"
 surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_configs/select_compounds_SH_configs.json"
 
 #molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS"; "Ethanol"; "L-Isoleucine"]
-molecule_names = ["alpha-D-Glucose"; "beta-D-Glucose"; "DSS"]
+molecule_names = ["alpha-D-Glucose"; "beta-D-Glucose"; "DSS"; "D2O, 4.7ppm"]
 
 # machine values taken from the BMRB 700 MHz 20 mM glucose experiment.
 fs = 14005.602240896402
@@ -77,8 +77,8 @@ As = mixture_params
 
 #dummy_SSFID = NMRSignalSimulator.SpinSysParamsType1(0.0)
 dummy_SSFID = NMRSignalSimulator.SpinSysParamsType2(0.0)
-u_min = ppm2hzfunc(-0.5)
-u_max = ppm2hzfunc(4.0)
+# u_min = ppm2hzfunc(-0.5)
+# u_max = ppm2hzfunc(4.0)
 
 Bs = NMRSignalSimulator.fitclproxies(As, dummy_SSFID, λ0;
     names = molecule_names,
@@ -86,8 +86,8 @@ Bs = NMRSignalSimulator.fitclproxies(As, dummy_SSFID, λ0;
     Δcs_max_scalar_default = Δcs_max_scalar_default,
     κ_λ_lb_default = κ_λ_lb_default,
     κ_λ_ub_default = κ_λ_ub_default,
-    u_min = u_min,
-    u_max = u_max,
+    # u_min = u_min,
+    # u_max = u_max,
     Δr_default = Δr_default,
     Δκ_λ_default = Δκ_λ_default)
 
@@ -112,7 +112,8 @@ f = uu->NMRSignalSimulator.evalclmixture(uu, mixture_params, Bs)
 #ΩS_ppm_flat = NMRSignalSimulator.combinevectors(ΩS_ppm)
 
 
-P = LinRange(hz2ppmfunc(u_min), hz2ppmfunc(u_max), 50000)
+#P = LinRange(hz2ppmfunc(u_min), hz2ppmfunc(u_max), 50000)
+P = LinRange(-0.1, 6.0, 80000)
 U = ppm2hzfunc.(P)
 U_rad = U .* (2*π)
 
