@@ -97,6 +97,9 @@ function fitFIDproxy(dummy_SSFID::SST,
     # threshold and partition the resonance components.
     if !isfinite(u_min) || !isfinite(u_max)
         Ωs_ppm = hz2ppmfunc.( combinevectors(A.Ωs) ./ (2*π) )
+        tmp = hz2ppmfunc.( A.Ωs_singlets ./ (2*π) )
+        push!(Ωs_ppm, tmp...)
+        
         min_ppm = minimum(Ωs_ppm) - 0.5
         max_ppm = maximum(Ωs_ppm) + 0.5
         u_min = ppm2hzfunc(min_ppm)

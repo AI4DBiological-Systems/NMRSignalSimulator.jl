@@ -28,7 +28,6 @@ function evalFIDproxysys(qs::Vector{Vector{Function}},
 
     d = x.d
     κs_λ = x.κs_λ
-    #κs_β = x.κs_β
 
     @assert length(d) == length(qs)
 
@@ -39,6 +38,30 @@ function evalFIDproxysys(qs::Vector{Vector{Function}},
 
         sys_sum = zero(Complex{T})
         for k = 1:length(qs[i])
+
+            sys_sum += qs[i][k](r, t)
+        end
+        out += sys_sum*exp(-x.κs_λ[i]*λ0*t)
+    end
+
+    return out
+end
+
+function evalFIDproxysys(qs::Vector{Vector{Function}},
+    t::T, x::SpinSysParamsType2{T}, λ0)::Complex{T} where T
+
+    d = x.d
+    κs_λ = x.κs_λ
+
+    @assert length(d) == length(qs)
+
+    out = zero(Complex{T})
+
+    for i = 1:length(qs)
+        sys_sum = zero(Complex{T})
+
+        for k = 1:length(qs[i])
+            r = d[i][k]
 
             sys_sum += qs[i][k](r, t)
         end

@@ -41,7 +41,7 @@ tol_coherence = 1e-2 # resonances are pairs of eigenvalues of the Hamiltonian th
 SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compounds_SH_configs.json"
 surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_configs/select_compounds_SH_configs.json"
 
-molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS"; "Ethanol"; "L-Isoleucine"]
+molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS"; "Ethanol"; "L-Isoleucine"; "D2O, 4.7ppm"]
 #molecule_names = ["D-(+)-Glucose"; "DSS"]
 #molecule_names = ["L-Serine";]
 
@@ -59,7 +59,7 @@ molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS"; "Ethanol"; "L-Isoleucine
 ν_0ppm = 6753.577042707225
 SW = 16.0196918511501
 fs = 9615.38461538462
-t = LinRange(0, 1.693536, 16285)
+t = LinRange(0, 1.693536, 16384)
 
 # path to the json file that provides the mapping from a compound name to its spin system info file name.
 H_params_path = "/home/roy/Documents/repo/NMRData/input/coupling_info"
@@ -86,7 +86,8 @@ println("Timing: setupmixtureSH()")
     α_relative_lower_threshold = α_relative_lower_threshold,
     Δc_partition_radius = Δc_partition_radius)
 
-dummy_SSFID = NMRSignalSimulator.SpinSysParamsType1(0.0)
+#dummy_SSFID = NMRSignalSimulator.SpinSysParamsType1(0.0)
+dummy_SSFID = NMRSignalSimulator.SpinSysParamsType2(0.0)
 # u_min = ppm2hzfunc(-0.5)
 # u_max = ppm2hzfunc(4.0)
 u_min = ppm2hzfunc(3.5)
@@ -157,3 +158,23 @@ PyPlot.legend()
 PyPlot.xlabel("sec")
 PyPlot.ylabel("intensity")
 PyPlot.title("real part")
+
+function getDFTfreqrange(N::Int, fs::T)::LinRange{T} where T
+    a = zero(T)
+    b = fs-fs/N
+
+    return LinRange(a, b, N)
+end
+
+U_DFT = getDFTfreqrange(length(q_t), fs)
+P_DFT = hz2ppmfunc.(U_DFT)
+
+PyPlot.figure(fig_num)
+fig_num += 1
+
+PyPlot.plot(P_DFT, real.(fft(q_t)), label = "q", linewidth = "2")
+
+PyPlot.legend()
+PyPlot.xlabel("sec")
+PyPlot.ylabel("")
+PyPlot.title("real part DFT of q_t, 0 ppm at $(ν_0ppm) Hz")
