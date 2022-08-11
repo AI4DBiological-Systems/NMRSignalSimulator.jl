@@ -44,6 +44,7 @@ surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_config
 molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS"; "Ethanol"; "L-Isoleucine"; "D2O, 4.7ppm"]
 #molecule_names = ["D-(+)-Glucose"; "DSS"]
 #molecule_names = ["L-Serine";]
+#molecule_names = ["D2O, 4.7ppm";]
 
 # # machine values taken from the BMRB 700 MHz 20 mM glucose experiment.
 # fs = 14005.602240896402
@@ -59,7 +60,9 @@ molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS"; "Ethanol"; "L-Isoleucine
 ν_0ppm = 6753.577042707225
 SW = 16.0196918511501
 fs = 9615.38461538462
-t = LinRange(0, 1.693536, 16384)
+
+#t = LinRange(0, 1.693536, 16384)
+t = NMRSignalSimulator.gettimerange(16384, fs)
 
 # path to the json file that provides the mapping from a compound name to its spin system info file name.
 H_params_path = "/home/roy/Documents/repo/NMRData/input/coupling_info"
@@ -90,8 +93,8 @@ println("Timing: setupmixtureSH()")
 dummy_SSFID = NMRSignalSimulator.SpinSysParamsType2(0.0)
 # u_min = ppm2hzfunc(-0.5)
 # u_max = ppm2hzfunc(4.0)
-u_min = ppm2hzfunc(3.5)
-u_max = ppm2hzfunc(4.2)
+#u_min = ppm2hzfunc(3.5)
+#u_max = ppm2hzfunc(4.2)
 
 println("fitclproxies():")
 @time Bs_cl = NMRSignalSimulator.fitclproxies(As, dummy_SSFID, λ0;
@@ -100,17 +103,15 @@ println("fitclproxies():")
     Δcs_max_scalar_default = Δcs_max_scalar_default,
     κ_λ_lb_default = κ_λ_lb_default,
     κ_λ_ub_default = κ_λ_ub_default,
-    u_min = u_min,
-    u_max = u_max,
+    #u_min = u_min,
+    #u_max = u_max,
     Δr_default = Δr_default,
     Δκ_λ_default = Δκ_λ_default)
 
 #
 #t_test = t[1:500] # 150 sec for glucose + DSS. v 1.
 t_test = t[1:8000] # v2.
-
-#t_test = t[500:1000] # v2.
-delta_t = t[2]-t[1]
+delta_t = 1/fs
 
 println("fitFIDproxies():")
 @time Bs = NMRSignalSimulator.fitFIDproxies(As, dummy_SSFID, λ0;
@@ -121,8 +122,8 @@ println("fitFIDproxies():")
     #t_ub_default = t[end],
     t_lb_default = t_test[1],
     t_ub_default = t_test[end],
-    u_min = u_min,
-    u_max = u_max,
+    #u_min = u_min,
+    #u_max = u_max,
     Δr_default = 1.0,
     #Δr_default = 0.1,
     Δt_default = delta_t*0.5)
@@ -136,11 +137,13 @@ println("fitFIDproxies():")
 # B.ss_params.κs_λ[:] = rand(length(B.ss_params.κs_λ)) .+ 1
 # B.ss_params.κs_β[:] = collect( rand(length(B.ss_params.κs_β[i])) .* (2*π) for i = 1:length(B.ss_params.κs_β) )
 
+w = rand(length(Bs))
+
 B = Bs[1]
-f = uu->NMRSignalSimulator.evalFIDmixture(uu, As, Bs)
+f = tt->NMRSignalSimulator.evalFIDmixture(tt, As, Bs; w = w)
 f_t = f.(t_test)
 
-q = uu->NMRSignalSimulator.evalFIDproxymixture(uu, As, Bs)
+q = tt->NMRSignalSimulator.evalFIDproxymixture(tt, As, Bs; w = w)
 q_t = q.(t_test)
 
 discrepancy = norm(q_t-f_t)
@@ -159,22 +162,99 @@ PyPlot.xlabel("sec")
 PyPlot.ylabel("intensity")
 PyPlot.title("real part")
 
-function getDFTfreqrange(N::Int, fs::T)::LinRange{T} where T
-    a = zero(T)
-    b = fs-fs/N
 
-    return LinRange(a, b, N)
-end
+##### compare against complex Lorentzian.
 
-U_DFT = getDFTfreqrange(length(q_t), fs)
+
+
+
+
+U_DFT = NMRSignalSimulator.getDFTfreqrange(length(q_t), fs)
 P_DFT = hz2ppmfunc.(U_DFT)
+
+Q = uu->NMRSignalSimulator.evalclproxymixture(uu, As, Bs_cl; w = w)
+Q_U = Q.(U_DFT .* (2*π))
+
+DFT_q = fft(q_t) ./ fs
 
 PyPlot.figure(fig_num)
 fig_num += 1
 
-PyPlot.plot(P_DFT, real.(fft(q_t)), label = "q", linewidth = "2")
+PyPlot.plot(P_DFT, real.(DFT_q), label = "DFT q", linewidth = "2")
+PyPlot.plot(P_DFT, real.(Q_U), label = "cL Q", "--", linewidth = "2")
+
+PyPlot.legend()
+PyPlot.xlabel("ppm")
+PyPlot.ylabel("real")
+PyPlot.title("DFT-FID vs. cL, 0 ppm at $(ν_0ppm) Hz")
+
+
+import NMRDataSetup
+offset_Hz = ν_0ppm - (ppm2hzfunc(0.3)-ppm2hzfunc(0.0))
+_, U_q, U_inds_q = NMRDataSetup.getwraparoundDFTfreqs(length(q_t), fs, offset_Hz)
+
+DFT_q_wrap = (fft(q_t) ./ fs)[U_inds_q]
+P_DFT_wrap = hz2ppmfunc.(U_q)
+Q_U_wrap = Q.(U_q .* (2*π))
+
+PyPlot.figure(fig_num)
+fig_num += 1
+
+PyPlot.plot(P_DFT_wrap, real.(DFT_q_wrap), label = "DFT q", linewidth = "2")
+PyPlot.plot(P_DFT_wrap, real.(Q_U_wrap), label = "cL Q", "--", linewidth = "2")
+PyPlot.gca().invert_xaxis()
+
+PyPlot.legend()
+PyPlot.xlabel("ppm")
+PyPlot.ylabel("real")
+PyPlot.title("wrapped, DFT-FID vs. cL, 0 ppm at $(ν_0ppm) Hz")
+
+
+function getΩSppm(As::Vector{NMRHamiltonian.SHType{T}}, hz2ppmfunc) where T
+
+    ΩS_ppm = Vector{Vector{T}}(undef, length(As))
+
+    for (n,A) in enumerate(As)
+
+        ΩS_ppm[n] = hz2ppmfunc.( combinevectors(A.Ωs) ./ (2*π) )
+
+        tmp = hz2ppmfunc.( A.Ωs_singlets ./ (2*π) )
+        push!(ΩS_ppm[n], tmp...)
+    end
+
+    return ΩS_ppm
+end
+
+ΩS_ppm = getΩSppm(As, hz2ppmfunc)
+ΩS_ppm_sorted = sort(NMRSignalSimulator.combinevectors(ΩS_ppm))
+
+
+tmp = copy(Q_U_wrap)
+tmp[U_inds_q] = Q_U_wrap
+invDFT_Q = ifft(tmp .* fs) #.* fs #.* exp(im*2*π*ν_0ppm)
+
+PyPlot.figure(fig_num)
+fig_num += 1
+
+
+PyPlot.plot(t_test, real.(q_t), label = "q", linewidth = "2")
+PyPlot.plot(t_test, real.(invDFT_Q), label = "invDFT Q", "--", linewidth = "2")
 
 PyPlot.legend()
 PyPlot.xlabel("sec")
-PyPlot.ylabel("")
-PyPlot.title("real part DFT of q_t, 0 ppm at $(ν_0ppm) Hz")
+PyPlot.ylabel("real")
+PyPlot.title("invDFT cL (wrapped) vs. FID")
+
+
+### abs will be the same even if we don't wrap the frequency, since it amounts to a *cis(constant) for all time domain values.
+PyPlot.figure(fig_num)
+fig_num += 1
+
+
+PyPlot.plot(t_test, abs.(q_t), label = "q", linewidth = "2")
+PyPlot.plot(t_test, abs.(invDFT_Q), label = "invDFT Q", "--", linewidth = "2")
+
+PyPlot.legend()
+PyPlot.xlabel("sec")
+PyPlot.ylabel("abs")
+PyPlot.title("invDFT cL (wrapped) vs. FID")

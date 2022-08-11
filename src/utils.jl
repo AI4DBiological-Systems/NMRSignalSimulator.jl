@@ -1,4 +1,5 @@
 
+
 function combinevectors(x::Vector{Vector{T}})::Vector{T} where T
 
     if isempty(x)
@@ -19,4 +20,28 @@ function combinevectors(x::Vector{Vector{T}})::Vector{T} where T
     end
 
     return y
+end
+
+"""
+    gettimerange(N::Int, fs::T) where T
+
+Returns the time stamps for a sequence, starting at time 0. Returns zero(T):Ts:(N-1)*Ts, Ts = 1/fs.
+"""
+function gettimerange(N::Int, fs::T) where T
+    Ts::T = 1/fs
+
+    return zero(T):Ts:(N-1)*Ts
+end
+
+"""
+    getDFTfreqrange(N::Int, fs::T) where T
+
+Returns the frequency stamps for a DFT sequence, computed by fft().
+    Starting at frequency 0 Hz. Returns LinRange(0, fs-fs/N, N).
+"""
+function getDFTfreqrange(N::Int, fs::T)::LinRange{T} where T
+    a = zero(T)
+    b = fs-fs/N
+
+    return LinRange(a, b, N)
 end

@@ -1,3 +1,7 @@
+
+
+
+
 function getPsnospininfo(As::Vector{NMRSignalSimulator.SHType{T}}, hz2ppmfunc) where T
 
     ΩS_ppm = Vector{Vector{T}}(undef, length(As))
