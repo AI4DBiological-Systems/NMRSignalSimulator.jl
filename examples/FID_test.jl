@@ -41,9 +41,10 @@ tol_coherence = 1e-2 # resonances are pairs of eigenvalues of the Hamiltonian th
 SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compounds_SH_configs.json"
 surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_configs/select_compounds_SH_configs.json"
 
-molecule_names = ["L-Serine"; "L-Phenylalanine"; "DSS"; "Ethanol"; "L-Isoleucine"; "D2O, 4.7ppm"]
+molecule_names = ["L-Serine"; "L-Phenylalanine"; "Ethanol"; "L-Isoleucine"; "DSS"; "D2O, 4.7ppm"]
 #molecule_names = ["D-(+)-Glucose"; "DSS"]
 #molecule_names = ["L-Serine";]
+#molecule_names = ["L-Serine"; "D2O, 4.7ppm";]
 #molecule_names = ["D2O, 4.7ppm";]
 
 # # machine values taken from the BMRB 700 MHz 20 mM glucose experiment.
@@ -63,6 +64,7 @@ fs = 9615.38461538462
 
 #t = LinRange(0, 1.693536, 16384)
 t = NMRSignalSimulator.gettimerange(16384, fs)
+#t = NMRSignalSimulator.gettimerange(16384*5, fs) # for smaller λ.
 
 # path to the json file that provides the mapping from a compound name to its spin system info file name.
 H_params_path = "/home/roy/Documents/repo/NMRData/input/coupling_info"
@@ -110,7 +112,8 @@ println("fitclproxies():")
 
 #
 #t_test = t[1:500] # 150 sec for glucose + DSS. v 1.
-t_test = t[1:8000] # v2.
+#t_test = t[1:8000] # v2.
+t_test = t
 delta_t = 1/fs
 
 println("fitFIDproxies():")
@@ -132,10 +135,54 @@ println("fitFIDproxies():")
 ### plot.
 
 # # purposely distort the spectra by assigning random values to model parameters.
-# B = Bs[1]
-# B.ss_params.d[:] = rand(length(B.ss_params.d))
-# B.ss_params.κs_λ[:] = rand(length(B.ss_params.κs_λ)) .+ 1
-# B.ss_params.κs_β[:] = collect( rand(length(B.ss_params.κs_β[i])) .* (2*π) for i = 1:length(B.ss_params.κs_β) )
+
+####  manual assignment of FID parameters.
+# ## type 1.
+# for n_select = 1:length(Bs)
+#     tmp_d = 100.0 .* ones(length(Bs[n_select].ss_params.d))
+#     Bs[n_select].ss_params.d[:] = tmp_d
+#     Bs_cl[n_select].ss_params.d[:] = tmp_d
+# end
+
+# ## type 2.
+for n_select = 1:length(Bs)
+    for i_select = 1:length(Bs[n_select].ss_params.d)
+        tmp_d = 100.0 .* ones(length(Bs[n_select].ss_params.d[i_select]))
+        Bs[n_select].ss_params.d[i_select] = tmp_d
+        Bs_cl[n_select].ss_params.d[i_select] = tmp_d
+    end
+end
+
+## common to both types.
+for n_select = 1:length(Bs)
+    tmp_λ = rand(length(Bs[n_select].ss_params.κs_λ)) .+ 1
+    Bs[n_select].ss_params.κs_λ[:] = tmp_λ
+    Bs_cl[n_select].ss_params.κs_λ[:] = tmp_λ
+
+    tmp_β = collect( rand(length(Bs[n_select].ss_params.κs_β[i])) .* (2*π) for i = 1:length(Bs[n_select].ss_params.κs_β) )
+    Bs[n_select].ss_params.κs_β[:] = tmp_β
+    Bs_cl[n_select].ss_params.κs_β[:] = tmp_β
+end
+
+# manual move the D2O singlet, assumed to be in the last position.
+for n_select = 1:length(Bs)
+    tmp_d_singlets = 20 .* rand(length(Bs[n_select].d_singlets))
+    Bs[n_select].d_singlets[:] = tmp_d_singlets
+    Bs_cl[n_select].d_singlets[:] = tmp_d_singlets
+
+    # if λ is too small relative to the length of t, DFT-FID and CL models won't agree.
+    # λ is large enough if the FID signal decays close to zero before end of t.
+    tmp_λ_singlet = rand(length(Bs[n_select].κs_λ_singlets)) .+ 1
+    #tmp_λ_singlet[1] = 0.2657313746474563 # small λ.
+    Bs[n_select].κs_λ_singlets[:] = tmp_λ_singlet
+    Bs_cl[n_select].κs_λ_singlets[:] = tmp_λ_singlet
+
+    tmp_β_singlet = rand(length(Bs[n_select].β_singlets))
+    Bs[n_select].β_singlets[:] = tmp_β_singlet
+    Bs_cl[n_select].β_singlets[:] = tmp_β_singlet
+end
+
+#### end manual assignment of FID parameters.
 
 w = rand(length(Bs))
 
@@ -145,6 +192,7 @@ f_t = f.(t_test)
 
 q = tt->NMRSignalSimulator.evalFIDproxymixture(tt, As, Bs; w = w)
 q_t = q.(t_test)
+#q_t=f_t
 
 discrepancy = norm(q_t-f_t)
 println("discrepancy = ", discrepancy)
@@ -245,6 +293,8 @@ PyPlot.xlabel("sec")
 PyPlot.ylabel("real")
 PyPlot.title("invDFT cL (wrapped) vs. FID")
 
+println("q_t vs. invDFT_Q descrepancy: ", norm(real.(q_t)-real.(invDFT_Q)))
+println()
 
 ### abs will be the same even if we don't wrap the frequency, since it amounts to a *cis(constant) for all time domain values.
 PyPlot.figure(fig_num)

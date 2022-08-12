@@ -65,11 +65,8 @@ function evalFIDspinsystem(t,
             inds = part_inds_compound[i][k]
 
             sys_sum += evalFIDpartitionelement(t, αs[i][inds],
-                Ωs[i][inds])*cis(dot(x.κs_β[i], c[i][k])-rt)
+                Ωs[i][inds])*cis(dot(x.κs_β[i], c[i][k])+rt)
 
-            ## debug.
-            # sys_sum += evalFIDpartitionelement(t, αs[i][inds],
-            #     Ωs[i][inds])
         end
 
         out += sys_sum*exp(-x.κs_λ[i]*λ0*t)
@@ -83,16 +80,23 @@ function evalFIDspinsystem(t,
     x::SpinSysParamsType2{T}, λ0::T,
     c, part_inds_compound)::Complex{T} where T <: Real
 
+    rt = zero(T) # pre-allocate.
+    inner_sum = zero(Complex{T}) # pre-allocate.
+
     out = zero(Complex{T})
     for i = 1:length(αs)
 
         λ = x.κs_λ[i]*λ0
+        inner_sum = zero(Complex{T})
         for k = 1:length(part_inds_compound[i])
             inds = part_inds_compound[i][k]
 
-            out += exp(-λ*t)*evalFIDpartitionelement(t, αs[i][inds],
-                Ωs[i][inds] .- x.d[i][k])*cis(dot(x.κs_β[i], c[i][k]))
+            rt = x.d[i][k]*t
+            #out += exp(-λ*t)*evalFIDpartitionelement(t, αs[i][inds],
+            inner_sum += evalFIDpartitionelement(t, αs[i][inds],
+                Ωs[i][inds])*cis(dot(x.κs_β[i], c[i][k])+rt)
         end
+        out += (exp(-λ*t)*inner_sum)
     end
 
     return out
@@ -107,24 +111,8 @@ function evalFIDsinglets(t::T, d::Vector{T}, αs_singlets::Vector{T}, Ωs_single
     for i = 1:length(αs_singlets)
 
         λ = λ0*λ_multipliers[i]
-        Ω = Ωs_singlets[i] - d[i]
+        Ω = Ωs_singlets[i] + d[i]
         out += αs_singlets[i]*cis(Ω*t+βs_singlets[i])*exp(-λ*t)
     end
     return out
 end
-
-## not implementing κ_α compensation for now.
-# function evalFIDsinglets(t::T, d::Vector{T},
-#     αs_singlets::Vector{T}, Ωs_singlets,
-#     βs_singlets, λ0::T, λ_multipliers::Vector{T},
-#     κ_α_singlets::Vector{T}) where T <: Real
-#
-#     out = zero(Complex{T})
-#     for i = 1:length(αs_singlets)
-#
-#         λ = λ0*λ_multipliers[i]
-#         Ω = Ωs_singlets[i] - d[i]
-#         out += κ_α_singlets[i]*αs_singlets[i]*cis(Ω*t+βs_singlets[i])*exp(-λ*t)
-#     end
-#     return out
-# end

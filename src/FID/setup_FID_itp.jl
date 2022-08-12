@@ -99,7 +99,7 @@ function fitFIDproxy(dummy_SSFID::SST,
         Ωs_ppm = hz2ppmfunc.( combinevectors(A.Ωs) ./ (2*π) )
         tmp = hz2ppmfunc.( A.Ωs_singlets ./ (2*π) )
         push!(Ωs_ppm, tmp...)
-        
+
         min_ppm = minimum(Ωs_ppm) - 0.5
         max_ppm = maximum(Ωs_ppm) + 0.5
         u_min = ppm2hzfunc(min_ppm)
@@ -160,7 +160,7 @@ function setupFIDcompoundpartitionitp(d_max::Vector{T},
             real_sitp, imag_sitp = setupFIDpartitionitp1(α, Ω,
             d_max[i]; t_lb = t_lb, t_ub = t_ub, Δt = Δt)
 
-            qs[i][k] = (rr, ξξ)->evalq1(real_sitp, imag_sitp, rr, ξξ, κs_β[i], Δc_bar[i][k])
+            qs[i][k] = (rr, tt)->evalq1(real_sitp, imag_sitp, rr, tt, κs_β[i], Δc_bar[i][k])
         end
     end
 
@@ -202,7 +202,7 @@ end
 
 function evalq1(real_sitp, imag_sitp, r::T, t::T, b::Vector{T}, c)::Complex{T} where T <: Real
 
-    return (real_sitp(t)+im*imag_sitp(t))*cis(dot(b, c)-r*t)
+    return (real_sitp(t)+im*imag_sitp(t))*cis(dot(b, c)+r*t)
     #return (real_sitp(t)+im*imag_sitp(t)) # debug.
 end
 
