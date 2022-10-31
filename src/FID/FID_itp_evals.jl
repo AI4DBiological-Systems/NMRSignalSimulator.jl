@@ -1,18 +1,18 @@
 
 function evalFIDproxymixture(t, As::Vector{SHType{T}},
-    Bs::Vector{CompoundType{T,SST}};
+    Bs::Vector{MoleculeType{T,SST}};
     w::Vector{T} = ones(T, length(As)))::Complex{T} where {T <: Real,SST}
 
     out = zero(Complex{T})
 
     for n = 1:length(As)
-        out += w[n]*evalFIDproxycompound(t, As[n], Bs[n])
+        out += w[n]*evalFIDproxymolecule(t, As[n], Bs[n])
     end
 
     return out
 end
 
-function evalFIDproxycompound(t, A::SHType{T}, B::CompoundType{T,SST})::Complex{T} where {T <: Real, SST}
+function evalFIDproxymolecule(t, A::SHType{T}, B::MoleculeType{T,SST})::Complex{T} where {T <: Real, SST}
 
     out_sys = evalFIDproxysys(B.qs, t, B.ss_params, B.λ0)
 

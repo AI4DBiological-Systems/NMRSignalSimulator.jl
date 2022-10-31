@@ -23,10 +23,10 @@ import Random
 Random.seed!(25)
 
 #save_folder = "/home/roy/MEGAsync/outputs/NMR/groups/700MHz"
-#SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compounds_SH_configs_reduce.json"
+#SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_molecules_SH_configs_reduce.json"
 
 save_folder = "/home/roy/MEGAsync/outputs/NMR/groups/700MHz_low_intensity_threshold"
-SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compounds_SH_configs_low_intensity_threshold.json"
+SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_molecules_SH_configs_low_intensity_threshold.json"
 
 isdir(save_folder) || mkpath(save_folder)
 
@@ -35,21 +35,21 @@ unique_cs_atol = 1e-6
 prune_Δc_option = 5
 u_offset = 0.2
 
-surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_configs/select_compounds_SH_configs.json"
+surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_configs/select_molecules_SH_configs.json"
 
 # machine values taken from the BMRB 700 MHz 20 mM glucose experiment.
 fs = 14005.602240896402
 SW = 20.0041938620844
 ν_0ppm = 10656.011933076665
 
-# path to the json file that provides the mapping from a compound name to its spin system info file name.
+# path to the json file that provides the mapping from a molecule name to its spin system info file name.
 H_params_path = "/home/roy/Documents/repo/NMRData/input/coupling_info"
-dict_compound_to_filename = JSON.parsefile("/home/roy/Documents/repo/NMRData/input/compound_mapping/select_compounds.json")
+dict_molecule_to_filename = JSON.parsefile("/home/roy/Documents/repo/NMRData/input/molecule_mapping/select_molecules.json")
 
 ### end inputs.
 
 function plotgroupsbulk(molecule_entries::Vector{String},
-        dict_compound_to_filename,
+        dict_molecule_to_filename,
         H_params_path, SH_config_path,
         fs, SW, ν_0ppm;
         unique_cs_atol = 1e-6,
@@ -61,7 +61,7 @@ function plotgroupsbulk(molecule_entries::Vector{String},
 
     for n = 1:length(molecule_entries)
         plotgroups(molecule_entries[n],
-            dict_compound_to_filename,
+            dict_molecule_to_filename,
             H_params_path, SH_config_path,
             fs, SW, ν_0ppm;
             unique_cs_atol = unique_cs_atol,
@@ -75,7 +75,7 @@ end
 
 
 function plotgroups(name::String,
-    dict_compound_to_filename,
+    dict_molecule_to_filename,
     H_params_path, SH_config_path,
     fs, SW, ν_0ppm;
     unique_cs_atol = 1e-6,
@@ -92,7 +92,7 @@ function plotgroups(name::String,
     molecule_entries = [name;]
     Phys = NMRHamiltonian.getphysicalparameters(molecule_entries,
         H_params_path,
-        dict_compound_to_filename;
+        dict_molecule_to_filename;
         unique_cs_atol = unique_cs_atol)
 
     mixture_params = NMRHamiltonian.setupmixtureSH(molecule_entries,
@@ -130,7 +130,7 @@ function plotgroups(name::String,
     qs = collect( collect( ωω->B.qs[i][k](ωω-B.ss_params.d[i], B.ss_params.κs_λ[i]) for k = 1:length(B.qs[i]) ) for i = 1:length(B.qs) )
     q_singlets = ωω->NMRSignalSimulator.evalclsinglets(ωω, B.d_singlets, A.αs_singlets, A.Ωs_singlets, B.β_singlets, B.λ0, B.κs_λ_singlets)
 
-    # create the function for the entire compound.
+    # create the function for the entire molecule.
     q = uu->NMRSignalSimulator.evalclproxymixture(uu, As[1:1], Bs[1:1])
 
     # evaluate at the plotting positions.
@@ -142,7 +142,7 @@ function plotgroups(name::String,
 
     #### sanity check.
     q_check_U = q_singlets_U
-    if !isempty(qs) # some compounds only have singlets.
+    if !isempty(qs) # some molecules only have singlets.
         q_check_U += sum( sum( qs[i][k].(U_rad) for k = 1:length(qs[i]) ) for i = 1:length(qs) )
     end
 
@@ -169,7 +169,7 @@ function plotgroups(name::String,
         println("Resonance group sizes for each system: ", collect(collect(length(qs[i]) for i = 1:length(qs) ) ))
         println("Number of spins for each system: ", A.N_spins_sys)
         println("Number of resonance components for each system: ", length.(A.αs))
-        println("Number of resonance components in each resonance group (inner index), for each system (outer index): ", collect( length.(A.part_inds_compound[i]) for i = 1:length(A.part_inds_compound)))
+        println("Number of resonance components in each resonance group (inner index), for each system (outer index): ", collect( length.(A.part_inds_molecule[i]) for i = 1:length(A.part_inds_molecule)))
         println("summed intensity of each system: ", sum.(A.αs))
     end
 
@@ -182,11 +182,11 @@ end
 
 # molecule_entries = ["beta-Alanine";
 # "L-Alanine"; ]
-molecule_entries = collect( key for (key,val) in dict_compound_to_filename)
+molecule_entries = collect( key for (key,val) in dict_molecule_to_filename)
 
 println("Timing: plotgroupsbulk()")
 @time plotgroupsbulk(molecule_entries,
-        dict_compound_to_filename,
+        dict_molecule_to_filename,
         H_params_path, SH_config_path,
         fs, SW, ν_0ppm;
         unique_cs_atol = 1e-6,

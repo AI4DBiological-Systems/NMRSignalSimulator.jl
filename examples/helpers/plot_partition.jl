@@ -1,6 +1,6 @@
 
 """
-save resonance groupings of a compound.
+save resonance groupings of a molecule.
 Choices for `f`` are: `real()`, `imag()`, or `abs()`. These corresponds to real part, imaginary part, and magnitude spectrum, respectively.
 """
 function plotgroups(title_string::String,
@@ -60,7 +60,7 @@ function plotgroups(title_string::String,
 end
 
 """
-only plots the first compound in molecule_entries.
+only plots the first molecule in molecule_entries.
 """
 function plotgroupsfullscript(plot_title, molecule_entries,
     H_params_path, project_path, tol_coherence, α_relative_lower_threshold,
@@ -140,7 +140,7 @@ function plotgroupsfullscript(plot_title, molecule_entries,
     qs = collect( collect( ωω->A.qs[i][k](ωω-A.ss_params.d[i], A.ss_params.κs_λ[i]) for k = 1:length(A.qs[i]) ) for i = 1:length(A.qs) )
     q_singlets = ωω->NMRSignalSimulator.evalsinglets(ωω, A.d_singlets, A.αs_singlets, A.Ωs_singlets, A.β_singlets, A.λ0, A.κs_λ_singlets)
 
-    # create the function for the entire compound.
+    # create the function for the entire molecule.
     q = uu->NMRSignalSimulator.evalclproxymixture(uu, As[1:1])
 
     # evaluate at the plotting positions.
@@ -151,7 +151,7 @@ function plotgroupsfullscript(plot_title, molecule_entries,
 
     # sanity check.
     q_check_U = q_singlets_U
-    if !isempty(qs) # some compounds only have singlets.
+    if !isempty(qs) # some molecules only have singlets.
         q_check_U += sum( sum( qs[i][k].(U_rad) for k = 1:length(qs[i]) ) for i = 1:length(qs) )
     end
     discrepancy = norm(q_check_U- q_U)
@@ -217,7 +217,7 @@ end
 
 
 """
-root_folder should contain only folders of 1D 1H NMR compound standard experiments, with the compound name being the subfolder name.
+root_folder should contain only folders of 1D 1H NMR molecule standard experiments, with the molecule name being the subfolder name.
 I.e., a folder containing an experiment of L-Serine and L-Histidine should have two folders in it with those names that contain the corresponding experimental data.
 """
 function batchplotgroups(plot_title, root_path,
@@ -232,7 +232,7 @@ function batchplotgroups(plot_title, root_path,
     plot_imag_and_mag_flag = false,
     save_plot_flag = true)
 
-    # get a list of experiment paths and compounds names. Assume the folder name of the experiment contains the compound.
+    # get a list of experiment paths and molecules names. Assume the folder name of the experiment contains the molecule.
     tmp = readdir(root_path, join = true)
     inds = findall(xx->isdir(xx), tmp)
 
@@ -243,19 +243,19 @@ function batchplotgroups(plot_title, root_path,
     for i = 1:length(project_names)
 
         project_path = project_paths[i]
-        compound_name = experiment_names[i]
+        molecule_name = experiment_names[i]
 
         println("Now on ", project_path)
 
-        # make sure this compound is in our library.
+        # make sure this molecule is in our library.
         records = GISSMOReader.getGISSMOentriesall()
         record_names = collect( records[i].molecule_name for i = 1:length(records) )
 
-        k = findfirst(xx->xx==compound_name, record_names)
+        k = findfirst(xx->xx==molecule_name, record_names)
 
         # decide if we should simulate and plot.
         if typeof(k) != Nothing
-            plotgroupsfullscript(plot_title, [compound_name;],
+            plotgroupsfullscript(plot_title, [molecule_name;],
                 H_params_path, project_path, tol_coherence, α_relative_lower_threshold,
                 Δc_partition_radius, Δcs_max, κ_λ_lb, κ_λ_ub;
                 display_flag = display_flag,
@@ -267,7 +267,7 @@ function batchplotgroups(plot_title, root_path,
                 plot_imag_and_mag_flag = plot_imag_and_mag_flag,
                 save_plot_flag = save_plot_flag)
         else
-            println("Compound not in the local GISSMO library. Skip.")
+            println("Molecule not in the local GISSMO library. Skip.")
         end
     end
 

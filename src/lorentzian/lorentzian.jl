@@ -3,12 +3,12 @@
 
 #### top-level
 
-function evalclcompound(u_rad, A::SHType{T}, B::CompoundType{T,SST})::Complex{T} where {T <: Real, SST}
+function evalclmolecule(u_rad, A::SHType{T}, B::MoleculeType{T,SST})::Complex{T} where {T <: Real, SST}
 
     #u_rad = 2*π*u
 
     out_sys = evalclspinsystem(u_rad, A.αs, A.Ωs, B.ss_params,
-    B.λ0, A.Δc_bar, A.part_inds_compound)
+    B.λ0, A.Δc_bar, A.part_inds_molecule)
 
     out_singlets = evalclsinglets(u_rad, B.d_singlets, A.αs_singlets, A.Ωs_singlets,
     B.β_singlets, B.λ0, B.κs_λ_singlets)
@@ -16,7 +16,7 @@ function evalclcompound(u_rad, A::SHType{T}, B::CompoundType{T,SST})::Complex{T}
     return out_sys + out_singlets
 end
 
-function evalclmixture(u_rad, As::Vector{SHType{T}}, Bs::Vector{CompoundType{T,SST}};
+function evalclmixture(u_rad, As::Vector{SHType{T}}, Bs::Vector{MoleculeType{T,SST}};
     w::Vector{T} = ones(T, length(As)))::Complex{T} where {T <: Real, SST}
 
     #u_rad = 2*π*u
@@ -24,7 +24,7 @@ function evalclmixture(u_rad, As::Vector{SHType{T}}, Bs::Vector{CompoundType{T,S
     out = zero(Complex{T})
     for n = 1:length(As)
 
-        out += w[n]*evalclcompound(u_rad, As[n], Bs[n])
+        out += w[n]*evalclmolecule(u_rad, As[n], Bs[n])
     end
 
     return out
@@ -50,7 +50,7 @@ end
 function evalclspinsystem(u_rad,
     αs::Vector{Vector{T}}, Ωs::Vector{Vector{T}},
     x::SpinSysParamsType1{T}, λ0::T,
-    c, part_inds_compound)::Complex{T} where T <: Real
+    c, part_inds_molecule)::Complex{T} where T <: Real
 
     #u_rad = 2*π*u
 
@@ -59,8 +59,8 @@ function evalclspinsystem(u_rad,
         r = u_rad - x.d[i]
 
         λ = x.κs_λ[i]*λ0
-        for k = 1:length(part_inds_compound[i])
-            inds = part_inds_compound[i][k]
+        for k = 1:length(part_inds_molecule[i])
+            inds = part_inds_molecule[i][k]
 
             out += evalclpartitionelement(r, αs[i][inds],
                 Ωs[i][inds], λ)*cis(dot(x.κs_β[i], c[i][k]))
@@ -73,7 +73,7 @@ end
 function evalclspinsystem(u_rad,
     αs::Vector{Vector{T}}, Ωs::Vector{Vector{T}},
     x::SpinSysParamsType2{T}, λ0::T,
-    c, part_inds_compound)::Complex{T} where T <: Real
+    c, part_inds_molecule)::Complex{T} where T <: Real
 
     #u_rad = 2*π*u
 
@@ -81,9 +81,9 @@ function evalclspinsystem(u_rad,
     for i = 1:length(αs)
 
         λ = x.κs_λ[i]*λ0
-        for k = 1:length(part_inds_compound[i])
+        for k = 1:length(part_inds_molecule[i])
             r = u_rad - x.d[i][k]
-            inds = part_inds_compound[i][k]
+            inds = part_inds_molecule[i][k]
 
             out += evalclpartitionelement(r, αs[i][inds],
                 Ωs[i][inds], λ)*cis(dot(x.κs_β[i], c[i][k]))

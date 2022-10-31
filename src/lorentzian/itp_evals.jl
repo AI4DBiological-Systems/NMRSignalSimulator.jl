@@ -125,7 +125,7 @@ end
 
 # without κ_α compensation.
 function evalclproxymixture(u_rad, As::Vector{SHType{T}},
-    Bs::Vector{CompoundType{T,SST}};
+    Bs::Vector{MoleculeType{T,SST}};
     w::Vector{T} = ones(T, length(As)))::Complex{T} where {T <: Real,SST}
 
     #u_rad = 2*π*u
@@ -133,14 +133,14 @@ function evalclproxymixture(u_rad, As::Vector{SHType{T}},
     out = zero(Complex{T})
 
     for n = 1:length(As)
-        out += w[n]*evalclproxycompound(u_rad, As[n], Bs[n])
+        out += w[n]*evalclproxymolecule(u_rad, As[n], Bs[n])
     end
 
     return out
 end
 
 # with proxy.
-function evalclproxycompound(u_rad, A::SHType{T}, B::CompoundType{T,SST})::Complex{T} where {T <: Real, SST}
+function evalclproxymolecule(u_rad, A::SHType{T}, B::MoleculeType{T,SST})::Complex{T} where {T <: Real, SST}
 
     #u_rad = 2*π*u
 
@@ -155,7 +155,7 @@ end
 
 # with κ_α compensation.
 function evalclproxymixture(u_rad, As::Vector{SHType{T}},
-    Es::Vector{καCompoundType{T,SST}};
+    Es::Vector{καMoleculeType{T,SST}};
     w::Vector{T} = ones(T, length(As)))::Complex{T} where {T <: Real,SST}
 
     #u_rad = 2*π*u
@@ -163,14 +163,14 @@ function evalclproxymixture(u_rad, As::Vector{SHType{T}},
     out = zero(Complex{T})
 
     for n = 1:length(Es)
-        out += w[n]*evalclproxycompound(u_rad, As[n], Es[n])
+        out += w[n]*evalclproxymolecule(u_rad, As[n], Es[n])
     end
 
     return out
 end
 
 # with κ-proxy.
-function evalclproxycompound(u_rad, A::SHType{T}, E::καCompoundType{T,SST})::Complex{T} where {T <: Real, SST}
+function evalclproxymolecule(u_rad, A::SHType{T}, E::καMoleculeType{T,SST})::Complex{T} where {T <: Real, SST}
 
     #u_rad = 2*π*u
 

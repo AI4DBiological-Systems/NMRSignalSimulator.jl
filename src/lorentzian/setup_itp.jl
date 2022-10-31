@@ -20,14 +20,14 @@ function fitclproxies(As::Vector{SHType{T}},
         config_dict = JSON3.read(read(config_path))
     end
 
-    cores = Vector{CompoundType{T,SST}}(undef, length(As))
+    cores = Vector{MoleculeType{T,SST}}(undef, length(As))
 
     for n = 1:length(As)
         A = As[n]
 
         # fit surrogate, save into `core`.
         cores[n] = fitclproxy(dummy_SSFID, A, λ0, config_dict;
-        compound_name = names[n],
+        molecule_name = names[n],
         Δcs_max_scalar_default = Δcs_max_scalar_default,
         κ_λ_lb_default = κ_λ_lb_default,
         κ_λ_ub_default = κ_λ_ub_default,
@@ -45,14 +45,14 @@ function fitclproxy(dummy_SSFID::SST,
     A::SHType{T},
     λ0::T,
     config_dict;
-    compound_name::String = "",
+    molecule_name::String = "",
     Δcs_max_scalar_default = 0.2,
     κ_λ_lb_default = 0.5,
     κ_λ_ub_default = 2.5,
     u_min = Inf,
     u_max = Inf,
     Δr_default = 1.0,
-    Δκ_λ_default = 0.05)::CompoundType{T,SST} where {T,SST}
+    Δκ_λ_default = 0.05)::MoleculeType{T,SST} where {T,SST}
 
     hz2ppmfunc = uu->(uu - A.ν_0ppm)*A.SW/A.fs
     ppm2hzfunc = pp->(A.ν_0ppm + pp*A.fs/A.SW)
@@ -69,7 +69,7 @@ function fitclproxy(dummy_SSFID::SST,
     # proxy placeholder.
     #qs = Vector{Vector{Function}}(undef, length(N_spins_sys))
 
-    SSFID_obj = setupSSFIDparams(dummy_SSFID, A.part_inds_compound, N_β_vars_sys)
+    SSFID_obj = setupSSFIDparams(dummy_SSFID, A.part_inds_molecule, N_β_vars_sys)
 
     # prepare configuration parameters.
     κ_λ_lb = κ_λ_lb_default
@@ -80,8 +80,8 @@ function fitclproxy(dummy_SSFID::SST,
 
     d_max::Vector{T} = ppm2hzfunc.(Δcs_max) .- ppm2hzfunc(zero(T))
 
-    if !isempty(config_dict) && !isempty(compound_name)
-        dict = config_dict[Symbol(compound_name)] # TODO graceful error-handle.
+    if !isempty(config_dict) && !isempty(molecule_name)
+        dict = config_dict[Symbol(molecule_name)] # TODO graceful error-handle.
 
         κ_λ_lb = dict[Symbol("κ_λ lower bound")]
         κ_λ_ub = dict[Symbol("κ_λ upper bound")]
@@ -108,10 +108,10 @@ function fitclproxy(dummy_SSFID::SST,
         u_max = ppm2hzfunc(max_ppm)
     end
 
-    qs = setupclcompoundpartitionitp(d_max,
+    qs = setupclmoleculepartitionitp(d_max,
         SSFID_obj.κs_β,
         A.Δc_bar,
-        A.part_inds_compound,
+        A.part_inds_molecule,
         A.αs, A.Ωs,
         λ0, u_min, u_max;
         κ_λ_lb = κ_λ_lb,
@@ -119,7 +119,7 @@ function fitclproxy(dummy_SSFID::SST,
         Δr = Δr,
         Δκ_λ = Δκ_λ)
 
-    core = CompoundType(qs, SSFID_obj, κs_λ_singlets, κs_β_singlets, d_singlets,
+    core = MoleculeType(qs, SSFID_obj, κs_λ_singlets, κs_β_singlets, d_singlets,
         Δcs_max, λ0)
 
     return core
@@ -173,11 +173,11 @@ function setupclpartitionitp(α::Vector{T}, Ω::Vector{T}, d_max::T, λ0::T,
     return real_setp, imag_setp
 end
 
-function setupclcompoundpartitionitp(d_max::Vector{T},
+function setupclmoleculepartitionitp(d_max::Vector{T},
     κs_β::Vector{Vector{T}},
-    #Δc_m_compound::Vector{Vector{Vector{T}}},
+    #Δc_m_molecule::Vector{Vector{Vector{T}}},
     Δc_bar::Vector{Vector{Vector{T}}},
-    part_inds_compound::Vector{Vector{Vector{Int}}},
+    part_inds_molecule::Vector{Vector{Vector{Int}}},
     αs::Vector{Vector{T}}, Ωs::Vector{Vector{T}},
     λ0::T, u_min::T, u_max::T;
     κ_λ_lb = 0.5,
@@ -188,16 +188,16 @@ function setupclcompoundpartitionitp(d_max::Vector{T},
     qs = Vector{Vector{Function}}(undef, length(αs)) # surrogates for lorentzian model.
     #gs = Vector{Vector{Function}}(undef, length(αs)) # surrogates for FID model.
 
-    for i = 1:length(part_inds_compound) # over elements in a spin group.
+    for i = 1:length(part_inds_molecule) # over elements in a spin group.
 
-        N_partition_elements = length(part_inds_compound[i])
+        N_partition_elements = length(part_inds_molecule[i])
         qs[i] = Vector{Function}(undef, N_partition_elements)
         #gs[i] = Vector{Function}(undef, N_partition_elements)
 
         for k = 1:N_partition_elements
             #println("i,k", (i,k))
 
-            inds = part_inds_compound[i][k]
+            inds = part_inds_molecule[i][k]
             α = αs[i][inds]
             Ω = Ωs[i][inds]
 

@@ -42,6 +42,8 @@ SW = 20.0041938620844
 ### end inputs.
 
 As, Rs = runSH(molecule_entries)
+println("finished As")
+println()
 
 #@assert 1==2
 
@@ -53,7 +55,7 @@ As, Rs = runSH(molecule_entries)
 κ_λ_lb_default = 0.5 # interpolation lower limit for κ_λ.
 κ_λ_ub_default = 2.5 # interpolation upper limit for κ_λ.
 
-surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/select_compounds_surrogate_configs.json"
+surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/select_molecules_surrogate_configs.json"
 
 
 #dummy_SSFID = NMRSignalSimulator.SpinSysParamsType1(0.0)
@@ -86,13 +88,13 @@ B.ss_params.κs_λ[:] = rand(length(B.ss_params.κs_λ)) .+ 1
 B.ss_params.κs_β[:] = collect( rand(length(B.ss_params.κs_β[i])) .* (2*π) for i = 1:length(B.ss_params.κs_β) )
 
 
-f = uu->NMRSignalSimulator.evalclmixture(uu, mixture_params, Bs)
+f = uu->NMRSignalSimulator.evalclmixture(uu, As, Bs)
 
 hz2ppmfunc = uu->(uu - ν_0ppm)*SW/fs
 ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 
 # test params.
-#ΩS_ppm = collect( hz2ppmfunc.( NMRSignalSimulator.combinevectors(A.Ωs) ./ (2*π) ) for A in mixture_params )
+#ΩS_ppm = collect( hz2ppmfunc.( NMRSignalSimulator.combinevectors(A.Ωs) ./ (2*π) ) for A in As )
 #ΩS_ppm_flat = NMRSignalSimulator.combinevectors(ΩS_ppm)
 
 
@@ -104,10 +106,10 @@ U_rad = U .* (2*π)
 ## parameters that affect qs.
 # A.d, A.κs_λ, A.κs_β
 # A.d_singlets, A.αs_singlets, A.Ωs_singlets, A.β_singlets, A.λ0, A.κs_λ_singlets
-q = uu->NMRSignalSimulator.evalclproxymixture(uu, mixture_params, Bs)
+q = uu->NMRSignalSimulator.evalclproxymixture(uu, As, Bs)
 
-#Es = collect( NMRSignalSimulator.καCompoundType(Bs[i]) for i = 1:length(Bs) )
-#q = uu->NMRSignalSimulator.evalclproxymixture(uu, mixture_params, Es)
+#Es = collect( NMRSignalSimulator.καMoleculeType(Bs[i]) for i = 1:length(Bs) )
+#q = uu->NMRSignalSimulator.evalclproxymixture(uu, As, Es)
 
 f_U = f.(U_rad)
 q_U = q.(U_rad)

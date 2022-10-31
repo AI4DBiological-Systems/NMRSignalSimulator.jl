@@ -6,7 +6,7 @@ const SHType{T} = NMRHamiltonian.SHType{T} where T
 ### model.
 
 # This is without the compensation amplitude parameter, κ_α, denoted κs_α in code.
-struct CompoundType{T,SST} # parameters for surrogate model.
+struct MoleculeType{T,SST} # parameters for surrogate model.
 
     # non-singlet spin systems.
     qs::Vector{Vector{Function}} # spin group, partition element index.
@@ -27,13 +27,13 @@ struct CompoundType{T,SST} # parameters for surrogate model.
 end
 
 # This is with the compensation amplitude parameter, κ_α, denoted κs_α in code.
-mutable struct καCompoundType{T,SST}
+mutable struct καMoleculeType{T,SST}
     κs_α::Vector{Vector{T}} # spin group, partition element index.
     κs_α_singlets::Vector{T}
-    core::CompoundType{T,SST}
+    core::MoleculeType{T,SST}
 end
 
-function καCompoundType(core::CompoundType{T,SST}) where {T,SST}
+function καMoleculeType(core::MoleculeType{T,SST}) where {T,SST}
 
     N_spins = length(core.qs)
     κs_α = Vector{Vector{T}}(undef, N_spins)
@@ -43,7 +43,7 @@ function καCompoundType(core::CompoundType{T,SST}) where {T,SST}
 
     κs_α_singlets = ones(T, length(core.d_singlets))
 
-    return καCompoundType(κs_α, κs_α_singlets, core)
+    return καMoleculeType(κs_α, κs_α_singlets, core)
 end
 
 ### different parameterizations of the spin system FID parameters.
@@ -78,8 +78,8 @@ end
 
 ########### more elaborate constructors.
 
-function setupSSFIDparams(dummy_SSFID::SpinSysParamsType1{T}, part_inds_compound, N_β_vars_sys)::SpinSysParamsType1{T} where T
-    L = length(part_inds_compound)
+function setupSSFIDparams(dummy_SSFID::SpinSysParamsType1{T}, part_inds_molecule, N_β_vars_sys)::SpinSysParamsType1{T} where T
+    L = length(part_inds_molecule)
 
     κs_λ = ones(T, L)
     κs_β = collect( zeros(T, N_β_vars_sys[i]) for i = 1:length(N_β_vars_sys))
@@ -89,14 +89,14 @@ function setupSSFIDparams(dummy_SSFID::SpinSysParamsType1{T}, part_inds_compound
     return constructorSSFID(dummy_SSFID, κs_λ, κs_β, d)
 end
 
-function setupSSFIDparams(dummy_SSFID::SpinSysParamsType2{T}, part_inds_compound::Vector{Vector{Vector{Int}}}, N_β_vars_sys)::SpinSysParamsType2{T} where T
+function setupSSFIDparams(dummy_SSFID::SpinSysParamsType2{T}, part_inds_molecule::Vector{Vector{Vector{Int}}}, N_β_vars_sys)::SpinSysParamsType2{T} where T
 
-    N_sys = length(part_inds_compound)
+    N_sys = length(part_inds_molecule)
     κs_λ = ones(T, N_sys)
     d = Vector{Vector{T}}(undef, N_sys)
 
     for i = 1:length(d)
-        N_partition_elements = length(part_inds_compound[i])
+        N_partition_elements = length(part_inds_molecule[i])
 
         d[i] = zeros(T, N_partition_elements)
     end

@@ -38,8 +38,8 @@ tol_coherence = 1e-2 # resonances are pairs of eigenvalues of the Hamiltonian th
 κ_λ_lb_default = 0.5 # interpolation lower limit for κ_λ.
 κ_λ_ub_default = 2.5 # interpolation upper limit for κ_λ.
 
-SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compounds_SH_configs.json"
-surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_configs/select_compounds_SH_configs.json"
+SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_molecules_SH_configs.json"
+surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_configs/select_molecules_SH_configs.json"
 
 molecule_entries = ["L-Serine"; "L-Phenylalanine"; "Ethanol"; "L-Isoleucine"; "DSS"; "D2O"]
 #molecule_entries = ["D-(+)-Glucose"; "DSS"]
@@ -66,9 +66,9 @@ fs = 9615.38461538462
 t = NMRSignalSimulator.gettimerange(16384, fs)
 #t = NMRSignalSimulator.gettimerange(16384*5, fs) # for smaller λ.
 
-# path to the json file that provides the mapping from a compound name to its spin system info file name.
+# path to the json file that provides the mapping from a molecule name to its spin system info file name.
 H_params_path = "/home/roy/Documents/repo/NMRData/input/coupling_info"
-dict_compound_to_filename = JSON.parsefile("/home/roy/Documents/repo/NMRData/input/compound_mapping/select_compounds.json")
+dict_molecule_to_filename = JSON.parsefile("/home/roy/Documents/repo/NMRData/input/molecule_mapping/select_molecules.json")
 
 ### end inputs.
 
@@ -78,7 +78,7 @@ ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 println("Timing: getphysicalparameters")
 @time Phys = NMRHamiltonian.getphysicalparameters(molecule_entries,
     H_params_path,
-    dict_compound_to_filename;
+    dict_molecule_to_filename;
     unique_cs_atol = 1e-6)
 
 #
