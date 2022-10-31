@@ -41,11 +41,11 @@ tol_coherence = 1e-2 # resonances are pairs of eigenvalues of the Hamiltonian th
 SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compounds_SH_configs.json"
 surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_configs/select_compounds_SH_configs.json"
 
-molecule_names = ["L-Serine"; "L-Phenylalanine"; "Ethanol"; "L-Isoleucine"; "DSS"; "D2O, 4.7ppm"]
-#molecule_names = ["D-(+)-Glucose"; "DSS"]
-#molecule_names = ["L-Serine";]
-#molecule_names = ["L-Serine"; "D2O, 4.7ppm";]
-#molecule_names = ["D2O, 4.7ppm";]
+molecule_entries = ["L-Serine"; "L-Phenylalanine"; "Ethanol"; "L-Isoleucine"; "DSS"; "D2O"]
+#molecule_entries = ["D-(+)-Glucose"; "DSS"]
+#molecule_entries = ["L-Serine";]
+#molecule_entries = ["L-Serine"; "D2O";]
+#molecule_entries = ["D2O";]
 
 # # machine values taken from the BMRB 700 MHz 20 mM glucose experiment.
 # fs = 14005.602240896402
@@ -76,14 +76,14 @@ hz2ppmfunc = uu->(uu - ν_0ppm)*SW/fs
 ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 
 println("Timing: getphysicalparameters")
-@time Phys = NMRHamiltonian.getphysicalparameters(molecule_names,
+@time Phys = NMRHamiltonian.getphysicalparameters(molecule_entries,
     H_params_path,
     dict_compound_to_filename;
     unique_cs_atol = 1e-6)
 
 #
 println("Timing: setupmixtureSH()")
-@time As = NMRHamiltonian.setupmixtureSH(molecule_names,
+@time As = NMRHamiltonian.setupmixtureSH(molecule_entries,
     fs, SW, ν_0ppm,
     Phys;
     config_path = SH_config_path,
@@ -100,7 +100,7 @@ dummy_SSFID = NMRSignalSimulator.SpinSysParamsType2(0.0)
 
 println("fitclproxies():")
 @time Bs_cl = NMRSignalSimulator.fitclproxies(As, dummy_SSFID, λ0;
-    names = molecule_names,
+    names = molecule_entries,
     config_path = surrogate_config_path,
     Δcs_max_scalar_default = Δcs_max_scalar_default,
     κ_λ_lb_default = κ_λ_lb_default,
@@ -118,7 +118,7 @@ delta_t = 1/fs
 
 println("fitFIDproxies():")
 @time Bs = NMRSignalSimulator.fitFIDproxies(As, dummy_SSFID, λ0;
-    names = molecule_names,
+    names = molecule_entries,
     config_path = surrogate_config_path,
     Δcs_max_scalar_default = 0.2,
     #t_lb_default = t[1],

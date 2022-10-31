@@ -60,9 +60,9 @@ function plotgroups(title_string::String,
 end
 
 """
-only plots the first compound in molecule_names.
+only plots the first compound in molecule_entries.
 """
-function plotgroupsfullscript(plot_title, molecule_names,
+function plotgroupsfullscript(plot_title, molecule_entries,
     H_params_path, project_path, tol_coherence, α_relative_lower_threshold,
     Δc_partition_radius, Δcs_max, κ_λ_lb, κ_λ_ub,
     fs, SW, ν_0ppm, λ_0ppm, save_folder;
@@ -90,12 +90,12 @@ function plotgroupsfullscript(plot_title, molecule_names,
     ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 
 
-    Δcs_max_mixture = collect( Δcs_max for i = 1:length(molecule_names))
+    Δcs_max_mixture = collect( Δcs_max for i = 1:length(molecule_entries))
 
     # get a surrogate where K_{n,i} is encouraged to be no larger than `early_exit_part_size`.
     # println("Timing: setupmixtureproxies()")
-    # @time mixture_params = NMRSignalSimulator.setupmixtureproxies(molecule_names,
-    mixture_params = NMRSignalSimulator.setupmixtureproxies(molecule_names,
+    # @time mixture_params = NMRSignalSimulator.setupmixtureproxies(molecule_entries,
+    mixture_params = NMRSignalSimulator.setupmixtureproxies(molecule_entries,
         H_params_path, ppm2hzfunc, fs, SW,
         λ_0ppm, ν_0ppm, dummy_SSFID;
         tol_coherence = tol_coherence,
@@ -180,7 +180,7 @@ function plotgroupsfullscript(plot_title, molecule_names,
     end
 
     plots_save_path = joinpath(save_folder, "groups_real.html")
-    title_string = "$(plot_title), $(molecule_names), real spectrum"
+    title_string = "$(plot_title), $(molecule_entries), real spectrum"
     plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P_display, U_display, q, qs, q_singlets, real, P[1]; canvas_size = canvas_size)
     if save_plot_flag
         Plots.savefig(plot_obj, plots_save_path)
@@ -194,7 +194,7 @@ function plotgroupsfullscript(plot_title, molecule_names,
     if plot_imag_and_mag_flag
 
         plots_save_path = joinpath(save_folder, "groups_imag.html")
-        title_string = "$(plot_title), $(molecule_names), imaginary spectrum"
+        title_string = "$(plot_title), $(molecule_entries), imaginary spectrum"
         plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P_display, U_display, q, qs, q_singlets, imag, P[1]; canvas_size = canvas_size)
         if save_plot_flag
             Plots.savefig(plot_obj, plots_save_path)
@@ -204,7 +204,7 @@ function plotgroupsfullscript(plot_title, molecule_names,
         end
 
         plots_save_path = joinpath(save_folder, "groups_magnitude.html")
-        title_string = "$(plot_title), $(molecule_names), magnitude spectrum"
+        title_string = "$(plot_title), $(molecule_entries), magnitude spectrum"
         plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P_display, U_display, q, qs, q_singlets, abs, P[1]; canvas_size = canvas_size)
         if save_plot_flag
             Plots.savefig(plot_obj, plots_save_path)

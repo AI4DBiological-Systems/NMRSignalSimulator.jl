@@ -1,0 +1,4 @@
+[deps]
+DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
+NMRHamiltonian = "d73005cc-2eb2-45b3-9785-29d07aec07ac"
+Tar = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"

@@ -42,21 +42,21 @@ save_fig_flag = false #true
 SH_config_path = "/home/roy/Documents/repo/NMRData/input/SH_configs/select_compounds_SH_configs_low_intensity_threshold.json"
 surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/surrogate_configs/select_compounds_SH_configs.json"
 
-#molecule_names = ["L-Valine"; ]
-#molecule_names = ["L-Isoleucine"; ]
-#molecule_names = ["L-Leucine"; ]
-#molecule_names = ["alpha-D-Glucose"; ]
-#molecule_names = ["beta-D-Glucose"; ]
-#molecule_names = ["L-Phenylalanine"; ]
-#molecule_names = ["L-Glutamine"; ]
-#molecule_names = ["Ethanol"; ]
-#molecule_names = ["L-Serine"; ]
-molecule_names = ["DSS"; ]
-#molecule_names = ["ATP"; ] # idea: coherence is the compensation for intensity.
-#molecule_names = ["L-Glutathione oxidized"; ]
-#molecule_names = ["L-Glutathione reduced"; ]
-#molecule_names = ["beta-Alanine"; ]
-#molecule_names = ["L-Alanine"; ]
+#molecule_entries = ["L-Valine"; ]
+#molecule_entries = ["L-Isoleucine"; ]
+#molecule_entries = ["L-Leucine"; ]
+#molecule_entries = ["alpha-D-Glucose"; ]
+#molecule_entries = ["beta-D-Glucose"; ]
+#molecule_entries = ["L-Phenylalanine"; ]
+#molecule_entries = ["L-Glutamine"; ]
+#molecule_entries = ["Ethanol"; ]
+#molecule_entries = ["L-Serine"; ]
+molecule_entries = ["DSS"; ]
+#molecule_entries = ["ATP"; ] # idea: coherence is the compensation for intensity.
+#molecule_entries = ["L-Glutathione oxidized"; ]
+#molecule_entries = ["L-Glutathione reduced"; ]
+#molecule_entries = ["beta-Alanine"; ]
+#molecule_entries = ["L-Alanine"; ]
 
 # machine values taken from the BMRB 700 MHz 20 mM glucose experiment.
 fs = 14005.602240896402
@@ -84,14 +84,14 @@ hz2ppmfunc = uu->(uu - ν_0ppm)*SW/fs
 ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 
 println("Timing: getphysicalparameters")
-@time Phys = NMRHamiltonian.getphysicalparameters(molecule_names,
+@time Phys = NMRHamiltonian.getphysicalparameters(molecule_entries,
     H_params_path,
     dict_compound_to_filename;
     unique_cs_atol = 1e-6)
 
 #
 println("Timing: setupmixtureSH()")
-@time mixture_params = NMRHamiltonian.setupmixtureSH(molecule_names,
+@time mixture_params = NMRHamiltonian.setupmixtureSH(molecule_entries,
     fs, SW, ν_0ppm,
     Phys;
     config_path = SH_config_path,
@@ -116,7 +116,7 @@ u_max = ppm2hzfunc(ΩS_ppm_sorted[end] + u_offset)
 
 println("fitclproxies():")
 @time Bs_cl = NMRSignalSimulator.fitclproxies(As, dummy_SSFID, λ0;
-    names = molecule_names,
+    names = molecule_entries,
     config_path = surrogate_config_path,
     # Δcs_max_scalar_default = Δcs_max_scalar_default,
     # κ_λ_lb_default = κ_λ_lb_default,
@@ -185,9 +185,9 @@ U_display = U[inds]
 canvas_size = (1000, 400)
 
 
-save_molecule_name = replace("$(molecule_names[1])", ","=>"-", " "=>"-")
+save_molecule_name = replace("$(molecule_entries[1])", ","=>"-", " "=>"-")
 plots_save_path = joinpath(save_folder, "$(save_molecule_name)_groups_real.html")
-title_string = "Resonance groups, real part: $(molecule_names[1])"
+title_string = "Resonance groups, real part: $(molecule_entries[1])"
 plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P_display, U_display, q, qs, q_singlets, real, P[1]; canvas_size = canvas_size)
 
 if save_fig_flag
@@ -198,7 +198,7 @@ display(plot_obj)
 
 
 # could try different Δc_bar grouping strategies based on the following information from simulation.
-save_molecule_name = replace("$(molecule_names[1])", ","=>"-", " "=>"-")
+save_molecule_name = replace("$(molecule_entries[1])", ","=>"-", " "=>"-")
 println("name = ", save_molecule_name)
 println("Number of non-singlet spin systems: ", length(A.N_spins_sys))
 println("Resonance group sizes for each system: ", collect(collect(length(qs[i]) for i = 1:length(qs) ) ))

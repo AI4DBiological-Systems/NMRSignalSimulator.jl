@@ -16,7 +16,8 @@ function fitclproxies(As::Vector{SHType{T}},
     if ispath(config_path)
 
         # TODO add error-handling if name is not found in the dictionary or filename does not exist.
-        config_dict = JSON.parsefile(config_path)
+        #config_dict = JSON.parsefile(config_path)
+        config_dict = JSON3.read(read(config_path))
     end
 
     cores = Vector{CompoundType{T,SST}}(undef, length(As))
@@ -80,19 +81,19 @@ function fitclproxy(dummy_SSFID::SST,
     d_max::Vector{T} = ppm2hzfunc.(Δcs_max) .- ppm2hzfunc(zero(T))
 
     if !isempty(config_dict) && !isempty(compound_name)
-        dict = config_dict[compound_name] # TODO graceful error-handle.
+        dict = config_dict[Symbol(compound_name)] # TODO graceful error-handle.
 
-        κ_λ_lb = dict["κ_λ lower bound"]
-        κ_λ_ub = dict["κ_λ upper bound"]
-        Δκ_λ = dict["κ_λ surrogate sampling step size"]
-        if length(dict["Δcs_max"]) == length(A.N_spins_sys)
-            Δcs_max = dict["Δcs_max"]
+        κ_λ_lb = dict[Symbol("κ_λ lower bound")]
+        κ_λ_ub = dict[Symbol("κ_λ upper bound")]
+        Δκ_λ = dict[Symbol("κ_λ surrogate sampling step size")]
+        if length(dict[Symbol("Δcs_max")]) == length(A.N_spins_sys)
+            Δcs_max = dict[Symbol("Δcs_max")]
         # else
         #     println("Warning: problem an entry's Δcs_max value in config file. Using default scalar value for Δcs_max")
         end
-        Δr = dict["radians surrogate sampling step size"]
+        Δr = dict[Symbol("radians surrogate sampling step size")]
 
-        d_max = collect( ppm2hzfunc(Δcs_max[i])-ppm2hzfunc(0.0) for i = 1:length(Δcs_max) )
+        d_max = collect( ppm2hzfunc(Δcs_max[i])-ppm2hzfunc(0.0) for i in eachindex(Δcs_max) )
     end
 
     # threshold and partition the resonance components.

@@ -1,13 +1,14 @@
 module NMRSignalSimulator
 
 # Write your package code here.
-using Distributed, LinearAlgebra, FFTW, SharedArrays, OffsetArrays, Statistics
+using LinearAlgebra
 
-import JSON, Interpolations
-#import Kronecker, NearestNeighbors, Graphs
+import JSON3, Interpolations, OffsetArrays
 
 
-import NMRHamiltonian # https://github.com/AI4DBiological-Systems/NMRHamiltonian.jl
+
+import NMRHamiltonian # consider removing this dependency, or split the data structure into a separate package.
+
 
 include("../src/types.jl")
 include("../src/utils.jl")

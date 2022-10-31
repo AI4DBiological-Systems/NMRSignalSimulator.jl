@@ -48,7 +48,7 @@ dict_compound_to_filename = JSON.parsefile("/home/roy/Documents/repo/NMRData/inp
 
 ### end inputs.
 
-function plotgroupsbulk(molecule_names::Vector{String},
+function plotgroupsbulk(molecule_entries::Vector{String},
         dict_compound_to_filename,
         H_params_path, SH_config_path,
         fs, SW, ν_0ppm;
@@ -59,8 +59,8 @@ function plotgroupsbulk(molecule_names::Vector{String},
         display_threshold_factor =  0.01/10,
         canvas_size = (1000, 400) )
 
-    for n = 1:length(molecule_names)
-        plotgroups(molecule_names[n],
+    for n = 1:length(molecule_entries)
+        plotgroups(molecule_entries[n],
             dict_compound_to_filename,
             H_params_path, SH_config_path,
             fs, SW, ν_0ppm;
@@ -89,13 +89,13 @@ function plotgroups(name::String,
     hz2ppmfunc = uu->(uu - ν_0ppm)*SW/fs
     ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 
-    molecule_names = [name;]
-    Phys = NMRHamiltonian.getphysicalparameters(molecule_names,
+    molecule_entries = [name;]
+    Phys = NMRHamiltonian.getphysicalparameters(molecule_entries,
         H_params_path,
         dict_compound_to_filename;
         unique_cs_atol = unique_cs_atol)
 
-    mixture_params = NMRHamiltonian.setupmixtureSH(molecule_names,
+    mixture_params = NMRHamiltonian.setupmixtureSH(molecule_entries,
         fs, SW, ν_0ppm,
         Phys;
         config_path = SH_config_path,
@@ -112,7 +112,7 @@ function plotgroups(name::String,
     u_max = ppm2hzfunc(ΩS_ppm_sorted[end] + u_offset)
 
     Bs = NMRSignalSimulator.fitclproxies(As, dummy_SSFID, λ0;
-        names = molecule_names,
+        names = molecule_entries,
         config_path = surrogate_config_path,
         u_min = u_min,
         u_max = u_max)
@@ -155,13 +155,13 @@ function plotgroups(name::String,
     P_display = P[inds]
     U_display = U[inds]
 
-    save_molecule_name = replace("$(molecule_names[1])", ","=>"-", " "=>"-")
+    save_molecule_name = replace("$(molecule_entries[1])", ","=>"-", " "=>"-")
     plots_save_path = joinpath(save_folder, "$(save_molecule_name)_groups_real.html")
-    title_string = "Resonance groups, real part: $(molecule_names[1])"
+    title_string = "Resonance groups, real part: $(molecule_entries[1])"
     plot_obj, q_U, qs_U, q_singlets_U = plotgroups(title_string, P_display, U_display, q, qs, q_singlets, real, P[1]; canvas_size = canvas_size)
     Plots.savefig(plot_obj, plots_save_path)
 
-    save_molecule_name = replace("$(molecule_names[1])", ","=>"-", " "=>"-")
+    save_molecule_name = replace("$(molecule_entries[1])", ","=>"-", " "=>"-")
     println("name = ", save_molecule_name)
 
     if length(A.N_spins_sys) > 0
@@ -180,12 +180,12 @@ function plotgroups(name::String,
 
 end
 
-# molecule_names = ["beta-Alanine";
+# molecule_entries = ["beta-Alanine";
 # "L-Alanine"; ]
-molecule_names = collect( key for (key,val) in dict_compound_to_filename)
+molecule_entries = collect( key for (key,val) in dict_compound_to_filename)
 
 println("Timing: plotgroupsbulk()")
-@time plotgroupsbulk(molecule_names,
+@time plotgroupsbulk(molecule_entries,
         dict_compound_to_filename,
         H_params_path, SH_config_path,
         fs, SW, ν_0ppm;
