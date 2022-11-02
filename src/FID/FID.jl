@@ -14,7 +14,7 @@ function evalFIDmixture(t, As::Vector{SHType{T}}, Bs::Vector{MoleculeType{T,SST}
     w::Vector{T} = ones(T, length(As)))::Complex{T} where {T <: Real, SST}
 
     out = zero(Complex{T})
-    for n = 1:length(As)
+    for n in eachindex(As)
 
         out += w[n]*evalFIDmolecule(t, As[n], Bs[n])
     end
@@ -35,7 +35,7 @@ Does not evaluate the complex phase β.
 function evalFIDpartitionelement(t,
     α::Vector{T}, Ω::Vector{T}, r::T)::Complex{T} where T <: Real
 
-    out = sum( α[l]*cis((Ω[l]-r)*t) for l = 1:length(α) )
+    out = sum( α[l]*cis((Ω[l]-r)*t) for l in eachindex(α) )
 
     return out
 end
@@ -43,7 +43,7 @@ end
 function evalFIDpartitionelement(t,
     α::Vector{T}, Ω::Vector{T})::Complex{T} where T <: Real
 
-    out = sum( α[l]*cis(Ω[l]*t) for l = 1:length(α) )
+    out = sum( α[l]*cis(Ω[l]*t) for l in eachindex(α) )
 
     return out
 end
@@ -51,17 +51,17 @@ end
 
 function evalFIDspinsystem(t,
     αs::Vector{Vector{T}}, Ωs::Vector{Vector{T}},
-    x::SpinSysParamsType1{T}, λ0::T,
+    x::SharedShift{T}, λ0::T,
     c, part_inds_molecule)::Complex{T} where T <: Real
 
     out = zero(Complex{T})
-    for i = 1:length(αs)
+    for i in eachindex(αs)
 
         rt = x.d[i]*t
 
         sys_sum = zero(Complex{T})
 
-        for k = 1:length(part_inds_molecule[i])
+        for k in eachindex(part_inds_molecule[i])
             inds = part_inds_molecule[i][k]
 
             sys_sum += evalFIDpartitionelement(t, αs[i][inds],
@@ -77,18 +77,18 @@ end
 
 function evalFIDspinsystem(t,
     αs::Vector{Vector{T}}, Ωs::Vector{Vector{T}},
-    x::SpinSysParamsType2{T}, λ0::T,
+    x::CoherenceShift{T}, λ0::T,
     c, part_inds_molecule)::Complex{T} where T <: Real
 
     rt = zero(T) # pre-allocate.
     inner_sum = zero(Complex{T}) # pre-allocate.
 
     out = zero(Complex{T})
-    for i = 1:length(αs)
+    for i in eachindex(αs)
 
         λ = x.κs_λ[i]*λ0
         inner_sum = zero(Complex{T})
-        for k = 1:length(part_inds_molecule[i])
+        for k in eachindex(part_inds_molecule[i])
             inds = part_inds_molecule[i][k]
 
             rt = x.d[i][k]*t
@@ -108,7 +108,7 @@ function evalFIDsinglets(t::T, d::Vector{T}, αs_singlets::Vector{T}, Ωs_single
     βs_singlets, λ0::T, λ_multipliers::Vector{T}) where T <: Real
 
     out = zero(Complex{T})
-    for i = 1:length(αs_singlets)
+    for i in eachindex(αs_singlets)
 
         λ = λ0*λ_multipliers[i]
         Ω = Ωs_singlets[i] + d[i]

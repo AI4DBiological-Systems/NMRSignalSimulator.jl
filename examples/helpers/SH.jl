@@ -1,4 +1,8 @@
-function runSH(molecule_entries)
+function runSH(
+    molecule_entries::Vector{String},
+    max_partition_size_offset::Int
+    )
+    
     root_data_path = getdatapath() # coupling values data repository root path
 
     H_params_path = joinpath(root_data_path, "coupling_info") # folder of coupling values. # replace with your own values in actual usage.
@@ -9,7 +13,7 @@ function runSH(molecule_entries)
 
 
     println("Timing: getphysicalparameters")
-    @time Phys, dict_molecule_to_filename = NMRHamiltonian.getphysicalparameters(molecule_entries,
+    Phys, dict_molecule_to_filename = NMRHamiltonian.getphysicalparameters(molecule_entries,
         H_params_path,
         molecule_mapping_file_path;
         unique_cs_atol = 1e-6)
@@ -46,23 +50,25 @@ function runSH(molecule_entries)
     #   - constantknnfunc
     #   - constantradiusfunc
 
+    searchγconfigfunc = (nn, ii, cc, aa)->NMRHamiltonian.createsearchγconfigs(
+        nn, ii, cc, aa;
+        max_partition_size_offset = max_partition_size_offset,
+    )
     part_algs = NMRHamiltonian.generatemixturepartitionalgorithm(
         molecule_entries,
         θs,
         γs,
         Phys;
         #getgraphconfigfunc = constantradiusfunc,
-        #getgraphconfigfunc = NMRHamiltonian.defaultknnsearchconfig,
-        #getsearchθconfigfunc = NMRHamiltonian.createsearchθconfigs,
-        # getsearchγconfigfunc = NMRHamiltonian.createsearchγconfigs,
-        #runcgsolverlib;
-        #store_trace = false,
+        getgraphconfigfunc = NMRHamiltonian.defaultknnsearchconfig,
+        getsearchθconfigfunc = NMRHamiltonian.createsearchθconfigs,
+        getsearchγconfigfunc = searchγconfigfunc,
         report_cost = true,
         verbose_kernel = true
         )
 
     println("Timing: setupmixtureproxies()")
-    @time As, Rs = NMRHamiltonian.setupmixtureSH(part_algs,
+    As, Rs = NMRHamiltonian.setupmixtureSH(part_algs,
         molecule_entries,
         fs, SW, ν_0ppm,
         Phys,

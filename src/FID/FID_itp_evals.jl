@@ -5,7 +5,7 @@ function evalFIDproxymixture(t, As::Vector{SHType{T}},
 
     out = zero(Complex{T})
 
-    for n = 1:length(As)
+    for n in eachindex(As)
         out += w[n]*evalFIDproxymolecule(t, As[n], Bs[n])
     end
 
@@ -24,7 +24,7 @@ end
 
 
 function evalFIDproxysys(qs::Vector{Vector{Function}},
-    t::T, x::SpinSysParamsType1{T}, λ0)::Complex{T} where T
+    t::T, x::SharedShift{T}, λ0)::Complex{T} where T
 
     d = x.d
     κs_λ = x.κs_λ
@@ -33,11 +33,11 @@ function evalFIDproxysys(qs::Vector{Vector{Function}},
 
     out = zero(Complex{T})
 
-    for i = 1:length(qs)
+    for i in eachindex(qs)
         r = d[i]
 
         sys_sum = zero(Complex{T})
-        for k = 1:length(qs[i])
+        for k in eachindex(qs[i])
 
             sys_sum += qs[i][k](r, t)
         end
@@ -48,7 +48,7 @@ function evalFIDproxysys(qs::Vector{Vector{Function}},
 end
 
 function evalFIDproxysys(qs::Vector{Vector{Function}},
-    t::T, x::SpinSysParamsType2{T}, λ0)::Complex{T} where T
+    t::T, x::CoherenceShift{T}, λ0)::Complex{T} where T
 
     d = x.d
     κs_λ = x.κs_λ
@@ -57,10 +57,10 @@ function evalFIDproxysys(qs::Vector{Vector{Function}},
 
     out = zero(Complex{T})
 
-    for i = 1:length(qs)
+    for i in eachindex(qs)
         sys_sum = zero(Complex{T})
 
-        for k = 1:length(qs[i])
+        for k in eachindex(qs[i])
             r = d[i][k]
 
             sys_sum += qs[i][k](r, t)

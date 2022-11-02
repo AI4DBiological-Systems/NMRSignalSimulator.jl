@@ -22,7 +22,7 @@ function evalclmixture(u_rad, As::Vector{SHType{T}}, Bs::Vector{MoleculeType{T,S
     #u_rad = 2*π*u
 
     out = zero(Complex{T})
-    for n = 1:length(As)
+    for n in eachindex(As)
 
         out += w[n]*evalclmolecule(u_rad, As[n], Bs[n])
     end
@@ -42,24 +42,24 @@ Does not evaluate the complex phase β.
 function evalclpartitionelement(r,
     α::Vector{T}, Ω::Vector{T}, λ::T)::Complex{T} where T <: Real
 
-    out = sum( α[l]/(λ+im*(r-Ω[l])) for l = 1:length(α) )
+    out = sum( α[l]/(λ+im*(r-Ω[l])) for l in eachindex(α) )
 
     return out
 end
 
 function evalclspinsystem(u_rad,
     αs::Vector{Vector{T}}, Ωs::Vector{Vector{T}},
-    x::SpinSysParamsType1{T}, λ0::T,
+    x::SharedShift{T}, λ0::T,
     c, part_inds_molecule)::Complex{T} where T <: Real
 
     #u_rad = 2*π*u
 
     out = zero(Complex{T})
-    for i = 1:length(αs)
+    for i in eachindex(αs)
         r = u_rad - x.d[i]
 
         λ = x.κs_λ[i]*λ0
-        for k = 1:length(part_inds_molecule[i])
+        for k in eachindex(part_inds_molecule[i])
             inds = part_inds_molecule[i][k]
 
             out += evalclpartitionelement(r, αs[i][inds],
@@ -72,16 +72,16 @@ end
 
 function evalclspinsystem(u_rad,
     αs::Vector{Vector{T}}, Ωs::Vector{Vector{T}},
-    x::SpinSysParamsType2{T}, λ0::T,
+    x::CoherenceShift{T}, λ0::T,
     c, part_inds_molecule)::Complex{T} where T <: Real
 
     #u_rad = 2*π*u
 
     out = zero(Complex{T})
-    for i = 1:length(αs)
+    for i in eachindex(αs)
 
         λ = x.κs_λ[i]*λ0
-        for k = 1:length(part_inds_molecule[i])
+        for k in eachindex(part_inds_molecule[i])
             r = u_rad - x.d[i][k]
             inds = part_inds_molecule[i][k]
 
@@ -101,7 +101,7 @@ function evalclsinglets(u_rad::T, d::Vector{T}, αs_singlets::Vector{T}, Ωs_sin
     #u_rad = 2*π*u
 
     out = zero(Complex{T})
-    for i = 1:length(αs_singlets)
+    for i in eachindex(αs_singlets)
         τ = u_rad - d[i]
 
         λ = λ0*λ_multipliers[i]
@@ -119,7 +119,7 @@ function evalclsinglets(u_rad::T, d::Vector{T},
     #u_rad = 2*π*u
 
     out = zero(Complex{T})
-    for i = 1:length(αs_singlets)
+    for i in eachindex(αs_singlets)
         τ = u_rad - d[i]
 
         λ = λ0*λ_multipliers[i]

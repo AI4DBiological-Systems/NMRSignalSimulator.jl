@@ -1,7 +1,7 @@
 ################### spin system.
 
 function evalclproxysys(qs::Vector{Vector{Function}},
-    u_rad::T, x::SpinSysParamsType1{T})::Complex{T} where T
+    u_rad::T, x::SharedShift{T})::Complex{T} where T
 
     d = x.d
     κs_λ = x.κs_λ
@@ -11,23 +11,23 @@ function evalclproxysys(qs::Vector{Vector{Function}},
 
     out = zero(Complex{T})
 
-    for i = 1:length(qs)
+    for i in eachindex(qs)
         r = u_rad - d[i]
 
-        for k = 1:length(qs[i])
+        for k in eachindex(qs[i])
 
             out += qs[i][k](r, κs_λ[i])
         end
     end
 
     ## slower possibly due to r = u_rad - d[i] being evaluated every time qs is called.
-    #out = sum( sum(qs[i][k](u_rad - d[i], κs_λ[i]) for k = 1:length(qs[i])) for i = 1:length(qs) )
+    #out = sum( sum(qs[i][k](u_rad - d[i], κs_λ[i]) for k in eachindex(qs[i])) for i in eachindex(qs) )
 
     return out
 end
 
 function evalclproxysys(qs::Vector{Vector{Function}},
-    u_rad::T, x::SpinSysParamsType1{T}, κs_α::Vector{Vector{T}})::Complex{T} where T
+    u_rad::T, x::SharedShift{T}, κs_α::Vector{Vector{T}})::Complex{T} where T
 
     d = x.d
     κs_λ = x.κs_λ
@@ -37,10 +37,10 @@ function evalclproxysys(qs::Vector{Vector{Function}},
 
     out = zero(Complex{T})
 
-    for i = 1:length(qs)
+    for i in eachindex(qs)
         r = u_rad - d[i]
 
-        for k = 1:length(qs[i])
+        for k in eachindex(qs[i])
 
             out += κs_α[i][k]*qs[i][k](r, κs_λ[i])
         end
@@ -50,7 +50,7 @@ function evalclproxysys(qs::Vector{Vector{Function}},
 end
 
 function evalclproxysys(qs::Vector{Vector{Function}},
-    u_rad::T, x::SpinSysParamsType2{T})::Complex{T} where T
+    u_rad::T, x::CoherenceShift{T})::Complex{T} where T
 
     d = x.d
     κs_λ = x.κs_λ
@@ -61,9 +61,9 @@ function evalclproxysys(qs::Vector{Vector{Function}},
     out = zero(Complex{T})
 
     #u_rad = 2*π*u
-    for i = 1:length(qs)
+    for i in eachindex(qs)
 
-        for k = 1:length(qs[i])
+        for k in eachindex(qs[i])
             r = u_rad - d[i][k]
 
             out += qs[i][k](r, κs_λ[i])
@@ -74,7 +74,7 @@ function evalclproxysys(qs::Vector{Vector{Function}},
 end
 
 function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}},
-    u_rad::T, x::SpinSysParamsType1{T})::Complex{T} where T
+    u_rad::T, x::SharedShift{T})::Complex{T} where T
 
     d = x.d
     κs_λ = x.κs_λ
@@ -85,10 +85,10 @@ function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}
     out = zero(Complex{T})
 
     #u_rad = 2*π*u
-    for i = 1:length(qs)
+    for i in eachindex(qs)
         r = u_rad - d[i]
 
-        for k = 1:length(qs[i])
+        for k in eachindex(qs[i])
 
             out += κ_α[i][k]*qs[i][k](r, κs_λ[i])
         end
@@ -98,7 +98,7 @@ function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}
 end
 
 function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}},
-    u_rad::T, x::SpinSysParamsType2{T})::Complex{T} where T
+    u_rad::T, x::CoherenceShift{T})::Complex{T} where T
 
     d = x.d
     κs_λ = x.κs_λ
@@ -108,9 +108,9 @@ function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}
     out = zero(Complex{T})
 
     #u_rad = 2*π*u
-    for i = 1:length(qs)
+    for i in eachindex(qs)
 
-        for k = 1:length(qs[i])
+        for k in eachindex(qs[i])
             r = u_rad - d[i][k]
 
             out += κ_α[i][k]*qs[i][k](r, κs_λ[i])
@@ -132,7 +132,7 @@ function evalclproxymixture(u_rad, As::Vector{SHType{T}},
 
     out = zero(Complex{T})
 
-    for n = 1:length(As)
+    for n in eachindex(As)
         out += w[n]*evalclproxymolecule(u_rad, As[n], Bs[n])
     end
 
@@ -162,7 +162,7 @@ function evalclproxymixture(u_rad, As::Vector{SHType{T}},
 
     out = zero(Complex{T})
 
-    for n = 1:length(Es)
+    for n in eachindex(Es)
         out += w[n]*evalclproxymolecule(u_rad, As[n], Es[n])
     end
 
@@ -185,8 +185,8 @@ end
 function findsimplecoherences(c2::Vector{T};
     atol = 1e-6)::Vector{Int} where T
 
-    c2a = collect( abs.(c2[i]) for i = 1:length(c2))
-    sum_c2a = collect(sum(c2a[i]) for i = 1:length(c2a))
+    c2a = collect( abs.(c2[i]) for i in eachindex(c2))
+    sum_c2a = collect(sum(c2a[i]) for i in eachindex(c2a))
     flags = isapprox.(sum_c2a, 1.0, atol = atol)
 
     return collect(1:length(c2))[flags]

@@ -29,10 +29,10 @@ function plotgroups(title_string::String,
         size = canvas_size)
 
     qs_U = Vector{Vector{Vector{Complex{T}}}}(undef, length(qs))
-    for i = 1:length(qs)
+    for i in eachindex(qs)
 
         qs_U[i] = Vector{Vector{Complex{T}}}(undef, length(qs[i]))
-        for k = 1:length(qs[i])
+        for k in eachindex(qs[i])
 
             qs_U[i][k] = qs[i][k].(U_rad)
 
@@ -90,14 +90,14 @@ function plotgroupsfullscript(plot_title, molecule_entries,
     ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 
 
-    Δcs_max_mixture = collect( Δcs_max for i = 1:length(molecule_entries))
+    Δcs_max_mixture = collect( Δcs_max for i in eachindex(molecule_entries))
 
     # get a surrogate where K_{n,i} is encouraged to be no larger than `early_exit_part_size`.
     # println("Timing: setupmixtureproxies()")
     # @time mixture_params = NMRSignalSimulator.setupmixtureproxies(molecule_entries,
     mixture_params = NMRSignalSimulator.setupmixtureproxies(molecule_entries,
         H_params_path, ppm2hzfunc, fs, SW,
-        λ_0ppm, ν_0ppm, dummy_SSFID;
+        λ_0ppm, ν_0ppm, dummy_SSParams;
         tol_coherence = tol_coherence,
         α_relative_lower_threshold = α_relative_lower_threshold,
         Δc_partition_radius = Δc_partition_radius)
@@ -137,7 +137,7 @@ function plotgroupsfullscript(plot_title, molecule_entries,
     #BSON.bson(save_simulation_path, mixture_params = mixture_params)
 
     # create the functions for each resonance group.
-    qs = collect( collect( ωω->A.qs[i][k](ωω-A.ss_params.d[i], A.ss_params.κs_λ[i]) for k = 1:length(A.qs[i]) ) for i = 1:length(A.qs) )
+    qs = collect( collect( ωω->A.qs[i][k](ωω-A.ss_params.d[i], A.ss_params.κs_λ[i]) for k in eachindex(A.qs[i]) ) for i in eachindex(A.qs) )
     q_singlets = ωω->NMRSignalSimulator.evalsinglets(ωω, A.d_singlets, A.αs_singlets, A.Ωs_singlets, A.β_singlets, A.λ0, A.κs_λ_singlets)
 
     # create the function for the entire molecule.
@@ -146,13 +146,13 @@ function plotgroupsfullscript(plot_title, molecule_entries,
     # evaluate at the plotting positions.
     q_U = q.(U_rad)
 
-    qs_U = collect( collect( qs[i][k].(U_rad) for k = 1:length(qs[i]) ) for i = 1:length(qs) )
+    qs_U = collect( collect( qs[i][k].(U_rad) for k in eachindex(qs[i]) ) for i in eachindex(qs) )
     q_singlets_U = q_singlets.(U_rad)
 
     # sanity check.
     q_check_U = q_singlets_U
     if !isempty(qs) # some molecules only have singlets.
-        q_check_U += sum( sum( qs[i][k].(U_rad) for k = 1:length(qs[i]) ) for i = 1:length(qs) )
+        q_check_U += sum( sum( qs[i][k].(U_rad) for k in eachindex(qs[i]) ) for i in eachindex(qs) )
     end
     discrepancy = norm(q_check_U- q_U)
 
@@ -238,9 +238,9 @@ function batchplotgroups(plot_title, root_path,
 
     project_paths = tmp[inds]
     experiment_names = readdir(root_path)[inds]
-    project_names = collect( "$(experiment_names[i])" for i = 1:length(experiment_names))
+    project_names = collect( "$(experiment_names[i])" for i in eachindex(experiment_names))
 
-    for i = 1:length(project_names)
+    for i in eachindex(project_names)
 
         project_path = project_paths[i]
         molecule_name = experiment_names[i]
@@ -249,7 +249,7 @@ function batchplotgroups(plot_title, root_path,
 
         # make sure this molecule is in our library.
         records = GISSMOReader.getGISSMOentriesall()
-        record_names = collect( records[i].molecule_name for i = 1:length(records) )
+        record_names = collect( records[i].molecule_name for i in eachindex(records) )
 
         k = findfirst(xx->xx==molecule_name, record_names)
 

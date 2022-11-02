@@ -91,15 +91,15 @@ println("Timing: setupmixtureSH()")
     α_relative_lower_threshold = α_relative_lower_threshold,
     Δc_partition_radius = Δc_partition_radius)
 
-#dummy_SSFID = NMRSignalSimulator.SpinSysParamsType1(0.0)
-dummy_SSFID = NMRSignalSimulator.SpinSysParamsType2(0.0)
+#dummy_SSParams = NMRSignalSimulator.SharedShift(0.0)
+dummy_SSParams = NMRSignalSimulator.CoherenceShift(0.0)
 # u_min = ppm2hzfunc(-0.5)
 # u_max = ppm2hzfunc(4.0)
 #u_min = ppm2hzfunc(3.5)
 #u_max = ppm2hzfunc(4.2)
 
 println("fitclproxies():")
-@time Bs_cl = NMRSignalSimulator.fitclproxies(As, dummy_SSFID, λ0;
+@time Bs_cl = NMRSignalSimulator.fitclproxies(As, dummy_SSParams, λ0;
     names = molecule_entries,
     config_path = surrogate_config_path,
     Δcs_max_scalar_default = Δcs_max_scalar_default,
@@ -117,7 +117,7 @@ t_test = t
 delta_t = 1/fs
 
 println("fitFIDproxies():")
-@time Bs = NMRSignalSimulator.fitFIDproxies(As, dummy_SSFID, λ0;
+@time Bs = NMRSignalSimulator.fitFIDproxies(As, dummy_SSParams, λ0;
     names = molecule_entries,
     config_path = surrogate_config_path,
     Δcs_max_scalar_default = 0.2,
@@ -138,15 +138,15 @@ println("fitFIDproxies():")
 
 ####  manual assignment of FID parameters.
 # ## type 1.
-# for n_select = 1:length(Bs)
+# for n_select in eachindex(Bs)
 #     tmp_d = 100.0 .* ones(length(Bs[n_select].ss_params.d))
 #     Bs[n_select].ss_params.d[:] = tmp_d
 #     Bs_cl[n_select].ss_params.d[:] = tmp_d
 # end
 
 # ## type 2.
-for n_select = 1:length(Bs)
-    for i_select = 1:length(Bs[n_select].ss_params.d)
+for n_select in eachindex(Bs)
+    for i_select in eachindex(Bs[n_select].ss_params.d)
         tmp_d = 100.0 .* ones(length(Bs[n_select].ss_params.d[i_select]))
         Bs[n_select].ss_params.d[i_select] = tmp_d
         Bs_cl[n_select].ss_params.d[i_select] = tmp_d
@@ -154,18 +154,18 @@ for n_select = 1:length(Bs)
 end
 
 ## common to both types.
-for n_select = 1:length(Bs)
+for n_select in eachindex(Bs)
     tmp_λ = rand(length(Bs[n_select].ss_params.κs_λ)) .+ 1
     Bs[n_select].ss_params.κs_λ[:] = tmp_λ
     Bs_cl[n_select].ss_params.κs_λ[:] = tmp_λ
 
-    tmp_β = collect( rand(length(Bs[n_select].ss_params.κs_β[i])) .* (2*π) for i = 1:length(Bs[n_select].ss_params.κs_β) )
+    tmp_β = collect( rand(length(Bs[n_select].ss_params.κs_β[i])) .* (2*π) for i in eachindex(Bs[n_select].ss_params.κs_β) )
     Bs[n_select].ss_params.κs_β[:] = tmp_β
     Bs_cl[n_select].ss_params.κs_β[:] = tmp_β
 end
 
 # manual move the D2O singlet, assumed to be in the last position.
-for n_select = 1:length(Bs)
+for n_select in eachindex(Bs)
     tmp_d_singlets = 20 .* rand(length(Bs[n_select].d_singlets))
     Bs[n_select].d_singlets[:] = tmp_d_singlets
     Bs_cl[n_select].d_singlets[:] = tmp_d_singlets

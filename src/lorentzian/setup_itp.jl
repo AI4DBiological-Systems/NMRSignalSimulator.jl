@@ -1,6 +1,6 @@
 
 function fitclproxies(As::Vector{SHType{T}},
-    dummy_SSFID::SST,
+    dummy_SSParams::SST,
     λ0::T;
     names::Vector{String} = Vector{String}(undef, 0),
     config_path::String = "",
@@ -22,11 +22,11 @@ function fitclproxies(As::Vector{SHType{T}},
 
     cores = Vector{MoleculeType{T,SST}}(undef, length(As))
 
-    for n = 1:length(As)
+    for n in eachindex(As)
         A = As[n]
 
         # fit surrogate, save into `core`.
-        cores[n] = fitclproxy(dummy_SSFID, A, λ0, config_dict;
+        cores[n] = fitclproxy(dummy_SSParams, A, λ0, config_dict;
         molecule_name = names[n],
         Δcs_max_scalar_default = Δcs_max_scalar_default,
         κ_λ_lb_default = κ_λ_lb_default,
@@ -41,7 +41,7 @@ function fitclproxies(As::Vector{SHType{T}},
 end
 
 
-function fitclproxy(dummy_SSFID::SST,
+function fitclproxy(dummy_SSParams::SST,
     A::SHType{T},
     λ0::T,
     config_dict;
@@ -64,18 +64,18 @@ function fitclproxy(dummy_SSFID::SST,
     d_singlets = zeros(T, N_singlets)
 
     #N_β_vars_sys = A.N_spins_sys # no equivalence used.
-    N_β_vars_sys::Vector{Int} = collect( length(A.Δc_bar[i][1]) for i = 1:length(A.Δc_bar) )
+    N_β_vars_sys::Vector{Int} = collect( length(A.Δc_bar[i][1]) for i in eachindex(A.Δc_bar) )
 
     # proxy placeholder.
     #qs = Vector{Vector{Function}}(undef, length(N_spins_sys))
 
-    SSFID_obj = setupSSFIDparams(dummy_SSFID, A.part_inds_molecule, N_β_vars_sys)
+    SSParams_obj = setupSSParamsparams(dummy_SSParams, A.part_inds_molecule, N_β_vars_sys)
 
     # prepare configuration parameters.
     κ_λ_lb = κ_λ_lb_default
     κ_λ_ub = κ_λ_ub_default
     Δκ_λ = Δκ_λ_default
-    Δcs_max::Vector{T} = collect( Δcs_max_scalar_default for i = 1:length(A.N_spins_sys))
+    Δcs_max::Vector{T} = collect( Δcs_max_scalar_default for i in eachindex(A.N_spins_sys))
     Δr = Δr_default
 
     d_max::Vector{T} = ppm2hzfunc.(Δcs_max) .- ppm2hzfunc(zero(T))
@@ -109,7 +109,7 @@ function fitclproxy(dummy_SSFID::SST,
     end
 
     qs = setupclmoleculepartitionitp(d_max,
-        SSFID_obj.κs_β,
+        SSParams_obj.κs_β,
         A.Δc_bar,
         A.part_inds_molecule,
         A.αs, A.Ωs,
@@ -119,7 +119,7 @@ function fitclproxy(dummy_SSFID::SST,
         Δr = Δr,
         Δκ_λ = Δκ_λ)
 
-    core = MoleculeType(qs, SSFID_obj, κs_λ_singlets, κs_β_singlets, d_singlets,
+    core = MoleculeType(qs, SSParams_obj, κs_λ_singlets, κs_β_singlets, d_singlets,
         Δcs_max, λ0)
 
     return core
@@ -188,7 +188,7 @@ function setupclmoleculepartitionitp(d_max::Vector{T},
     qs = Vector{Vector{Function}}(undef, length(αs)) # surrogates for lorentzian model.
     #gs = Vector{Vector{Function}}(undef, length(αs)) # surrogates for FID model.
 
-    for i = 1:length(part_inds_molecule) # over elements in a spin group.
+    for i in eachindex(part_inds_molecule) # over elements in a spin group.
 
         N_partition_elements = length(part_inds_molecule[i])
         qs[i] = Vector{Function}(undef, N_partition_elements)

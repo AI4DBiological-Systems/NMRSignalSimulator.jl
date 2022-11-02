@@ -59,7 +59,7 @@ function plotgroupsbulk(molecule_entries::Vector{String},
         display_threshold_factor =  0.01/10,
         canvas_size = (1000, 400) )
 
-    for n = 1:length(molecule_entries)
+    for n in eachindex(molecule_entries)
         plotgroups(molecule_entries[n],
             dict_molecule_to_filename,
             H_params_path, SH_config_path,
@@ -102,7 +102,7 @@ function plotgroups(name::String,
         prune_Δc_option = prune_Δc_option)
     As = mixture_params
 
-    dummy_SSFID = NMRSignalSimulator.SpinSysParamsType1(0.0)
+    dummy_SSParams = NMRSignalSimulator.SharedShift(0.0)
 
     ## frequency locations. For plotting.
     ΩS_ppm = getPsnospininfo(mixture_params, hz2ppmfunc)
@@ -111,7 +111,7 @@ function plotgroups(name::String,
     u_min = ppm2hzfunc(ΩS_ppm_sorted[1] - u_offset)
     u_max = ppm2hzfunc(ΩS_ppm_sorted[end] + u_offset)
 
-    Bs = NMRSignalSimulator.fitclproxies(As, dummy_SSFID, λ0;
+    Bs = NMRSignalSimulator.fitclproxies(As, dummy_SSParams, λ0;
         names = molecule_entries,
         config_path = surrogate_config_path,
         u_min = u_min,
@@ -127,7 +127,7 @@ function plotgroups(name::String,
     # create the functions for each resonance group.
     B = Bs[1]
     A = As[1]
-    qs = collect( collect( ωω->B.qs[i][k](ωω-B.ss_params.d[i], B.ss_params.κs_λ[i]) for k = 1:length(B.qs[i]) ) for i = 1:length(B.qs) )
+    qs = collect( collect( ωω->B.qs[i][k](ωω-B.ss_params.d[i], B.ss_params.κs_λ[i]) for k in eachindex(B.qs[i]) ) for i in eachindex(B.qs) )
     q_singlets = ωω->NMRSignalSimulator.evalclsinglets(ωω, B.d_singlets, A.αs_singlets, A.Ωs_singlets, B.β_singlets, B.λ0, B.κs_λ_singlets)
 
     # create the function for the entire molecule.
@@ -136,14 +136,14 @@ function plotgroups(name::String,
     # evaluate at the plotting positions.
     q_U = q.(U_rad)
 
-    qs_U = collect( collect( qs[i][k].(U_rad) for k = 1:length(qs[i]) ) for i = 1:length(qs) )
+    qs_U = collect( collect( qs[i][k].(U_rad) for k in eachindex(qs[i]) ) for i in eachindex(qs) )
     q_singlets_U = q_singlets.(U_rad)
 
 
     #### sanity check.
     q_check_U = q_singlets_U
     if !isempty(qs) # some molecules only have singlets.
-        q_check_U += sum( sum( qs[i][k].(U_rad) for k = 1:length(qs[i]) ) for i = 1:length(qs) )
+        q_check_U += sum( sum( qs[i][k].(U_rad) for k in eachindex(qs[i]) ) for i in eachindex(qs) )
     end
 
     discrepancy = norm(q_check_U- q_U)
@@ -166,10 +166,10 @@ function plotgroups(name::String,
 
     if length(A.N_spins_sys) > 0
         println("Number of non-singlet spin systems: ", length(A.N_spins_sys))
-        println("Resonance group sizes for each system: ", collect(collect(length(qs[i]) for i = 1:length(qs) ) ))
+        println("Resonance group sizes for each system: ", collect(collect(length(qs[i]) for i in eachindex(qs) ) ))
         println("Number of spins for each system: ", A.N_spins_sys)
         println("Number of resonance components for each system: ", length.(A.αs))
-        println("Number of resonance components in each resonance group (inner index), for each system (outer index): ", collect( length.(A.part_inds_molecule[i]) for i = 1:length(A.part_inds_molecule)))
+        println("Number of resonance components in each resonance group (inner index), for each system (outer index): ", collect( length.(A.part_inds_molecule[i]) for i in eachindex(A.part_inds_molecule)))
         println("summed intensity of each system: ", sum.(A.αs))
     end
 

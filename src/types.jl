@@ -47,62 +47,65 @@ function καMoleculeType(core::MoleculeType{T,SST}) where {T,SST}
 end
 
 ### different parameterizations of the spin system FID parameters.
-struct SpinSysParamsType2{T}
+abstract type SpinSysParams{T<:AbstractFloat} end
+
+
+struct CoherenceShift{T} <: SpinSysParams{T}
     κs_λ::Vector{T} # a multiplier for each (spin group.
     κs_β::Vector{Vector{T}} # a vector coefficient for each (spin group). vector length: number of spins in the spin group.
     d::Vector{Vector{T}} # a multiplier for each (spin group, partition element).
     κs_d::Vector{Vector{T}} # same size as κs_β. # intermediate buffer for d.
 end
 
-function SpinSysParamsType2(x::T) where T
-    return SpinSysParamsType2(Vector{T}(undef,0), Vector{Vector{T}}(undef, 0), Vector{Vector{T}}(undef, 0), Vector{Vector{T}}(undef, 0))
+function CoherenceShift(x::T) where T
+    return CoherenceShift(Vector{T}(undef,0), Vector{Vector{T}}(undef, 0), Vector{Vector{T}}(undef, 0), Vector{Vector{T}}(undef, 0))
 end
 
-struct SpinSysParamsType1{T}
+struct SharedShift{T} <: SpinSysParams{T}
     κs_λ::Vector{T} # a common multiplier for each spin group. length: number of spin groups.
     κs_β::Vector{Vector{T}} # a vector coefficient for each (spin group). vector length: number of spins in the spin group.
     d::Vector{T} # a common multiplier for each spin group. length: number of spin groups.
 end
 
-function SpinSysParamsType1(x::T) where T
-    return SpinSysParamsType1(Vector{T}(undef,0), Vector{Vector{T}}(undef, 0), Vector{T}(undef, 0))
+function SharedShift(x::T) where T
+    return SharedShift(Vector{T}(undef,0), Vector{Vector{T}}(undef, 0), Vector{T}(undef, 0))
 end
 
-function constructorSSFID(x::SpinSysParamsType1{T}, y...)::SpinSysParamsType1{T} where T
-    return SpinSysParamsType1(y...)
+function constructorSSParams(x::SharedShift{T}, y...)::SharedShift{T} where T
+    return SharedShift(y...)
 end
 
-function constructorSSFID(x::SpinSysParamsType2{T}, y...)::SpinSysParamsType2{T} where T
-    return SpinSysParamsType2(y...)
+function constructorSSParams(x::CoherenceShift{T}, y...)::CoherenceShift{T} where T
+    return CoherenceShift(y...)
 end
 
 ########### more elaborate constructors.
 
-function setupSSFIDparams(dummy_SSFID::SpinSysParamsType1{T}, part_inds_molecule, N_β_vars_sys)::SpinSysParamsType1{T} where T
+function setupSSParamsparams(dummy_SSParams::SharedShift{T}, part_inds_molecule, N_β_vars_sys)::SharedShift{T} where T
     L = length(part_inds_molecule)
 
     κs_λ = ones(T, L)
-    κs_β = collect( zeros(T, N_β_vars_sys[i]) for i = 1:length(N_β_vars_sys))
+    κs_β = collect( zeros(T, N_β_vars_sys[i]) for i in eachindex(N_β_vars_sys))
     #d = rand(length(αs))
     d = zeros(T, L)
 
-    return constructorSSFID(dummy_SSFID, κs_λ, κs_β, d)
+    return constructorSSParams(dummy_SSParams, κs_λ, κs_β, d)
 end
 
-function setupSSFIDparams(dummy_SSFID::SpinSysParamsType2{T}, part_inds_molecule::Vector{Vector{Vector{Int}}}, N_β_vars_sys)::SpinSysParamsType2{T} where T
+function setupSSParamsparams(dummy_SSParams::CoherenceShift{T}, part_inds_molecule::Vector{Vector{Vector{Int}}}, N_β_vars_sys)::CoherenceShift{T} where T
 
     N_sys = length(part_inds_molecule)
     κs_λ = ones(T, N_sys)
     d = Vector{Vector{T}}(undef, N_sys)
 
-    for i = 1:length(d)
+    for i in eachindex(d)
         N_partition_elements = length(part_inds_molecule[i])
 
         d[i] = zeros(T, N_partition_elements)
     end
 
-    κs_β = collect( zeros(T, N_β_vars_sys[i]) for i = 1:length(N_β_vars_sys))
-    κs_d = collect( zeros(T, N_β_vars_sys[i]) for i = 1:length(N_β_vars_sys))
+    κs_β = collect( zeros(T, N_β_vars_sys[i]) for i in eachindex(N_β_vars_sys))
+    κs_d = collect( zeros(T, N_β_vars_sys[i]) for i in eachindex(N_β_vars_sys))
 
-    return constructorSSFID(dummy_SSFID, κs_λ, κs_β, d, κs_d)
+    return constructorSSParams(dummy_SSParams, κs_λ, κs_β, d, κs_d)
 end

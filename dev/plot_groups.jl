@@ -130,7 +130,7 @@ As = mixture_params
 ##prunecombocoherences!(As[1], α_relative_lower_threshold_default, tol_coherence_default, Δc_partition_radius_default)
 #prunecombocoherencesbar!(As[1], α_relative_lower_threshold_default, tol_coherence_default, Δc_partition_radius_default)
 
-dummy_SSFID = NMRSignalSimulator.SpinSysParamsType1(0.0)
+dummy_SSParams = NMRSignalSimulator.SharedShift(0.0)
 
 ## frequency locations. For plotting.
 ΩS_ppm = getPsnospininfo(mixture_params, hz2ppmfunc)
@@ -141,7 +141,7 @@ u_min = ppm2hzfunc(ΩS_ppm_sorted[1] - u_offset)
 u_max = ppm2hzfunc(ΩS_ppm_sorted[end] + u_offset)
 
 println("fitclproxies():")
-@time Bs_cl = NMRSignalSimulator.fitclproxies(As, dummy_SSFID, λ0;
+@time Bs_cl = NMRSignalSimulator.fitclproxies(As, dummy_SSParams, λ0;
     names = molecule_entries,
     config_path = surrogate_config_path,
     # Δcs_max_scalar_default = Δcs_max_scalar_default,
@@ -173,7 +173,7 @@ q = uu->NMRSignalSimulator.evalclproxymixture(uu, mixture_params, Bs)
 # create the functions for each resonance group.
 B = Bs[1]
 A = As[1]
-qs = collect( collect( ωω->B.qs[i][k](ωω-B.ss_params.d[i], B.ss_params.κs_λ[i]) for k = 1:length(B.qs[i]) ) for i = 1:length(B.qs) )
+qs = collect( collect( ωω->B.qs[i][k](ωω-B.ss_params.d[i], B.ss_params.κs_λ[i]) for k in eachindex(B.qs[i]) ) for i in eachindex(B.qs) )
 q_singlets = ωω->NMRSignalSimulator.evalclsinglets(ωω, B.d_singlets, A.αs_singlets, A.Ωs_singlets, B.β_singlets, B.λ0, B.κs_λ_singlets)
 
 # create the function for the entire molecule.
@@ -182,14 +182,14 @@ q = uu->NMRSignalSimulator.evalclproxymixture(uu, As[1:1], Bs[1:1])
 # evaluate at the plotting positions.
 q_U = q.(U_rad)
 
-qs_U = collect( collect( qs[i][k].(U_rad) for k = 1:length(qs[i]) ) for i = 1:length(qs) )
+qs_U = collect( collect( qs[i][k].(U_rad) for k in eachindex(qs[i]) ) for i in eachindex(qs) )
 q_singlets_U = q_singlets.(U_rad)
 
 
 #### sanity check.
 q_check_U = q_singlets_U
 if !isempty(qs) # some molecules only have singlets.
-    q_check_U += sum( sum( qs[i][k].(U_rad) for k = 1:length(qs[i]) ) for i = 1:length(qs) )
+    q_check_U += sum( sum( qs[i][k].(U_rad) for k in eachindex(qs[i]) ) for i in eachindex(qs) )
 end
 
 discrepancy = norm(q_check_U- q_U)
@@ -227,12 +227,12 @@ display(plot_obj)
 save_molecule_name = replace("$(molecule_entries[1])", ","=>"-", " "=>"-")
 println("name = ", save_molecule_name)
 println("Number of non-singlet spin systems: ", length(A.N_spins_sys))
-println("Resonance group sizes for each system: ", collect(collect(length(qs[i]) for i = 1:length(qs) ) ))
+println("Resonance group sizes for each system: ", collect(collect(length(qs[i]) for i in eachindex(qs) ) ))
 println("Number of spins for each system: ", A.N_spins_sys)
 println("Number of resonance components for each system: ", length.(A.αs))
-println("Number of resonance components in each resonance group (inner index), for each system (outer index): ", collect( length.(A.part_inds_molecule[i]) for i = 1:length(A.part_inds_molecule)))
+println("Number of resonance components in each resonance group (inner index), for each system (outer index): ", collect( length.(A.part_inds_molecule[i]) for i in eachindex(A.part_inds_molecule)))
 println("summed intensity of each system: ", sum.(A.αs))
 println()
 
-Cs = collect( array2matrix(A.Δc_bar[i]) for i = 1:length(A.Δc_bar) )
+Cs = collect( array2matrix(A.Δc_bar[i]) for i in eachindex(A.Δc_bar) )
 displaymatrix(Cs[1])
