@@ -1,4 +1,7 @@
 [deps]
 DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
+MakiePlots = "a9bd3fed-5c2a-40f0-8692-fcfc96913d85"
 NMRHamiltonian = "d73005cc-2eb2-45b3-9785-29d07aec07ac"
+NMRSpecifyRegions = "2c6f6ba7-1a3c-4d31-8511-d336c09a6ae6"
+Parameters = "d96e819e-fc66-5662-9728-84c9c7592b0a"
 Tar = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"

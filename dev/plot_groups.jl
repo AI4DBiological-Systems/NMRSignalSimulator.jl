@@ -1,4 +1,30 @@
 
+function array2matrix(X::Array{Vector{T},L})::Matrix{T} where {T,L}
+
+    N = length(X)
+    D = length(X[1])
+
+    out = Matrix{T}(undef,D,N)
+    for n = 1:N
+        out[:,n] = X[n]
+    end
+
+    return out
+end
+
+function displaymatrix(A::Matrix{T}; display_width::Int = 10) where T
+
+    st = 0
+    fin = 0
+    for c = 1:size(A,2)
+        st = fin + 1
+        fin = min(st + display_width - 1, size(A,2))
+        display(A[:,st:fin])
+    end
+
+    return nothing
+end
+
 import NMRHamiltonian
 
 include("../src/NMRSignalSimulator.jl")
