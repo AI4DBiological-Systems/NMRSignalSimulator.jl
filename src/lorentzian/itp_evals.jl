@@ -26,6 +26,7 @@ function evalclproxysys(qs::Vector{Vector{Function}},
     return out
 end
 
+# unused?
 function evalclproxysys(qs::Vector{Vector{Function}},
     u_rad::T, x::SharedShift{T}, κs_α::Vector{Vector{T}})::Complex{T} where T
 

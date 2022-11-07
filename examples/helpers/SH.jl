@@ -1,29 +1,34 @@
 function runSH(
+    H_params_path,
+    molecule_mapping_file_path,
+    fs::T,
+    SW::T,
+    ν_0ppm::T,
     molecule_entries::Vector{String},
-    max_partition_size_offset::Int
-    )
-    
-    root_data_path = getdatapath() # coupling values data repository root path
+    max_partition_size_offset::Int;
+    search_θ = true,
+    θ_default = 0.0,
+    γ_base = 0.1,
+    γ_rate = 1.05,
+    max_iters_γ = 100,
+    ) where T <: AbstractFloat
 
-    H_params_path = joinpath(root_data_path, "coupling_info") # folder of coupling values. # replace with your own values in actual usage.
-
-    molecule_mapping_root_path = joinpath(root_data_path, "molecule_name_mapping")
-    molecule_mapping_file_path = joinpath(molecule_mapping_root_path, "select_molecules.json")
-    #molecule_mapping_file_path = joinpath(molecule_mapping_root_path, "GISSMO_names.json")
-
-
-    println("Timing: getphysicalparameters")
-    Phys, dict_molecule_to_filename = NMRHamiltonian.getphysicalparameters(molecule_entries,
+    Phys, dict_molecule_to_filename = NMRHamiltonian.getphysicalparameters(
+        molecule_entries,
         H_params_path,
         molecule_mapping_file_path;
-        unique_cs_atol = 1e-6)
+        unique_cs_atol = 1e-6,
+    )
 
     # extract chemical shifts for spin systems and singlets.
     cs_sys_mixture, cs_singlets_mixture = NMRHamiltonian.extractcs(Phys)
 
     # if using default tolerances for coherence and intensity thresholding.
     mixture_sh_config = NMRHamiltonian.defaultmixtureshsconfig(cs_sys_mixture)
-    mixture_parts_params = NMRHamiltonian.defaultmixturepartitionsparameters(cs_sys_mixture, 1.0)
+    mixture_parts_params = NMRHamiltonian.defaultmixturepartitionsparameters(
+        cs_sys_mixture,
+        θ_default
+    )
     # # if loading from file.
     # file_filder = "./configs"
     # mixture_sh_config = NMRHamiltonian.loadmixtureshsconfig(
@@ -50,9 +55,16 @@ function runSH(
     #   - constantknnfunc
     #   - constantradiusfunc
 
+    getsearchθconfigfunc = NMRHamiltonian.disablesearch
+    if search_θ
+        getsearchθconfigfunc = NMRHamiltonian.createsearchθconfigs
+    end
     searchγconfigfunc = (nn, ii, cc, aa)->NMRHamiltonian.createsearchγconfigs(
         nn, ii, cc, aa;
         max_partition_size_offset = max_partition_size_offset,
+        γ_base = γ_base,
+        γ_rate = γ_rate,
+        max_iters_γ = max_iters_γ,
     )
     part_algs = NMRHamiltonian.generatemixturepartitionalgorithm(
         molecule_entries,
@@ -61,13 +73,12 @@ function runSH(
         Phys;
         #getgraphconfigfunc = constantradiusfunc,
         getgraphconfigfunc = NMRHamiltonian.defaultknnsearchconfig,
-        getsearchθconfigfunc = NMRHamiltonian.createsearchθconfigs,
+        getsearchθconfigfunc = getsearchθconfigfunc,
         getsearchγconfigfunc = searchγconfigfunc,
         report_cost = true,
         verbose_kernel = true
         )
 
-    println("Timing: setupmixtureproxies()")
     As, Rs = NMRHamiltonian.setupmixtureSH(part_algs,
         molecule_entries,
         fs, SW, ν_0ppm,

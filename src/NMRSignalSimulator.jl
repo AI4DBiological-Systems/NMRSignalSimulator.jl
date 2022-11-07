@@ -21,4 +21,6 @@ include("./FID/FID.jl")
 include("./FID/setup_FID_itp.jl")
 include("./FID/FID_itp_evals.jl")
 
+include("./parameters/flatten.jl")
+
 end

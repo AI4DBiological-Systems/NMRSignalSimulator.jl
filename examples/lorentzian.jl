@@ -1,20 +1,11 @@
+# run a.jl
+# import NMRHamiltonian
+# import NMRSignalSimulator
+# using DataDeps
+# import Tar
+# using LinearAlgebra
+# import PyPlot
 
-import NMRHamiltonian
-
-# include("../src/NMRSignalSimulator.jl")
-# import .NMRSignalSimulator
-# ## remove later.
-# import Interpolations, OffsetArrays
-# ##
-
-import NMRSignalSimulator
-
-using DataDeps
-import Tar
-
-using LinearAlgebra
-import PyPlot
-#import JSON3
 
 include("./helpers/data.jl")
 include("./helpers/SH.jl")
@@ -29,6 +20,15 @@ PyPlot.matplotlib["rcParams"][:update](["font.size" => 22, "font.family" => "ser
 #molecule_entries = ["L-Methionine"; "L-Phenylalanine"; "DSS"; "Ethanol"; "L-Isoleucine"]
 molecule_entries = ["alpha-D-Glucose"; "beta-D-Glucose"; "DSS"; "D2O"]
 
+root_data_path = getdatapath() # coupling values data repository root path
+
+H_params_path = joinpath(root_data_path, "coupling_info") # folder of coupling values. # replace with your own values in actual usage.
+
+molecule_mapping_root_path = joinpath(root_data_path, "molecule_name_mapping")
+molecule_mapping_file_path = joinpath(molecule_mapping_root_path, "select_molecules.json")
+#molecule_mapping_file_path = joinpath(molecule_mapping_root_path, "GISSMO_names.json")
+
+
 # machine values taken from the BMRB 700 MHz 20 mM glucose experiment.
 fs = 14005.602240896402
 SW = 20.0041938620844
@@ -39,11 +39,24 @@ SW = 20.0041938620844
 # SW = 16.0196917451925
 # fs = 9615.38461538462
 
+max_partition_size_offset = 2
+
 ### end inputs.
 
-As, Rs = runSH(molecule_entries)
-println("finished As")
-println()
+As, Rs = runSH(
+    H_params_path,
+    molecule_mapping_file_path,
+    fs,
+    SW,
+    ν_0ppm,
+    molecule_entries,
+    max_partition_size_offset;
+    search_θ = true,
+    θ_default = 0.0,
+    γ_base = 0.1,
+    γ_rate = 1.05,
+    max_iters_γ = 100,
+)
 
 #@assert 1==2
 
@@ -55,6 +68,7 @@ println()
 κ_λ_lb_default = 0.5 # interpolation lower limit for κ_λ.
 κ_λ_ub_default = 2.5 # interpolation upper limit for κ_λ.
 
+# TODO: functions for creating these config files, or at least documentation about it.
 surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/select_molecules_surrogate_configs.json"
 
 
@@ -182,3 +196,5 @@ PyPlot.title("f vs q")
 # println("q_U eval")
 # @btime q.(U_rad);
 # println()
+
+## next, derivatives of q over the bounds of d and β, not κ_d and κ_β.

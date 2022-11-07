@@ -10,7 +10,9 @@ function fitclproxies(As::Vector{SHType{T}},
     u_min = Inf,
     u_max = Inf,
     Δr_default = 1.0,
-    Δκ_λ_default = 0.05) where {T,SST}
+    Δκ_λ_default = 0.05,
+    default_ppm_padding = 0.5,
+    ) where {T,SST}
 
     config_dict = Dict()
     if ispath(config_path)
@@ -26,15 +28,21 @@ function fitclproxies(As::Vector{SHType{T}},
         A = As[n]
 
         # fit surrogate, save into `core`.
-        cores[n] = fitclproxy(dummy_SSParams, A, λ0, config_dict;
-        molecule_name = names[n],
-        Δcs_max_scalar_default = Δcs_max_scalar_default,
-        κ_λ_lb_default = κ_λ_lb_default,
-        κ_λ_ub_default = κ_λ_ub_default,
-        u_min = u_min,
-        u_max = u_max,
-        Δr_default = Δr_default,
-        Δκ_λ_default = Δκ_λ_default)
+        cores[n] = fitclproxy(
+            dummy_SSParams,
+            A,
+            λ0,
+            config_dict;
+            molecule_name = names[n],
+            Δcs_max_scalar_default = Δcs_max_scalar_default,
+            κ_λ_lb_default = κ_λ_lb_default,
+            κ_λ_ub_default = κ_λ_ub_default,
+            u_min = u_min,
+            u_max = u_max,
+            Δr_default = Δr_default,
+            Δκ_λ_default = Δκ_λ_default,
+            default_ppm_padding = default_ppm_padding,
+        )
     end
 
     return cores
@@ -52,7 +60,9 @@ function fitclproxy(dummy_SSParams::SST,
     u_min = Inf,
     u_max = Inf,
     Δr_default = 1.0,
-    Δκ_λ_default = 0.05)::MoleculeType{T,SST} where {T,SST}
+    Δκ_λ_default = 0.05,
+    default_ppm_padding = 0.5,
+    )::MoleculeType{T,SST} where {T,SST}
 
     hz2ppmfunc = uu->(uu - A.ν_0ppm)*A.SW/A.fs
     ppm2hzfunc = pp->(A.ν_0ppm + pp*A.fs/A.SW)
@@ -102,8 +112,8 @@ function fitclproxy(dummy_SSParams::SST,
         tmp = hz2ppmfunc.( A.Ωs_singlets ./ (2*π) )
         push!(Ωs_ppm, tmp...)
 
-        min_ppm = minimum(Ωs_ppm) - 0.5
-        max_ppm = maximum(Ωs_ppm) + 0.5
+        min_ppm = minimum(Ωs_ppm) - default_ppm_padding
+        max_ppm = maximum(Ωs_ppm) + default_ppm_padding
         u_min = ppm2hzfunc(min_ppm)
         u_max = ppm2hzfunc(max_ppm)
     end
@@ -159,13 +169,13 @@ function setupclpartitionitp(α::Vector{T}, Ω::Vector{T}, d_max::T, λ0::T,
     f = (rr,ξξ)->evalclpartitionelement(rr, α, Ω, ξξ*λ0)
     A = [f(x1,x2) for x1 in A_r, x2 in A_ξ]
 
-    #real_itp = Interpolations.interpolate(real.(A), Interpolations.BSpline(Interpolations.Cubic(Interpolations.Line(Interpolations.OnGrid()))))
-    real_itp = Interpolations.interpolate(real.(A), Interpolations.BSpline(Interpolations.Quadratic(Interpolations.Line(Interpolations.OnGrid()))))
+    real_itp = Interpolations.interpolate(real.(A), Interpolations.BSpline(Interpolations.Cubic(Interpolations.Line(Interpolations.OnGrid()))))
+    #real_itp = Interpolations.interpolate(real.(A), Interpolations.BSpline(Interpolations.Quadratic(Interpolations.Line(Interpolations.OnGrid()))))
     real_sitp = Interpolations.scale(real_itp, A_r, A_ξ)
     real_setp = Interpolations.extrapolate(real_sitp, 0.0) # zero outside interp range.
 
-    #imag_itp = Interpolations.interpolate(imag.(A), Interpolations.BSpline(Interpolations.Cubic(Interpolations.Line(Interpolations.OnGrid()))))
-    imag_itp = Interpolations.interpolate(imag.(A), Interpolations.BSpline(Interpolations.Quadratic(Interpolations.Line(Interpolations.OnGrid()))))
+    imag_itp = Interpolations.interpolate(imag.(A), Interpolations.BSpline(Interpolations.Cubic(Interpolations.Line(Interpolations.OnGrid()))))
+    #imag_itp = Interpolations.interpolate(imag.(A), Interpolations.BSpline(Interpolations.Quadratic(Interpolations.Line(Interpolations.OnGrid()))))
     imag_sitp = Interpolations.scale(imag_itp, A_r, A_ξ)
     imag_setp = Interpolations.extrapolate(imag_sitp, 0.0) # zero outside interp range.
 
