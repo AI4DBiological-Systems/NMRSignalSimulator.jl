@@ -154,35 +154,6 @@ function evalclproxymolecule(u_rad, A::SHType{T}, B::MoleculeType{T,SST})::Compl
 end
 
 
-# with κ_α compensation.
-function evalclproxymixture(u_rad, As::Vector{SHType{T}},
-    Es::Vector{καMoleculeType{T,SST}};
-    w::Vector{T} = ones(T, length(As)))::Complex{T} where {T <: Real,SST}
-
-    #u_rad = 2*π*u
-
-    out = zero(Complex{T})
-
-    for n in eachindex(Es)
-        out += w[n]*evalclproxymolecule(u_rad, As[n], Es[n])
-    end
-
-    return out
-end
-
-# with κ-proxy.
-function evalclproxymolecule(u_rad, A::SHType{T}, E::καMoleculeType{T,SST})::Complex{T} where {T <: Real, SST}
-
-    #u_rad = 2*π*u
-
-    out_sys = evalclproxysys(E.core.qs, u_rad, E.core.ss_params, E.κs_α)
-
-    out_singlets = evalclsinglets(u_rad, E.core.d_singlets, A.αs_singlets, A.Ωs_singlets,
-    E.core.β_singlets, E.core.λ0, E.core.κs_λ_singlets, E.κs_α_singlets)
-
-    return out_sys + out_singlets
-end
-
 function findsimplecoherences(c2::Vector{T};
     atol = 1e-6)::Vector{Int} where T
 

@@ -17,7 +17,8 @@ struct MoleculeType{T,SST} # parameters for surrogate model.
     ss_params::SST
 
     # singlets.
-    κs_λ_singlets::Vector{T}
+    κs_λ_singlets::Vector{T} # multiplier wrt λ0.
+    λ_singlets::Vector{T} # actual T2.
     β_singlets::Vector{T}
     d_singlets::Vector{T}
 
@@ -26,86 +27,75 @@ struct MoleculeType{T,SST} # parameters for surrogate model.
     λ0::T
 end
 
-# This is with the compensation amplitude parameter, κ_α, denoted κs_α in code.
-mutable struct καMoleculeType{T,SST}
-    κs_α::Vector{Vector{T}} # spin group, partition element index.
-    κs_α_singlets::Vector{T}
-    core::MoleculeType{T,SST}
-end
-
-function καMoleculeType(core::MoleculeType{T,SST}) where {T,SST}
-
-    N_spins = length(core.qs)
-    κs_α = Vector{Vector{T}}(undef, N_spins)
-    for i = 1:N_spins
-        κs_α[i] = ones(T, length(core.qs[i]))
-    end
-
-    κs_α_singlets = ones(T, length(core.d_singlets))
-
-    return καMoleculeType(κs_α, κs_α_singlets, core)
-end
 
 ### different parameterizations of the spin system FID parameters.
-abstract type SpinSysParams{T<:AbstractFloat} end
+abstract type ShiftParms{T<:AbstractFloat} end
+abstract type PhaseParms{T<:AbstractFloat} end
+abstract type T2Parms{T<:AbstractFloat} end
 
 
-struct CoherenceShift{T} <: SpinSysParams{T}
-    κs_λ::Vector{T} # a multiplier for each (spin group.
-    κs_β::Vector{Vector{T}} # a vector coefficient for each (spin group). vector length: number of spins in the spin group.
-    d::Vector{Vector{T}} # a multiplier for each (spin group, partition element).
-    κs_d::Vector{Vector{T}} # same size as κs_β. # intermediate buffer for d.
+# struct CoherenceShift{T} <: SpinSysParams{T}
+#     κs_λ::Vector{T} # a multiplier for each (spin group.
+#     κs_β::Vector{Vector{T}} # a vector coefficient for each (spin group). vector length: number of spins in the spin group.
+#     d::Vector{Vector{T}} # a multiplier for each (spin group, partition element).
+#     κs_d::Vector{Vector{T}} # same size as κs_β. # intermediate buffer for d.
+# end
+
+
+
+# struct SharedShift{T} <: SpinSysParams{T}
+#     κs_λ::Vector{T} # a common multiplier for each spin group. length: number of spin groups.
+#     κs_β::Vector{Vector{T}} # a vector coefficient for each (spin group). vector length: number of spins in the spin group.
+#     d::Vector{T} # a common multiplier for each spin group. length: number of spin groups.
+# end
+
+
+struct SpinSysParams{ST,PT,DT}
+    shift::ST
+    phase::PT
+    T2::DT
 end
 
-function CoherenceShift(x::T) where T
-    return CoherenceShift(Vector{T}(undef,0), Vector{Vector{T}}(undef, 0), Vector{Vector{T}}(undef, 0), Vector{Vector{T}}(undef, 0))
+struct SharedT2{T} <: T2Parms{T}
+    κs_λ::Vector{T} # multiplier wrt some λ0. length: number of spin groups.
+    λ::Vector{T} # actual decay. length: number of spin groups.
 end
 
-struct SharedShift{T} <: SpinSysParams{T}
-    κs_λ::Vector{T} # a common multiplier for each spin group. length: number of spin groups.
-    κs_β::Vector{Vector{T}} # a vector coefficient for each (spin group). vector length: number of spins in the spin group.
-    d::Vector{T} # a common multiplier for each spin group. length: number of spin groups.
+function SharedT2(::Type{T}) where T
+    return SharedT2(
+        Vector{T}(undef, 0),
+        Vector{T}(undef, 0),
+    )
 end
 
-function SharedShift(x::T) where T
-    return SharedShift(Vector{T}(undef,0), Vector{Vector{T}}(undef, 0), Vector{T}(undef, 0))
+struct SharedShift{T} <: ShiftParms{T}
+    d::Vector{T} # length: number of spin groups.
 end
 
-function constructorSSParams(x::SharedShift{T}, y...)::SharedShift{T} where T
-    return SharedShift(y...)
+function SharedShift(::Type{T}) where T
+    return CoherenceShift(Vector{T}(undef, 0))
 end
 
-function constructorSSParams(x::CoherenceShift{T}, y...)::CoherenceShift{T} where T
-    return CoherenceShift(y...)
+struct CoherenceShift{T} <: ShiftParms{T}
+    d::Vector{Vector{T}} # first index for spin systems, second for resonance groups.
+    κs_d::Vector{Vector{T}} # first index for spin systems, second for coherence dimension.
 end
 
-########### more elaborate constructors.
-
-function setupSSParamsparams(dummy_SSParams::SharedShift{T}, part_inds_molecule, N_β_vars_sys)::SharedShift{T} where T
-    L = length(part_inds_molecule)
-
-    κs_λ = ones(T, L)
-    κs_β = collect( zeros(T, N_β_vars_sys[i]) for i in eachindex(N_β_vars_sys))
-    #d = rand(length(αs))
-    d = zeros(T, L)
-
-    return constructorSSParams(dummy_SSParams, κs_λ, κs_β, d)
+function CoherenceShift(::Type{T}) where T
+    return CoherenceShift(
+        Vector{Vector{T}}(undef, 0),
+        Vector{Vector{T}}(undef, 0)
+        )
 end
 
-function setupSSParamsparams(dummy_SSParams::CoherenceShift{T}, part_inds_molecule::Vector{Vector{Vector{Int}}}, N_β_vars_sys)::CoherenceShift{T} where T
+struct CoherencePhase{T} <: PhaseParms{T}
+    β::Vector{Vector{T}} # first index for spin systems, second for resonance groups.
+    κs_β::Vector{Vector{T}} # first index for spin systems, second for coherence dimension.
+end
 
-    N_sys = length(part_inds_molecule)
-    κs_λ = ones(T, N_sys)
-    d = Vector{Vector{T}}(undef, N_sys)
-
-    for i in eachindex(d)
-        N_partition_elements = length(part_inds_molecule[i])
-
-        d[i] = zeros(T, N_partition_elements)
-    end
-
-    κs_β = collect( zeros(T, N_β_vars_sys[i]) for i in eachindex(N_β_vars_sys))
-    κs_d = collect( zeros(T, N_β_vars_sys[i]) for i in eachindex(N_β_vars_sys))
-
-    return constructorSSParams(dummy_SSParams, κs_λ, κs_β, d, κs_d)
+function CoherencePhase(::Type{T}) where T
+    return CoherencePhase(
+        Vector{Vector{T}}(undef, 0),
+        Vector{Vector{T}}(undef, 0)
+        )
 end

@@ -19,6 +19,11 @@ println("flatten state from nested Vectors to a Vector.")
 @show vals
 println()
 
+
+buffer_d, buffer_κs_d, buffer_κs_β, views_d, views_κs_d, views_κs_β = NMRSignalSimulator.extractshiftviews(Bs)
+
+@assert 1==2
+
 #flat_vals .+= 1
 
 # I am here. write a type stable, mutating recursive iterator that loops through a nested vector given a flat vector.

@@ -122,7 +122,6 @@ U_rad = U .* (2*π)
 # A.d_singlets, A.αs_singlets, A.Ωs_singlets, A.β_singlets, A.λ0, A.κs_λ_singlets
 q = uu->NMRSignalSimulator.evalclproxymixture(uu, As, Bs)
 
-#Es = collect( NMRSignalSimulator.καMoleculeType(Bs[i]) for i in eachindex(Bs) )
 #q = uu->NMRSignalSimulator.evalclproxymixture(uu, As, Es)
 
 f_U = f.(U_rad)
