@@ -50,52 +50,125 @@ abstract type T2Parms{T<:AbstractFloat} end
 # end
 
 
-struct SpinSysParams{ST,PT,DT}
-    shift::ST
-    phase::PT
-    T2::DT
-end
+
 
 struct SharedT2{T} <: T2Parms{T}
     κs_λ::Vector{T} # multiplier wrt some λ0. length: number of spin groups.
-    λ::Vector{T} # actual decay. length: number of spin groups.
+    #λ::Vector{T} # actual decay. length: number of spin groups.
 end
 
-function SharedT2(::Type{T}) where T
-    return SharedT2(
-        Vector{T}(undef, 0),
-        Vector{T}(undef, 0),
-    )
+function SharedT2(
+    ::Type{T},
+    N_sys::Int,
+    #λ0::T
+    )::SharedT2{T} where T <: AbstractFloat
+
+    κs_λ = ones(T, N_sys)
+    #λ = λ0 .* κs_λ
+
+    #return SharedT2(κs_λ, λ)
+    return SharedT2(κs_λ)
 end
 
 struct SharedShift{T} <: ShiftParms{T}
     d::Vector{T} # length: number of spin groups.
 end
 
-function SharedShift(::Type{T}) where T
-    return CoherenceShift(Vector{T}(undef, 0))
+function SharedShift(
+    ::Type{T},
+    N_sys::Int,
+    )::SharedShift{T} where T <: AbstractFloat
+
+    d = zeros(T, N_sys)
+
+    return SharedShift(d)
 end
 
 struct CoherenceShift{T} <: ShiftParms{T}
-    d::Vector{Vector{T}} # first index for spin systems, second for resonance groups.
     κs_d::Vector{Vector{T}} # first index for spin systems, second for coherence dimension.
+    d::Vector{Vector{T}} # first index for spin systems, second for resonance groups.
 end
 
-function CoherenceShift(::Type{T}) where T
-    return CoherenceShift(
-        Vector{Vector{T}}(undef, 0),
-        Vector{Vector{T}}(undef, 0)
-        )
+function CoherenceShift(
+    ::Type{T},
+    N_coherence_vars_sys::Vector{Int},
+    N_resonance_groups_sys::Vector{Int},
+    )::CoherenceShift{T} where T <: AbstractFloat
+
+    κs_d = collect( zeros(T, N_coherence_vars_sys[i]) for i in eachindex(N_coherence_vars_sys))
+    d = collect( zeros(T, N_resonance_groups_sys[i]) for i in eachindex(N_resonance_groups_sys))
+
+    return CoherenceShift(κs_d, d)
 end
+
 
 struct CoherencePhase{T} <: PhaseParms{T}
-    β::Vector{Vector{T}} # first index for spin systems, second for resonance groups.
     κs_β::Vector{Vector{T}} # first index for spin systems, second for coherence dimension.
+    cos_β::Vector{Vector{T}} # first index for spin systems, second for resonance groups.
+    sin_β::Vector{Vector{T}}
 end
 
-function CoherencePhase(::Type{T}) where T
-    return CoherencePhase(
-        Vector{Vector{T}}(undef, 0),
-        Vector{Vector{T}}(undef, 0)
-        )
+function CoherencePhase(
+    ::Type{T},
+    N_coherence_vars_sys::Vector{Int},
+    N_resonance_groups_sys::Vector{Int},
+    )::CoherencePhase{T} where T <: AbstractFloat
+
+    κs_β = collect( zeros(T, N_coherence_vars_sys[i]) for i in eachindex(N_coherence_vars_sys))
+    cos_β = collect( ones(T, N_resonance_groups_sys[i]) for i in eachindex(N_resonance_groups_sys))
+    sin_β = collect( zeros(T, N_resonance_groups_sys[i]) for i in eachindex(N_resonance_groups_sys))
+
+    return CoherencePhase(κs_β, cos_β, sin_β)
+end
+
+
+
+struct SpinSysParams{ST,PT,DT}
+    shift::ST
+    phase::PT
+    T2::DT
+end
+
+function setupSSParamsparams(
+    ::Type{SpinSysParams{SharedShift{T}, CoherencePhase{T}, SharedT2{T}}},
+    N_coherence_vars_sys::Vector{Int},
+    N_resonance_groups_sys::Vector{Int},
+    )::SpinSysParams{SharedShift{T}, CoherencePhase{T}, SharedT2{T}} where T <: AbstractFloat
+
+    N_sys = length(N_coherence_vars_sys)
+
+    return SpinSysParams(
+        SharedShift(T, N_sys),
+        CoherencePhase(T, N_coherence_vars_sys, N_resonance_groups_sys),
+        SharedT2(T, N_sys),
+    )
+end
+
+function setupSSParamsparams(
+    ::Type{SpinSysParams{CoherenceShift{T}, CoherencePhase{T}, SharedT2{T}}},
+    N_coherence_vars_sys::Vector{Int},
+    N_resonance_groups_sys::Vector{Int},
+    )::SpinSysParams{CoherenceShift{T}, CoherencePhase{T}, SharedT2{T}} where T <: AbstractFloat
+
+    N_sys = length(N_coherence_vars_sys)
+
+    return SpinSysParams(
+        CoherenceShift(T, N_coherence_vars_sys, N_resonance_groups_sys),
+        CoherencePhase(T, N_coherence_vars_sys, N_resonance_groups_sys),
+        SharedT2(T, N_sys),
+    )
+end
+
+function getSpinSysParamsdatatype(
+    ::Type{CoherenceShift{T}}
+    )::DataType where T <: AbstractFloat
+
+    return SpinSysParams{CoherenceShift{T}, CoherencePhase{T}, SharedT2{T}}
+end
+
+function getSpinSysParamsdatatype(
+    ::Type{SharedShift{T}}
+    )::DataType where T <: AbstractFloat
+
+    return SpinSysParams{SharedShift{T}, CoherencePhase{T}, SharedT2{T}}
 end

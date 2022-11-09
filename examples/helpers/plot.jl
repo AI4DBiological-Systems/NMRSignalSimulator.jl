@@ -67,7 +67,7 @@ function setupresonanceplotfuncs(As, Bs)::Tuple{Function,Vector{Vector{Function}
 
         qs[i] = Vector{Function}(undef, length(B.qs[i]))
         for k in eachindex(B.qs[i])
-            qs[i][k] = ωω->B.qs[i][k](ωω-B.ss_params.d[i], B.ss_params.κs_λ[i])
+            qs[i][k] = ωω->B.qs[i][k](ωω-B.ss_params.shift.d[i], B.ss_params.T2.κs_λ[i])
         end
     end
 

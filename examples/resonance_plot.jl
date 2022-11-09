@@ -18,6 +18,16 @@ include("./helpers/SH.jl")
 include("./helpers/plot.jl")
 
 # # User inputs.
+
+root_data_path = getdatapath() # coupling values data repository root path
+
+H_params_path = joinpath(root_data_path, "coupling_info") # folder of coupling values. # replace with your own values in actual usage.
+
+molecule_mapping_root_path = joinpath(root_data_path, "molecule_name_mapping")
+molecule_mapping_file_path = joinpath(molecule_mapping_root_path, "select_molecules.json")
+#molecule_mapping_file_path = joinpath(molecule_mapping_root_path, "GISSMO_names.json")
+
+
 #=
 Some example choices:
 ```
@@ -106,10 +116,27 @@ hz2ppmfunc = uu->(uu - ν_0ppm)*SW/fs
 ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 
 # Get spin Hamiltonian simulation. This could be slow.
-As, Rs = runSH(molecule_entries, max_partition_size_offset)
+As, Rs = runSH(
+    H_params_path,
+    molecule_mapping_file_path,
+    fs,
+    SW,
+    ν_0ppm,
+    molecule_entries,
+    max_partition_size_offset;
+    search_θ = true,
+    θ_default = 0.0,
+    γ_base = 0.1,
+    γ_rate = 1.05,
+    max_iters_γ = 100,
+    fully_connected_convex_clustering = false, # if true, overides max_connected_components_offset and start_knn
+    max_connected_components_offset = -1,
+    start_knn = 60,
+)
 
 # Fit surrogate model. Since we are not fitting against data, a `SharedShift` surrogate would suffice.
-dummy_SSParams = NMRSignalSimulator.SharedShift(0.0)
+type_SSParams = NMRSignalSimulator.getSpinSysParamsdatatype(NMRSignalSimulator.SharedShift{Float64})
+
 
 # Get the frequency range over which the surrogate acts on.
 ΩS_ppm = getPsnospininfo(As, hz2ppmfunc)
@@ -120,8 +147,8 @@ u_max = ppm2hzfunc(ΩS_ppm_sorted[end] + u_offset)
 
 # Construct surrogate.
 Bs = NMRSignalSimulator.fitclproxies(
+    type_SSParams,
     As,
-    dummy_SSParams,
     λ0;
     names = molecule_entries,
     u_min = u_min,

@@ -1,6 +1,7 @@
 
-function fitclproxies(As::Vector{SHType{T}},
-    dummy_SSParams::SST,
+function fitclproxies(
+    ::Type{SST},
+    As::Vector{SHType{T}},
     λ0::T;
     names::Vector{String} = Vector{String}(undef, 0),
     config_path::String = "",
@@ -29,7 +30,7 @@ function fitclproxies(As::Vector{SHType{T}},
 
         # fit surrogate, save into `core`.
         cores[n] = fitclproxy(
-            dummy_SSParams,
+            SST,
             A,
             λ0,
             config_dict;
@@ -49,7 +50,8 @@ function fitclproxies(As::Vector{SHType{T}},
 end
 
 
-function fitclproxy(dummy_SSParams::SST,
+function fitclproxy(
+    ::Type{SST},
     A::SHType{T},
     λ0::T,
     config_dict;
@@ -70,16 +72,23 @@ function fitclproxy(dummy_SSParams::SST,
     # allocate `core` data structure.
     N_singlets = length(A.αs_singlets)
     κs_λ_singlets = ones(T, N_singlets)
+    λ_singlets = λ0 .* κs_λ_singlets
     κs_β_singlets = zeros(T, N_singlets)
     d_singlets = zeros(T, N_singlets)
 
     #N_β_vars_sys = A.N_spins_sys # no equivalence used.
-    N_β_vars_sys::Vector{Int} = collect( length(A.Δc_bar[i][1]) for i in eachindex(A.Δc_bar) )
+    N_coherence_vars_sys::Vector{Int} = collect( length(A.Δc_bar[i][begin]) for i in eachindex(A.Δc_bar) )
+    N_resonance_groups_sys::Vector{Int} = collect( length(A.Δc_bar[i]) for i in eachindex(A.Δc_bar) )
 
     # proxy placeholder.
     #qs = Vector{Vector{Function}}(undef, length(N_spins_sys))
 
-    SSParams_obj = setupSSParamsparams(dummy_SSParams, A.part_inds_molecule, N_β_vars_sys)
+    SSParams_obj = setupSSParamsparams(
+        SST,
+        N_coherence_vars_sys,
+        N_resonance_groups_sys,
+        #λ0,
+    )
 
     # prepare configuration parameters.
     κ_λ_lb = κ_λ_lb_default
@@ -118,29 +127,106 @@ function fitclproxy(dummy_SSParams::SST,
         u_max = ppm2hzfunc(max_ppm)
     end
 
-    qs = setupclmoleculepartitionitp(d_max,
-        SSParams_obj.κs_β,
+    qs = setupclmoleculepartitionitp(
+        d_max,
+        #SSParams_obj.κs_β,
+        SSParams_obj.phase.cos_β,
+        SSParams_obj.phase.sin_β,
         A.Δc_bar,
         A.part_inds_molecule,
         A.αs, A.Ωs,
-        λ0, u_min, u_max;
+        λ0, 
+        u_min, u_max;
         κ_λ_lb = κ_λ_lb,
         κ_λ_ub = κ_λ_ub,
         Δr = Δr,
-        Δκ_λ = Δκ_λ)
+        Δκ_λ = Δκ_λ,
+    )
 
-    core = MoleculeType(qs, SSParams_obj, κs_λ_singlets, κs_β_singlets, d_singlets,
-        Δcs_max, λ0)
+    core = MoleculeType(
+        qs,
+        SSParams_obj,
+        κs_λ_singlets,
+        λ_singlets,
+        κs_β_singlets,
+        d_singlets,
+        Δcs_max,
+        λ0
+    )
 
     return core
 end
 
-function setupclpartitionitp(α::Vector{T}, Ω::Vector{T}, d_max::T, λ0::T,
-    u_min::T, u_max::T;
+function setupclmoleculepartitionitp(
+    d_max::Vector{T},
+    #κs_β::Vector{Vector{T}},
+    cos_β::Vector{Vector{T}},
+    sin_β::Vector{Vector{T}},
+    Δc_bar::Vector{Vector{Vector{T}}},
+    part_inds_molecule::Vector{Vector{Vector{Int}}},
+    αs::Vector{Vector{T}},
+    Ωs::Vector{Vector{T}},
+    λ0::T,
+    u_min::T,
+    u_max::T;
     κ_λ_lb = 0.5,
     κ_λ_ub = 2.5,
     Δr = 1.0,
-    Δκ_λ = 0.05) where T <: Real
+    Δκ_λ = 0.05,
+    ) where T <: AbstractFloat
+
+    qs = Vector{Vector{Function}}(undef, length(αs)) # surrogates for lorentzian model.
+    #gs = Vector{Vector{Function}}(undef, length(αs)) # surrogates for FID model.
+
+    for i in eachindex(part_inds_molecule) # over elements in a spin group.
+
+        N_partition_elements = length(part_inds_molecule[i])
+        qs[i] = Vector{Function}(undef, N_partition_elements)
+        #gs[i] = Vector{Function}(undef, N_partition_elements)
+
+        for k = 1:N_partition_elements
+            #println("i,k", (i,k))
+
+            inds = part_inds_molecule[i][k]
+            α = αs[i][inds]
+            Ω = Ωs[i][inds]
+
+            real_sitp, imag_sitp = setupclpartitionitp(α, Ω,
+            d_max[i], λ0, u_min, u_max; κ_λ_lb = κ_λ_lb, κ_λ_ub = κ_λ_ub,
+            Δr = Δr, Δκ_λ = Δκ_λ)
+
+            #qs[i][k] = (rr, ξξ)->evalq(real_sitp, imag_sitp, rr, ξξ, κs_β[i], Δc_bar[i][k])
+            qs[i][k] = (rr, ξξ)->evalq(real_sitp, imag_sitp, rr, ξξ, cos_β[i][k], sin_β[i][k])
+        end
+    end
+
+    return qs
+end
+
+# function evalq(real_sitp, imag_sitp, r::T, ξ::T, b::Vector{T}, c)::Complex{T} where T <: AbstractFloat
+
+#     return (real_sitp(r,ξ)+im*imag_sitp(r,ξ))*cis(dot(b, c))
+# end
+
+function evalq(real_sitp, imag_sitp, r::T, ξ::T, c, d)::Complex{T} where T <: AbstractFloat
+
+    a = real_sitp(r,ξ)
+    b = imag_sitp(r,ξ)
+    return Complex(a*c-b*d, a*d+b*c)
+end
+
+function setupclpartitionitp(
+    α::Vector{T},
+    Ω::Vector{T},
+    d_max::T,
+    λ0::T,
+    u_min::T,
+    u_max::T;
+    κ_λ_lb = 0.5,
+    κ_λ_ub = 2.5,
+    Δr = 1.0,
+    Δκ_λ = 0.05,
+    ) where T <: AbstractFloat
 
     # A_x1 = 1:.1:10
     # A_x2 = 1:.5:20
@@ -166,7 +252,8 @@ function setupclpartitionitp(α::Vector{T}, Ω::Vector{T}, d_max::T, λ0::T,
     # println("length(A_ξ) = ", length(A_ξ))
 
     # complex.
-    f = (rr,ξξ)->evalclpartitionelement(rr, α, Ω, ξξ*λ0)
+    f = (rr,ξξ)->evalclpart(rr, α, Ω, ξξ*λ0)
+    #f = (rr,ξξ)->evalclpart(rr, α, Ω, λ[ind])
     A = [f(x1,x2) for x1 in A_r, x2 in A_ξ]
 
     real_itp = Interpolations.interpolate(real.(A), Interpolations.BSpline(Interpolations.Cubic(Interpolations.Line(Interpolations.OnGrid()))))
@@ -181,48 +268,4 @@ function setupclpartitionitp(α::Vector{T}, Ω::Vector{T}, d_max::T, λ0::T,
 
     #return real_sitp, imag_sitp
     return real_setp, imag_setp
-end
-
-function setupclmoleculepartitionitp(d_max::Vector{T},
-    κs_β::Vector{Vector{T}},
-    #Δc_m_molecule::Vector{Vector{Vector{T}}},
-    Δc_bar::Vector{Vector{Vector{T}}},
-    part_inds_molecule::Vector{Vector{Vector{Int}}},
-    αs::Vector{Vector{T}}, Ωs::Vector{Vector{T}},
-    λ0::T, u_min::T, u_max::T;
-    κ_λ_lb = 0.5,
-    κ_λ_ub = 2.5,
-    Δr = 1.0,
-    Δκ_λ = 0.05) where T
-
-    qs = Vector{Vector{Function}}(undef, length(αs)) # surrogates for lorentzian model.
-    #gs = Vector{Vector{Function}}(undef, length(αs)) # surrogates for FID model.
-
-    for i in eachindex(part_inds_molecule) # over elements in a spin group.
-
-        N_partition_elements = length(part_inds_molecule[i])
-        qs[i] = Vector{Function}(undef, N_partition_elements)
-        #gs[i] = Vector{Function}(undef, N_partition_elements)
-
-        for k = 1:N_partition_elements
-            #println("i,k", (i,k))
-
-            inds = part_inds_molecule[i][k]
-            α = αs[i][inds]
-            Ω = Ωs[i][inds]
-
-            real_sitp, imag_sitp = setupclpartitionitp(α, Ω,
-            d_max[i], λ0, u_min, u_max; κ_λ_lb = κ_λ_lb, κ_λ_ub = κ_λ_ub,
-            Δr = Δr, Δκ_λ = Δκ_λ)
-
-            qs[i][k] = (rr, ξξ)->evalq(real_sitp, imag_sitp, rr, ξξ, κs_β[i], Δc_bar[i][k])
-        end
-    end
-
-    return qs
-end
-
-function evalq(real_sitp, imag_sitp, r::T, ξ::T, b::Vector{T}, c)::Complex{T} where T <: Real
-
-    return (real_sitp(r,ξ)+im*imag_sitp(r,ξ))*cis(dot(b, c))
 end

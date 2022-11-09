@@ -1,10 +1,13 @@
 ################### spin system.
 
-function evalclproxysys(qs::Vector{Vector{Function}},
-    u_rad::T, x::SharedShift{T})::Complex{T} where T
+function evalclproxysys(
+    qs::Vector{Vector{Function}},
+    u_rad::T,
+    x::SpinSysParams{SharedShift{T}, CoherencePhase{T}, SharedT2{T}},
+    )::Complex{T} where T
 
-    d = x.d
-    κs_λ = x.κs_λ
+    d = x.shift.d
+    κs_λ = x.T2.κs_λ
     #κs_β = x.κs_β
 
     @assert length(d) == length(qs)
@@ -20,41 +23,18 @@ function evalclproxysys(qs::Vector{Vector{Function}},
         end
     end
 
-    ## slower possibly due to r = u_rad - d[i] being evaluated every time qs is called.
-    #out = sum( sum(qs[i][k](u_rad - d[i], κs_λ[i]) for k in eachindex(qs[i])) for i in eachindex(qs) )
-
     return out
 end
 
-# unused?
-function evalclproxysys(qs::Vector{Vector{Function}},
-    u_rad::T, x::SharedShift{T}, κs_α::Vector{Vector{T}})::Complex{T} where T
 
-    d = x.d
-    κs_λ = x.κs_λ
-    #κs_β = x.κs_β
+function evalclproxysys(
+    qs::Vector{Vector{Function}},
+    u_rad::T,
+    x::SpinSysParams{CoherenceShift{T}, CoherencePhase{T}, SharedT2{T}},
+    )::Complex{T} where T
 
-    @assert length(d) == length(qs)
-
-    out = zero(Complex{T})
-
-    for i in eachindex(qs)
-        r = u_rad - d[i]
-
-        for k in eachindex(qs[i])
-
-            out += κs_α[i][k]*qs[i][k](r, κs_λ[i])
-        end
-    end
-
-    return out
-end
-
-function evalclproxysys(qs::Vector{Vector{Function}},
-    u_rad::T, x::CoherenceShift{T})::Complex{T} where T
-
-    d = x.d
-    κs_λ = x.κs_λ
+    d = x.shift.d
+    κs_λ = x.T2.κs_λ
     #κs_β = x.κs_β
 
     @assert length(d) == length(qs)

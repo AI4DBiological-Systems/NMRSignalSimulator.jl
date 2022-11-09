@@ -92,7 +92,7 @@ println("Timing: setupmixtureSH()")
     Δc_partition_radius = Δc_partition_radius)
 
 #dummy_SSParams = NMRSignalSimulator.SharedShift(0.0)
-dummy_SSParams = NMRSignalSimulator.CoherenceShift(0.0)
+dummy_SSParams = NMRSignalSimulator.CoherenceShift(Float64)
 # u_min = ppm2hzfunc(-0.5)
 # u_max = ppm2hzfunc(4.0)
 #u_min = ppm2hzfunc(3.5)

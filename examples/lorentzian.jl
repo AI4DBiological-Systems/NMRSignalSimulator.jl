@@ -71,13 +71,14 @@ As, Rs = runSH(
 # TODO: functions for creating these config files, or at least documentation about it.
 surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/select_molecules_surrogate_configs.json"
 
+### I am here. make this run again, then make sure manuscript can run. then convexclustering report knn used, and report/save assignments in NMRHamiltonian.
+#type_SSParams = NMRSignalSimulator.getSpinSysParamsdatatype(NMRSignalSimulator.SharedShift{Float64})
+type_SSParams = NMRSignalSimulator.getSpinSysParamsdatatype(NMRSignalSimulator.CoherenceShift{Float64})
 
-#dummy_SSParams = NMRSignalSimulator.SharedShift(0.0)
-dummy_SSParams = NMRSignalSimulator.CoherenceShift(0.0)
 # u_min = ppm2hzfunc(-0.5)
 # u_max = ppm2hzfunc(4.0)
 
-Bs = NMRSignalSimulator.fitclproxies(As, dummy_SSParams, λ0;
+Bs = NMRSignalSimulator.fitclproxies(type_SSParams, As, λ0;
     names = molecule_entries,
     config_path = surrogate_config_path,
     Δcs_max_scalar_default = Δcs_max_scalar_default,
@@ -93,13 +94,13 @@ Bs = NMRSignalSimulator.fitclproxies(As, dummy_SSParams, λ0;
 
 # purposely distort the spectra by assigning random values to model parameters.
 B = Bs[1]
-if typeof(dummy_SSParams) <: NMRSignalSimulator.SharedShift
-    B.ss_params.d[:] = rand(length(B.ss_params.d))
-elseif typeof(dummy_SSParams) <: NMRSignalSimulator.CoherenceShift
-    B.ss_params.d[:] = collect( rand(length(B.ss_params.d[i])) .* (2*π) for i in eachindex(B.ss_params.d) )
+if type_SSParams <: NMRSignalSimulator.SharedShift
+    B.ss_params.shift.d[:] = rand(length(B.ss_params.shift.d))
+elseif type_SSParams <: NMRSignalSimulator.CoherenceShift
+    B.ss_params.shift.d[:] = collect( rand(length(B.ss_params.shift.d[i])) .* (2*π) for i in eachindex(B.ss_params.d) )
 end
-B.ss_params.κs_λ[:] = rand(length(B.ss_params.κs_λ)) .+ 1
-B.ss_params.κs_β[:] = collect( rand(length(B.ss_params.κs_β[i])) .* (2*π) for i in eachindex(B.ss_params.κs_β) )
+B.ss_params.T2.κs_λ[:] = rand(length(B.ss_params.T2.κs_λ)) .+ 1
+B.ss_params.phase.κs_β[:] = collect( rand(length(B.ss_params.phase.κs_β[i])) .* (2*π) for i in eachindex(B.ss_params.phase.κs_β) )
 
 
 f = uu->NMRSignalSimulator.evalclmixture(uu, As, Bs)

@@ -11,6 +11,9 @@ function runSH(
     γ_base = 0.1,
     γ_rate = 1.05,
     max_iters_γ = 100,
+    fully_connected_convex_clustering = false,
+    max_connected_components_offset = -1,
+    start_knn = 60,
     ) where T <: AbstractFloat
 
     Phys, dict_molecule_to_filename = NMRHamiltonian.getphysicalparameters(
@@ -54,6 +57,22 @@ function runSH(
     #   - defaultradiussearchconfig
     #   - constantknnfunc
     #   - constantradiusfunc
+
+
+
+    searchknnconfigfunc = (nn, ii, cc, aa)->NMRHamiltonian.defaultknnsearchconfig(
+        nn, ii, cc, aa;
+        verbose = true,
+        start_knn = start_knn,
+        max_connected_components_offset  = max_connected_components_offset,
+    )
+    if fully_connected_convex_clustering
+        searchknnconfigfunc = (nn, ii, cc, aa)->NMRHamiltonian.defaultknnsearchconfig(
+            nn, ii, cc, aa;
+            verbose = true,
+            start_knn = length(cc),
+        )
+    end
 
     getsearchθconfigfunc = NMRHamiltonian.disablesearch
     if search_θ
