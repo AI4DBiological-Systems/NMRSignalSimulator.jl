@@ -66,6 +66,8 @@ fs = 9615.38461538462
 ```
 =#
 
+# I am here. make this run, then go to model.
+
 # These are in units ppm.
 u_offset = 0.2 # affects the frequency range to plot.
 Δcs_padding = 0.02 # affects the interval creation.

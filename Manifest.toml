@@ -81,9 +81,9 @@ version = "1.4.1"
 
 [[deps.ConvexClustering]]
 deps = ["Distances", "Graphs", "LinearAlgebra", "NearestNeighbors", "Optim"]
-git-tree-sha1 = "6119be78fe764e1419aac6014c0777ec15f2e6ca"
+git-tree-sha1 = "180c254e752b3aa53fc0d39712002ca5c544fb52"
 uuid = "0437234d-b0b7-4786-9d16-5c3be1f5901d"
-version = "0.1.7"
+version = "0.1.8"
 
 [[deps.CovarianceEstimation]]
 deps = ["LinearAlgebra", "Statistics", "StatsBase"]
@@ -291,9 +291,9 @@ version = "7.8.2"
 
 [[deps.NMRHamiltonian]]
 deps = ["ConvexClustering", "Distances", "Graphs", "JSON3", "Kronecker", "LinearAlgebra"]
-git-tree-sha1 = "c8c64d55049b8562d3cc62003d385b4b05855399"
+git-tree-sha1 = "ba32623a22e295492c5f420719d4e4ff50be4b47"
 uuid = "d73005cc-2eb2-45b3-9785-29d07aec07ac"
-version = "0.1.5"
+version = "0.1.7"
 
 [[deps.NaNMath]]
 deps = ["OpenLibm_jll"]

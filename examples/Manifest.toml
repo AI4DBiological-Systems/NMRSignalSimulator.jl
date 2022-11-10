@@ -62,9 +62,9 @@ version = "1.0.1"
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 
 [[deps.BitFlags]]
-git-tree-sha1 = "84259bb6172806304b9101094a7cc4bc6f56dbc6"
+git-tree-sha1 = "629c6e4a7be8f427d268cebef2a5e3de6c50d462"
 uuid = "d1d4a3ce-64b1-5f1a-9ba4-7e7e69966f35"
-version = "0.1.5"
+version = "0.1.6"
 
 [[deps.Bzip2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -179,9 +179,9 @@ version = "0.6.2"
 
 [[deps.ConvexClustering]]
 deps = ["Distances", "Graphs", "LinearAlgebra", "NearestNeighbors", "Optim"]
-git-tree-sha1 = "6119be78fe764e1419aac6014c0777ec15f2e6ca"
+git-tree-sha1 = "180c254e752b3aa53fc0d39712002ca5c544fb52"
 uuid = "0437234d-b0b7-4786-9d16-5c3be1f5901d"
-version = "0.1.7"
+version = "0.1.8"
 
 [[deps.CovarianceEstimation]]
 deps = ["LinearAlgebra", "Statistics", "StatsBase"]
@@ -778,9 +778,9 @@ version = "7.8.2"
 
 [[deps.NMRHamiltonian]]
 deps = ["ConvexClustering", "Distances", "Graphs", "JSON3", "Kronecker", "LinearAlgebra"]
-git-tree-sha1 = "c8c64d55049b8562d3cc62003d385b4b05855399"
+git-tree-sha1 = "1f3cbf51820dcce328bf5c38c62cff5af325d5d3"
 uuid = "d73005cc-2eb2-45b3-9785-29d07aec07ac"
-version = "0.1.5"
+version = "0.1.6"
 
 [[deps.NMRSpecifyRegions]]
 deps = ["Graphs"]
