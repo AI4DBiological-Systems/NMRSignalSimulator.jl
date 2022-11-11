@@ -126,19 +126,20 @@ As, Rs = runSH(
     ν_0ppm,
     molecule_entries,
     max_partition_size_offset;
-    search_θ = true,
-    θ_default = 0.0,
+    #search_θ = true,
+    #θ_default = 0.0,
+    starting_manual_knn = 60,
     γ_base = 0.1,
-    γ_rate = 1.05,
+    #γ_rate = 1.05,
     max_iters_γ = 100,
-    fully_connected_convex_clustering = false, # if true, overides max_connected_components_offset and start_knn
-    max_connected_components_offset = -1,
-    start_knn = 60,
+    #min_dynamic_range = 0.95,
+    cc_gap_tol = 1e-8,
+    cc_max_iters = 300,
+    assignment_zero_tol = 1e-3,
 )
 
 # Fit surrogate model. Since we are not fitting against data, a `SharedShift` surrogate would suffice.
 type_SSParams = NMRSignalSimulator.getSpinSysParamsdatatype(NMRSignalSimulator.SharedShift{Float64})
-
 
 # Get the frequency range over which the surrogate acts on.
 ΩS_ppm = getPsnospininfo(As, hz2ppmfunc)
