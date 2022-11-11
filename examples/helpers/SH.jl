@@ -11,16 +11,23 @@ function runSH(
     γ_base = 0.1,
     γ_rate = 1.05,
     max_iters_γ = 100,
-    fully_connected_convex_clustering = false,
+    fully_connected_convex_clustering = false, #  overides all knn-related optional inputs
     max_connected_components_offset = -1,
-    start_knn = 60,
+    starting_manual_knn = 60,
+    unique_cs_atol = 1e-6,
+    length_scale_base = 10.0,
+    length_scale_rate = 0.7,
+    min_dynamic_range = 0.95,
+    cc_gap_tol = 1e-8,
+    cc_max_iters = 300,
+    assignment_zero_tol = 1e-3,
     ) where T <: AbstractFloat
 
     Phys, dict_molecule_to_filename = NMRHamiltonian.getphysicalparameters(
         molecule_entries,
         H_params_path,
         molecule_mapping_file_path;
-        unique_cs_atol = 1e-6,
+        unique_cs_atol = unique_cs_atol,
     )
 
     # extract chemical shifts for spin systems and singlets.
@@ -63,7 +70,8 @@ function runSH(
     searchknnconfigfunc = (nn, ii, cc, aa)->NMRHamiltonian.defaultknnsearchconfig(
         nn, ii, cc, aa;
         verbose = true,
-        start_knn = start_knn,
+        start_knn = max(starting_manual_knn, round(Int, length(cc)*0.05)),
+        max_knn = max(starting_manual_knn, round(Int, length(cc)*0.2)),
         max_connected_components_offset  = max_connected_components_offset,
     )
     if fully_connected_convex_clustering
@@ -76,7 +84,12 @@ function runSH(
 
     getsearchθconfigfunc = NMRHamiltonian.disablesearch
     if search_θ
-        getsearchθconfigfunc = NMRHamiltonian.createsearchθconfigs
+        getsearchθconfigfunc = (nn, ii, cc, aa)->NMRHamiltonian.createsearchθconfigs(
+            nn, ii, cc, aa;
+            length_scale_base = length_scale_base,
+            length_scale_rate = length_scale_rate,
+            min_dynamic_range = min_dynamic_range,
+        )
     end
     searchγconfigfunc = (nn, ii, cc, aa)->NMRHamiltonian.createsearchγconfigs(
         nn, ii, cc, aa;
@@ -85,6 +98,12 @@ function runSH(
         γ_rate = γ_rate,
         max_iters_γ = max_iters_γ,
     )
+
+    getassignmentfunc = (nn, ii, cc, aa)->NMRHamiltonian.defeaultassignmentconfig(
+    nn, ii, cc, aa;
+    assignment_zero_tol = assignment_zero_tol,
+    )
+
     part_algs = NMRHamiltonian.generatemixturepartitionalgorithm(
         molecule_entries,
         θs,
@@ -94,8 +113,11 @@ function runSH(
         getgraphconfigfunc = NMRHamiltonian.defaultknnsearchconfig,
         getsearchθconfigfunc = getsearchθconfigfunc,
         getsearchγconfigfunc = searchγconfigfunc,
+        getassignmentfunc = getassignmentfunc,
         report_cost = true,
-        verbose_kernel = true
+        verbose_kernel = true,
+        gap_tol = cc_gap_tol,
+        max_iters = cc_max_iters,
         )
 
     As, Rs = NMRHamiltonian.setupmixtureSH(part_algs,

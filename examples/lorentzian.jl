@@ -51,11 +51,16 @@ As, Rs = runSH(
     ν_0ppm,
     molecule_entries,
     max_partition_size_offset;
-    search_θ = true,
-    θ_default = 0.0,
-    γ_base = 0.1,
-    γ_rate = 1.05,
+    #search_θ = true,
+    #θ_default = 0.0,
+    starting_manual_knn = 60,
+    γ_base = 0.8,
+    #γ_rate = 1.05,
     max_iters_γ = 100,
+    #min_dynamic_range = 0.95,
+    cc_gap_tol = 1e-8,
+    cc_max_iters = 300,
+    assignment_zero_tol = 1e-3,
 )
 
 #@assert 1==2
@@ -71,7 +76,7 @@ As, Rs = runSH(
 # TODO: functions for creating these config files, or at least documentation about it.
 surrogate_config_path = "/home/roy/Documents/repo/NMRData/input/select_molecules_surrogate_configs.json"
 
-### I am here. make this run again, then make sure manuscript can run. then convexclustering report knn used, and report/save assignments in NMRHamiltonian.
+###
 #type_SSParams = NMRSignalSimulator.getSpinSysParamsdatatype(NMRSignalSimulator.SharedShift{Float64})
 type_SSParams = NMRSignalSimulator.getSpinSysParamsdatatype(NMRSignalSimulator.CoherenceShift{Float64})
 
@@ -89,11 +94,12 @@ Bs = NMRSignalSimulator.fitclproxies(type_SSParams, As, λ0;
     Δr_default = Δr_default,
     Δκ_λ_default = Δκ_λ_default)
 
-#
+# 
 ### plot.
 
 # purposely distort the spectra by assigning random values to model parameters.
 B = Bs[1]
+A = As[1]
 if type_SSParams <: NMRSignalSimulator.SharedShift
     B.ss_params.shift.d[:] = rand(length(B.ss_params.shift.d))
 elseif type_SSParams <: NMRSignalSimulator.CoherenceShift
@@ -102,6 +108,8 @@ end
 B.ss_params.T2.κs_λ[:] = rand(length(B.ss_params.T2.κs_λ)) .+ 1
 B.ss_params.phase.κs_β[:] = collect( rand(length(B.ss_params.phase.κs_β[i])) .* (2*π) for i in eachindex(B.ss_params.phase.κs_β) )
 
+NMRSignalSimulator.updateparameters!(B.ss_params.phase, A.Δc_bar)
+NMRSignalSimulator.updateparameters!(B.ss_params.shift, A.Δc_bar)
 
 f = uu->NMRSignalSimulator.evalclmixture(uu, As, Bs)
 
