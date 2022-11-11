@@ -1,21 +1,23 @@
 # Builds nested shifts, no copying.
-function extractshifts(Bs::Vector{MoleculeType{T,CoherenceShift{T}}}) where T
+function extractshifts(
+    Bs::Vector{MoleculeType{T, SpinSysParams{CoherenceShift{T}, CoherencePhase{T}, SharedT2{T}}}},
+    ) where T
 
     out_d = Vector{Vector{Vector{T}}}(undef, length(Bs))
     out_β = Vector{Vector{Vector{T}}}(undef, length(Bs))
     
     for n in eachindex(Bs)
-        out_d[n] = Vector{Vector{T}}(undef, length(Bs[n].ss_params.d))
-        out_β[n] = Vector{Vector{T}}(undef, length(Bs[n].ss_params.κs_β))
+        out_d[n] = Vector{Vector{T}}(undef, length(Bs[n].ss_params.shift.var))
+        out_β[n] = Vector{Vector{T}}(undef, length(Bs[n].ss_params.phase.var))
 
-        for i in eachindex(Bs[n].ss_params.d)
+        for i in eachindex(Bs[n].ss_params.shift.var)
             
-            out_d[n][i] = Bs[n].ss_params.d[i]
-            out_β[n][i] = Bs[n].ss_params.κs_β[i]
+            out_d[n][i] = Bs[n].ss_params.shift.var[i]
+            out_β[n][i] = Bs[n].ss_params.phase.var[i]
 
-            # out_d[n][i] = Vector{T}(undef, length(Bs[n].ss_params.d))
-            # for k in eachindex(Bs[n].ss_params.d[i])
-            #     out_d[n][i][k] = Bs[n].ss_params.d[i]
+            # out_d[n][i] = Vector{T}(undef, length(Bs[n].ss_params.shift.var))
+            # for k in eachindex(Bs[n].ss_params.shift.var[i])
+            #     out_d[n][i][k] = Bs[n].ss_params.shift.var[i]
             # end
         end
     end
@@ -23,160 +25,221 @@ function extractshifts(Bs::Vector{MoleculeType{T,CoherenceShift{T}}}) where T
     return out_d, out_β
 end
 
-function getnumvars(Bs::Vector{MoleculeType{T,CoherenceShift{T}}}) where T
 
-    N_d::Int = 0
-    N_κs_d::Int = 0
-    N_κs_β::Int = 0
+function setupvars(
+    Bs::Vector{MoleculeType{T, SpinSysParams{ST, PT, T2T}}},
+    ) where {T, ST, PT, T2T}
 
-    for n in eachindex(Bs) # molecule index.
-        for i in eachindex(Bs[n].ss_params.d) # spin system index.
-            for k in eachindex(Bs[n].ss_params.d[i]) # resonance group index.
+    N = length(Bs)
+    shifts = Vector{ST}(undef, N)
+    phases = Vector{PT}(undef, N)
+    T2s = Vector{T2T}(undef, N)
 
-                N_d += length(Bs[n].ss_params.d[i][k])
-            end
+    for n in eachindex(Bs)
+        shifts[n] = Bs[n].ss_params.shift
+        phases[n] = Bs[n].ss_params.phase
+        T2s[n] = Bs[n].ss_params.T2
+    end
 
-            for j in eachindex(Bs[n].ss_params.κs_β[i]) # effective chemical shift index.
+    return shifts, phases, T2s
+end
 
-                N_κs_d += length(Bs[n].ss_params.κs_d[i][j])
-                N_κs_β += length(Bs[n].ss_params.κs_β[i][j])
+# I am here.
+function getNvars(
+    Vs::Vector{VT},
+    ) where VT <: MoleculeParams
+
+    N_vars::Int = 0
+
+    for n in eachindex(Vs) # molecule index.
+        for i in eachindex(Vs[n].var) # spin system index.
+
+            for j in eachindex(Vs[n].var[i]) # effective chemical shift index.
+
+                N_vars += length(Vs[n].var[i][j])
             end
         end
     end
 
-    return N_d, N_κs_d, N_κs_β
+    return N_vars
 end
+
+#abstract type MoleculeParamsMapping end
+
+struct MoleculeParamsMapping
+    st::Vector{Vector{Int}}
+    fin::Vector{Vector{Int}}
+end
+
+# struct CoherenceMapping <: MoleculeParamsMapping
+#     st::Vector{Vector{Int}}
+#     fin::Vector{Vector{Int}}
+# end
+
+# struct SharedMapping <: MoleculeParamsMapping
+#     st::Vector{Int}
+#     fin::Vector{Int}
+# end
+
+# function getmapping(
+#     ::Type{VT},
+#     st::Vector{Vector{Int}},
+#     fin::Vector{Vector{Int}}
+#     )::CoherenceMapping where VT <: CoherenceParams
+
+#     return CoherenceMapping(st, fin)
+# end
+
+# function getmapping(
+#     ::Type{VT},
+#     st::Vector{Int},
+#     fin::Vector{Int}
+#     )::SharedMapping where VT <: SharedParams
+
+#     return SharedMapping(st, fin)
+# end
 
 # for a mixture.
-struct CoherenceShiftMapping
+# struct ParamsMapping{ST<:MoleculeParamsMapping,PT<:MoleculeParamsMapping,T2T<:MoleculeParamsMapping}
+#     #κs_d_st::Vector{Vector{Int}}
+#     #κs_d_fin::Vector{Vector{Int}}
+#     shift::ST
+#     phase::PT
+#     T2::T2T
+# end
+struct ParamsMapping
     #κs_d_st::Vector{Vector{Int}}
     #κs_d_fin::Vector{Vector{Int}}
-    κs_d_st::Vector{Int}
-    κs_d_fin::Vector{Int}
-    
-    #κs_β::Vector{Vector{T}}
-    κs_β_st::Vector{Int}
-    κs_β_fin::Vector{Int}
+    shift::MoleculeParamsMapping
+    phase::MoleculeParamsMapping
+    T2::MoleculeParamsMapping
 end
 
-function buildshiftmapping(
-    Bs::Vector{MoleculeType{T,SharedShift{T}}};
+function getParamsMapping(
+    shifts::Vector{ST},
+    phases::Vector{PT},
+    T2s::Vector{T2T},
+    ) where {ST,PT,T2T}
+
+    N_κs_d = getNvars(shifts)
+    N_κs_β = getNvars(phases)
+    N_κs_λ = getNvars(T2s)
+    
+    κs_d_st, κs_d_fin, fin_ind = buildmapping(shifts; offset_ind = 0)
+    #@assert κs_d_fin[end] -κs_d_st[begin] +1 == N_κs_d
+
+    κs_β_st, κs_β_fin, fin_ind = buildmapping(phases; offset_ind = N_κs_d)
+    #@assert κs_β_fin[end] -κs_β_st[begin] +1 == N_κs_β
+
+    κs_λ_st, κs_λ_fin, fin_ind = buildmapping(T2s; offset_ind = N_κs_d+N_κs_β)
+    #@assert κs_λ_fin[end] -κs_λ_st[begin] +1 == N_κs_λ
+
+    return ParamsMapping(
+        MoleculeParamsMapping(κs_d_st, κs_d_fin),
+        MoleculeParamsMapping(κs_β_st, κs_β_fin),
+        MoleculeParamsMapping(κs_λ_st, κs_λ_fin),
+    )
+end
+
+# function buildmapping(
+#     Vs::Vector{VT};
+#     offset_ind::Int = 0,
+#     ) where VT <: SharedParams
+
+#     sts = Vector{Int}(undef, length(Vs))
+#     fins = Vector{Int}(undef, length(Vs))
+
+#     fill!(sts, -1)
+#     fill!(fins, -1)
+
+#     #st_ind = 0 + offset_ind
+#     fin_ind = 0 + offset_ind
+#     for n in eachindex(Vs)
+
+#         sts[n], fin_ind = buildsharedmapping(Vs[n].var, fin_ind)
+#         fins[n] = fin_ind
+#     end
+
+#     return sts, fins, fin_ind
+# end
+
+function buildvarmapping(κs_λ::Vector{T}, fin_ind::Int) where T
+
+    st_ind = fin_ind + 1
+    fin_ind = st_ind + length(κs_λ) - 1
+
+    return [st_ind;], [fin_ind;], fin_ind
+end
+
+
+# identical to buildphasemapping() for CoherencePhase, but this dispatches on CohereneShift.
+function buildmapping(
+    Vs::Vector{VT};
     offset_ind::Int = 0,
-    ) where T
+    ) where VT <: MoleculeParams #CoherenceParams
 
-    ranges_κs_d_st = Vector{Int}(undef, length(Bs))
-    ranges_κs_d_fin = Vector{Int}(undef, length(Bs))
+    κs_d_st = Vector{Vector{Int}}(undef, length(Vs))
+    κs_d_fin = Vector{Vector{Int}}(undef, length(Vs))
 
-    st_ind = 0 + offset_ind
-    for n in eachindex(Bs)
-        
-        st_ind +=1
-        fin_ind = st_ind + length(Bs[n].ss_params.κs_d) - 1
+    #st_ind = 0 + offset_ind
+    fin_ind = 0 + offset_ind
+    for n in eachindex(Vs)
 
-        ranges_κs_d_st[n] = st_ind
-        ranges_κs_d_fin[n] = fin_ind
+        if !isempty(Vs[n].var)
+                
+            κs_d_st[n], κs_d_fin[n], fin_ind = buildvarmapping(
+                Vs[n].var,
+                fin_ind,
+            )
+        end
     end
 
-    return ranges_κs_d_st, ranges_κs_d_fin
+    return κs_d_st, κs_d_fin, fin_ind
 end
 
-function buildshiftmapping(
-    Bs::Vector{MoleculeType{T,CoherenceShift{T}}};
-    offset_ind::Int = 0,
-    ) where T
+function buildvarmapping(κs_β::Vector{Vector{T}}, fin_ind::Int) where T
 
-    return buildβrmapping(Bs; offset_ind = offset_ind)
+    κs_β_st = Vector{Int}(undef, length(κs_β))
+    κs_β_fin = Vector{Int}(undef, length(κs_β))
+
+    for i in eachindex(κs_β)
+        st_ind = fin_ind + 1
+        fin_ind = st_ind + length(κs_β[i]) - 1
+
+        κs_β_st[i] = st_ind
+        κs_β_fin[i] = fin_ind
+    end
+
+    return κs_β_st, κs_β_fin, fin_ind
 end
 
+#=
 function buildβrmapping(
-    Bs::Vector{MoleculeType{T,CoherenceShift{T}}};
+    phases::Vector{CoherencePhase{T}};
     offset_ind::Int = 0,
     ) where T
 
-    ranges_κs_β_st = Vector{Vector{Int}}(undef, length(Bs))
-    ranges_κs_β_fin = Vector{Vector{Int}}(undef, length(Bs))
+    N = length(phases)
+
+    ranges_κs_β_st = Vector{Vector{Int}}(undef, N)
+    ranges_κs_β_fin = Vector{Vector{Int}}(undef, N)
 
     st_ind = 0 + offset_ind
+    fin_ind = st_ind
     for n in eachindex(Bs)
-        ranges_κs_β_st[n] = Vector{Int}(undef, length(Bs[n].ss_params.κs_β))
-        ranges_κs_β_fin[n] = Vector{Int}(undef, length(Bs[n].ss_params.κs_β))
 
-        for i in eachindex(Bs[n].ss_params.κs_β)
-            st_ind +=1
-            fin_ind = st_ind + length(Bs[n].ss_params.κs_β[i]) - 1
-
-            ranges_κs_β_st[n][i] = st_ind
-            ranges_κs_β_fin[n][i] = fin_ind
-        end
+        ranges_κs_β_st[n], ranges_κs_β_fin[n], fin_ind = buildcoherencemapping(
+            phases[n].var,
+            fin_ind,
+        )
     end
 
     return ranges_κs_β_st, ranges_κs_β_fin
 end
 
 
-function updatemodel!(
-    Bs,
-    #Bs::Vector{MoleculeType{T,CoherenceShift{T}}},
-    mapping::CoherenceShiftMapping,
-    x::Vector{T},
-    ) where T <: Real
 
-    #N_d, N_κs_d, N_κs_β = getnumvars(Bs)
-
-    # These are 1-indexing arrays.
-    κs_d_st = mapping.κs_d_st
-    κs_d_fin = mapping.κs_d_fin
-    κs_β_st = mapping.κs_β_st
-    κs_β_fin = mapping.κs_β_fin
-
-    # shift κs_d
-    l = 0
-    for n in eachindex(Bs)
-        
-        for i in eachindex(Bs[n].ss_params.κs_β)
-            l += 1
-            #st_ind +=1
-            #fin_ind = st_ind + length(Bs[n].ss_params.κs_β[i]) - 1
-
-            #Bs[n].ss_params.κs_d[i][:] = x[begin+ranges_κs_d[n][i].st-1:begin+ranges_κs_d[n][i].fin-1]
-
-            Bs[n].ss_params.κs_d[i][:] = x[begin+κs_d_st[l]-1:begin+κs_d_fin[l]-1]
-
-            # update shift.
-            for k in eachindex(Bs[n].ss_params.d[i])
-                Bs[n].ss_params.d[i][k] = dot(As[n].Δc_bar[i][k], Bs[n].ss_params.κs_d[i])
-            end
-
-        end
-
-    end
-
-    # phase κs_β
-    l = 0
-    for n in eachindex(Bs)
-        
-        for i in eachindex(Bs[n].ss_params.κs_β)
-            l += 1
-            #st_ind +=1
-            #fin_ind = st_ind + length(Bs[n].ss_params.κs_β[i]) - 1
-
-            #Bs[n].ss_params.κs_d[i][:] = x[begin+ranges_κs_d[n][i].st-1:begin+ranges_κs_d[n][i].fin-1]
-
-            Bs[n].ss_params.κs_β[i][:] = x[begin+κs_β_st[l]-1:begin+κs_β_fin[l]-1]
-
-            #ranges_κs_β[n][i] = st_ind:fin_ind
-            # update shift.
-            for k in eachindex(Bs[n].ss_params.β[i])
-                Bs[n].ss_params.β[i][k] = dot(As[n].Δc_bar[i][k], Bs[n].ss_params.κs_β[i])
-            end
-        end
-    end
-
-    return nothing
-end
-
-
-#= function extractshiftranges(
+ function extractshiftranges(
     Bs::Vector{MoleculeType{T,CoherenceShift{T}}},
     offset_ind::Int,
     ) where T
@@ -189,11 +252,11 @@ end
     
     st_ind = 0 + offset_ind
     for n in eachindex(Bs)
-        ranges_d[n] = Vector{dtype}(undef, length(Bs[n].ss_params.d))
+        ranges_d[n] = Vector{dtype}(undef, length(Bs[n].ss_params.shift.var))
 
-        for i in eachindex(Bs[n].ss_params.d)
+        for i in eachindex(Bs[n].ss_params.shift.var)
             st_ind +=1
-            fin_ind = st_ind + length(Bs[n].ss_params.d[i]) - 1
+            fin_ind = st_ind + length(Bs[n].ss_params.shift.var[i]) - 1
 
             ranges_d[n][i] = st_ind:fin_ind
         end
@@ -201,12 +264,12 @@ end
 
     st_ind = 0
     for n in eachindex(Bs)
-        ranges_κs_d[n] = Vector{dtype}(undef, length(Bs[n].ss_params.κs_d))
-        ranges_κs_β[n] = Vector{dtype}(undef, length(Bs[n].ss_params.κs_β))
+        ranges_κs_d[n] = Vector{dtype}(undef, length(Bs[n].ss_params.shift.var))
+        ranges_κs_β[n] = Vector{dtype}(undef, length(Bs[n].ss_params.phase.var))
 
-        for i in eachindex(Bs[n].ss_params.κs_β)
+        for i in eachindex(Bs[n].ss_params.phase.var)
             st_ind +=1
-            fin_ind = st_ind + length(Bs[n].ss_params.κs_β[i]) - 1
+            fin_ind = st_ind + length(Bs[n].ss_params.phase.var[i]) - 1
 
             ranges_κs_d[n][i] = st_ind:fin_ind
             ranges_κs_β[n][i] = st_ind:fin_ind
@@ -232,11 +295,11 @@ function extractshiftviews(Bs::Vector{MoleculeType{T,CoherenceShift{T}}}) where 
     
     st_ind = 0
     for n in eachindex(Bs)
-        views_d[n] = Vector{dtype}(undef, length(Bs[n].ss_params.d))
+        views_d[n] = Vector{dtype}(undef, length(Bs[n].ss_params.shift.var))
 
-        for i in eachindex(Bs[n].ss_params.d)
+        for i in eachindex(Bs[n].ss_params.shift.var)
             st_ind +=1
-            fin_ind = st_ind + length(Bs[n].ss_params.d[i]) - 1
+            fin_ind = st_ind + length(Bs[n].ss_params.shift.var[i]) - 1
 
             views_d[n][i] = @view buffer_d[begin+st_ind-1:begin+fin_ind-1]
         end
@@ -244,12 +307,12 @@ function extractshiftviews(Bs::Vector{MoleculeType{T,CoherenceShift{T}}}) where 
 
     st_ind = 0
     for n in eachindex(Bs)
-        views_κs_d[n] = Vector{dtype}(undef, length(Bs[n].ss_params.κs_d))
-        views_κs_β[n] = Vector{dtype}(undef, length(Bs[n].ss_params.κs_β))
+        views_κs_d[n] = Vector{dtype}(undef, length(Bs[n].ss_params.shift.var))
+        views_κs_β[n] = Vector{dtype}(undef, length(Bs[n].ss_params.phase.var))
 
-        for i in eachindex(Bs[n].ss_params.κs_β)
+        for i in eachindex(Bs[n].ss_params.phase.var)
             st_ind +=1
-            fin_ind = st_ind + length(Bs[n].ss_params.κs_β[i]) - 1
+            fin_ind = st_ind + length(Bs[n].ss_params.phase.var[i]) - 1
 
             views_κs_d[n][i] = @view buffer_κs_d[begin+st_ind-1:begin+fin_ind-1]
             views_κs_β[n][i] = @view buffer_κs_β[begin+st_ind-1:begin+fin_ind-1]

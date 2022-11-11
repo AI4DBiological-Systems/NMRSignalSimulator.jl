@@ -7,7 +7,7 @@ function evalclproxysys(
     )::Complex{T} where T
 
     d = x.shift.d
-    κs_λ = x.T2.κs_λ
+    κs_λ = x.T2.var
     #κs_β = x.κs_β
 
     @assert length(d) == length(qs)
@@ -34,7 +34,7 @@ function evalclproxysys(
     )::Complex{T} where T
 
     d = x.shift.d
-    κs_λ = x.T2.κs_λ
+    κs_λ = x.T2.var
     #κs_β = x.κs_β
 
     @assert length(d) == length(qs)
@@ -54,6 +54,7 @@ function evalclproxysys(
     return out
 end
 
+#= 
 function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}},
     u_rad::T, x::SharedShift{T})::Complex{T} where T
 
@@ -99,7 +100,7 @@ function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}
     end
 
     return out
-end
+end =#
 
 
 ###################### front end.

@@ -137,7 +137,7 @@ function plotgroupsfullscript(plot_title, molecule_entries,
     #BSON.bson(save_simulation_path, mixture_params = mixture_params)
 
     # create the functions for each resonance group.
-    qs = collect( collect( ωω->A.qs[i][k](ωω-A.ss_params.d[i], A.ss_params.κs_λ[i]) for k in eachindex(A.qs[i]) ) for i in eachindex(A.qs) )
+    qs = collect( collect( ωω->A.qs[i][k](ωω-A.ss_params.shift.d[i], A.ss_params.T2.var[i]) for k in eachindex(A.qs[i]) ) for i in eachindex(A.qs) )
     q_singlets = ωω->NMRSignalSimulator.evalsinglets(ωω, A.d_singlets, A.αs_singlets, A.Ωs_singlets, A.β_singlets, A.λ0, A.κs_λ_singlets)
 
     # create the function for the entire molecule.

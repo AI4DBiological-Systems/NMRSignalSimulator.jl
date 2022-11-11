@@ -63,12 +63,12 @@ function evalclspinsystem(
     for i in eachindex(αs)
         r = u_rad - x.shift.d[i]
 
-        λ = x.T2.κs_λ[i]*λ0
+        λ = x.T2.var[i]*λ0
         for k in eachindex(part_inds_molecule[i])
             inds = part_inds_molecule[i][k]
 
             out += evalclpart(r, αs[i][inds],
-                Ωs[i][inds], λ)*cis(dot(x.phase.κs_β[i], c[i][k]))
+                Ωs[i][inds], λ)*cis(dot(x.phase.var[i], c[i][k]))
         end
     end
 
@@ -86,13 +86,14 @@ function evalclspinsystem(u_rad,
     out = zero(Complex{T})
     for i in eachindex(αs)
 
-        λ = x.T2.κs_λ[i]*λ0
+        λ = x.T2.var[i]*λ0
         for k in eachindex(part_inds_molecule[i])
+            
             r = u_rad - x.shift.d[i][k]
             inds = part_inds_molecule[i][k]
 
             out += evalclpart(r, αs[i][inds],
-                Ωs[i][inds], λ)*cis(dot(x.phase.κs_β[i], c[i][k]))
+                Ωs[i][inds], λ)*cis(dot(x.phase.var[i], c[i][k]))
         end
     end
 

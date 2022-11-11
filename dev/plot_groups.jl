@@ -173,7 +173,7 @@ q = uu->NMRSignalSimulator.evalclproxymixture(uu, mixture_params, Bs)
 # create the functions for each resonance group.
 B = Bs[1]
 A = As[1]
-qs = collect( collect( ωω->B.qs[i][k](ωω-B.ss_params.d[i], B.ss_params.κs_λ[i]) for k in eachindex(B.qs[i]) ) for i in eachindex(B.qs) )
+qs = collect( collect( ωω->B.qs[i][k](ωω-B.ss_params.shift.d[i], B.ss_params.T2.var[i]) for k in eachindex(B.qs[i]) ) for i in eachindex(B.qs) )
 q_singlets = ωω->NMRSignalSimulator.evalclsinglets(ωω, B.d_singlets, A.αs_singlets, A.Ωs_singlets, B.β_singlets, B.λ0, B.κs_λ_singlets)
 
 # create the function for the entire molecule.

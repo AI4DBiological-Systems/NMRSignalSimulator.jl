@@ -29,10 +29,12 @@ end
 
 
 ### different parameterizations of the spin system FID parameters.
-abstract type ShiftParms{T<:AbstractFloat} end
-abstract type PhaseParms{T<:AbstractFloat} end
-abstract type T2Parms{T<:AbstractFloat} end
 
+abstract type MoleculeParams end
+
+# abstract type ShiftParms{T} <: MoleculeParms{T} end
+# abstract type PhaseParms{T} <: MoleculeParms{T} end
+# abstract type T2Parms{T} <: MoleculeParms{T} end
 
 # struct CoherenceShift{T} <: SpinSysParams{T}
 #     κs_λ::Vector{T} # a multiplier for each (spin group.
@@ -41,19 +43,27 @@ abstract type T2Parms{T<:AbstractFloat} end
 #     κs_d::Vector{Vector{T}} # same size as κs_β. # intermediate buffer for d.
 # end
 
+# struct SharedParams <: T2Parms{T}
+#     var::Vector{T} # multiplier wrt some λ0. length: number of spin groups.
 
-
-# struct SharedShift{T} <: SpinSysParams{T}
-#     κs_λ::Vector{T} # a common multiplier for each spin group. length: number of spin groups.
-#     κs_β::Vector{Vector{T}} # a vector coefficient for each (spin group). vector length: number of spins in the spin group.
-#     d::Vector{T} # a common multiplier for each spin group. length: number of spin groups.
 # end
+# function SharedParams(
+#     ::Type{T},
+#     N_sys::Int;
+#     default_value::T = one(T),
+#     )::SharedParams where T <: AbstractFloat
 
+#     var = ones(T, N_sys)
+#     fill!(var, default_value)
 
+#     return SharedParams(var)
+# end
+abstract type SharedParams <: MoleculeParams end
+abstract type CoherenceParams <: MoleculeParams end
 
-
-struct SharedT2{T} <: T2Parms{T}
-    κs_λ::Vector{T} # multiplier wrt some λ0. length: number of spin groups.
+struct SharedT2{T} <: SharedParams
+    var::Vector{T} # multiplier wrt some λ0. length: number of spin groups.
+    #κs_λ::Vector{T} # multiplier wrt some λ0. length: number of spin groups.
     #λ::Vector{T} # actual decay. length: number of spin groups.
 end
 
@@ -70,8 +80,9 @@ function SharedT2(
     return SharedT2(κs_λ)
 end
 
-struct SharedShift{T} <: ShiftParms{T}
-    d::Vector{T} # length: number of spin groups.
+struct SharedShift{T} <: SharedParams
+    var::Vector{T} # length: number of spin groups.
+    #d::Vector{T} # length: number of spin groups.
 end
 
 function SharedShift(
@@ -84,8 +95,9 @@ function SharedShift(
     return SharedShift(d)
 end
 
-struct CoherenceShift{T} <: ShiftParms{T}
-    κs_d::Vector{Vector{T}} # first index for spin systems, second for coherence dimension.
+struct CoherenceShift{T} <: CoherenceParams
+    var::Vector{Vector{T}} # first index for spin systems, second for coherence dimension.
+    #κs_d::Vector{Vector{T}} # first index for spin systems, second for coherence dimension.
     d::Vector{Vector{T}} # first index for spin systems, second for resonance groups.
 end
 
@@ -102,8 +114,9 @@ function CoherenceShift(
 end
 
 
-struct CoherencePhase{T} <: PhaseParms{T}
-    κs_β::Vector{Vector{T}} # first index for spin systems, second for coherence dimension.
+struct CoherencePhase{T} <: CoherenceParams
+    var::Vector{Vector{T}} # first index for spin systems, second for coherence dimension.
+    #κs_β::Vector{Vector{T}} # first index for spin systems, second for coherence dimension.
     cos_β::Vector{Vector{T}} # first index for spin systems, second for resonance groups.
     sin_β::Vector{Vector{T}}
 end

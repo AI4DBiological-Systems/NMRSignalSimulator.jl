@@ -139,29 +139,29 @@ println("fitFIDproxies():")
 ####  manual assignment of FID parameters.
 # ## type 1.
 # for n_select in eachindex(Bs)
-#     tmp_d = 100.0 .* ones(length(Bs[n_select].ss_params.d))
-#     Bs[n_select].ss_params.d[:] = tmp_d
-#     Bs_cl[n_select].ss_params.d[:] = tmp_d
+#     tmp_d = 100.0 .* ones(length(Bs[n_select].ss_params.shift.var))
+#     Bs[n_select].ss_params.shift.var[:] = tmp_d
+#     Bs_cl[n_select].ss_params.shift.var[:] = tmp_d
 # end
 
 # ## type 2.
 for n_select in eachindex(Bs)
-    for i_select in eachindex(Bs[n_select].ss_params.d)
-        tmp_d = 100.0 .* ones(length(Bs[n_select].ss_params.d[i_select]))
-        Bs[n_select].ss_params.d[i_select] = tmp_d
-        Bs_cl[n_select].ss_params.d[i_select] = tmp_d
+    for i_select in eachindex(Bs[n_select].ss_params.shift.var)
+        tmp_d = 100.0 .* ones(length(Bs[n_select].ss_params.shift.d[i_select]))
+        Bs[n_select].ss_params.shift.d[i_select] = tmp_d
+        Bs_cl[n_select].ss_params.shift.d[i_select] = tmp_d
     end
 end
 
 ## common to both types.
 for n_select in eachindex(Bs)
-    tmp_λ = rand(length(Bs[n_select].ss_params.κs_λ)) .+ 1
-    Bs[n_select].ss_params.κs_λ[:] = tmp_λ
-    Bs_cl[n_select].ss_params.κs_λ[:] = tmp_λ
+    tmp_λ = rand(length(Bs[n_select].ss_params.T2.var)) .+ 1
+    Bs[n_select].ss_params.T2.var[:] = tmp_λ
+    Bs_cl[n_select].ss_params.T2.var[:] = tmp_λ
 
-    tmp_β = collect( rand(length(Bs[n_select].ss_params.κs_β[i])) .* (2*π) for i in eachindex(Bs[n_select].ss_params.κs_β) )
-    Bs[n_select].ss_params.κs_β[:] = tmp_β
-    Bs_cl[n_select].ss_params.κs_β[:] = tmp_β
+    tmp_β = collect( rand(length(Bs[n_select].ss_params.phase.var[i])) .* (2*π) for i in eachindex(Bs[n_select].ss_params.phase.var) )
+    Bs[n_select].ss_params.phase.var[:] = tmp_β
+    Bs_cl[n_select].ss_params.phase.var[:] = tmp_β
 end
 
 # manual move the D2O singlet, assumed to be in the last position.

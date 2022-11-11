@@ -20,7 +20,22 @@ println("flatten state from nested Vectors to a Vector.")
 println()
 
 
-buffer_d, buffer_κs_d, buffer_κs_β, views_d, views_κs_d, views_κs_β = NMRSignalSimulator.extractshiftviews(Bs)
+# buffer_d, buffer_κs_d, buffer_κs_β, views_d, views_κs_d,
+# views_κs_β = NMRSignalSimulator.extractshiftviews(Bs)
+
+shifts, phases, T2s = NMRSignalSimulator.setupvars(Bs)
+
+N_κs_d = NMRSignalSimulator.getNvars(shifts)
+
+N_κs_β = NMRSignalSimulator.getNvars(phases)
+
+N_κs_λ = NMRSignalSimulator.getNvars(T2s)
+@assert sum(length( As[n].αs ) for n in eachindex(As)) == N_κs_λ
+
+# for coherence shift.
+
+params_map = NMRSignalSimulator.getParamsMapping(shifts, phases, T2s)
+
 
 @assert 1==2
 

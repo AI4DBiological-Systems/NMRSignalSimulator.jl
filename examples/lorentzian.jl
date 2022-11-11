@@ -101,12 +101,12 @@ Bs = NMRSignalSimulator.fitclproxies(type_SSParams, As, λ0;
 B = Bs[1]
 A = As[1]
 if type_SSParams <: NMRSignalSimulator.SharedShift
-    B.ss_params.shift.d[:] = rand(length(B.ss_params.shift.d))
+    B.ss_params.shift.var[:] = rand(length(B.ss_params.shift.var))
 elseif type_SSParams <: NMRSignalSimulator.CoherenceShift
-    B.ss_params.shift.d[:] = collect( rand(length(B.ss_params.shift.d[i])) .* (2*π) for i in eachindex(B.ss_params.d) )
+    B.ss_params.shift.var[:] = collect( rand(length(B.ss_params.shift.var[i])) .* (2*π) for i in eachindex(B.ss_params.shift.var) )
 end
-B.ss_params.T2.κs_λ[:] = rand(length(B.ss_params.T2.κs_λ)) .+ 1
-B.ss_params.phase.κs_β[:] = collect( rand(length(B.ss_params.phase.κs_β[i])) .* (2*π) for i in eachindex(B.ss_params.phase.κs_β) )
+B.ss_params.T2.var[:] = rand(length(B.ss_params.T2.var)) .+ 1
+B.ss_params.phase.var[:] = collect( rand(length(B.ss_params.phase.var[i])) .* (2*π) for i in eachindex(B.ss_params.phase.var) )
 
 NMRSignalSimulator.updateparameters!(B.ss_params.phase, A.Δc_bar)
 NMRSignalSimulator.updateparameters!(B.ss_params.shift, A.Δc_bar)
@@ -194,7 +194,7 @@ PyPlot.title("f vs q")
 # A = As[1];
 #
 # println("qs[i][k], gs eval:")
-# r0 = 2*π*U[m] - A.ss_params.d[1]
+# r0 = 2*π*U[m] - A.ss_params.shift.var[1]
 # @btime A.qs[1][1](r0, 1.0)
 # @btime A.gs[1][1](r0, 1.0)
 #
