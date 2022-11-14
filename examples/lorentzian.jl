@@ -18,7 +18,8 @@ PyPlot.matplotlib["rcParams"][:update](["font.size" => 22, "font.family" => "ser
 ### user inputs.
 
 #molecule_entries = ["L-Methionine"; "L-Phenylalanine"; "DSS"; "Ethanol"; "L-Isoleucine"]
-molecule_entries = ["alpha-D-Glucose"; "beta-D-Glucose"; "DSS"; "D2O"]
+#molecule_entries = ["alpha-D-Glucose"; "beta-D-Glucose"; "DSS"; "D2O"]
+molecule_entries = ["alpha-D-Glucose"; "DSS"; "D2O"; "beta-D-Glucose"; ]
 
 root_data_path = getdatapath() # coupling values data repository root path
 
@@ -83,7 +84,7 @@ type_SSParams = NMRSignalSimulator.getSpinSysParamsdatatype(NMRSignalSimulator.C
 # u_min = ppm2hzfunc(-0.5)
 # u_max = ppm2hzfunc(4.0)
 
-Bs = NMRSignalSimulator.fitclproxies(type_SSParams, As, λ0;
+Bs, MSS, MS = NMRSignalSimulator.fitclproxies(type_SSParams, As, λ0;
     names = molecule_entries,
     config_path = surrogate_config_path,
     Δcs_max_scalar_default = Δcs_max_scalar_default,
@@ -108,8 +109,8 @@ end
 B.ss_params.T2.var[:] = rand(length(B.ss_params.T2.var)) .+ 1
 B.ss_params.phase.var[:] = collect( rand(length(B.ss_params.phase.var[i])) .* (2*π) for i in eachindex(B.ss_params.phase.var) )
 
-NMRSignalSimulator.updateparameters!(B.ss_params.phase, A.Δc_bar)
-NMRSignalSimulator.updateparameters!(B.ss_params.shift, A.Δc_bar)
+NMRSignalSimulator.resolveparameters!(B.ss_params.phase, A.Δc_bar)
+NMRSignalSimulator.resolveparameters!(B.ss_params.shift, A.Δc_bar)
 
 f = uu->NMRSignalSimulator.evalclmixture(uu, As, Bs)
 

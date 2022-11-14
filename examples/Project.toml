@@ -1,5 +1,7 @@
 [deps]
 DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
+FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
+FiniteDifferences = "26cc04aa-876d-5657-8c51-4c34ba976000"
 MakiePlots = "a9bd3fed-5c2a-40f0-8692-fcfc96913d85"
 NMRHamiltonian = "d73005cc-2eb2-45b3-9785-29d07aec07ac"
 NMRSpecifyRegions = "2c6f6ba7-1a3c-4d31-8511-d336c09a6ae6"

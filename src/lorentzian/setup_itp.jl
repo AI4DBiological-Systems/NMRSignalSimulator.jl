@@ -1,6 +1,6 @@
 
 function fitclproxies(
-    ::Type{SST},
+    ::Type{SpinSysParams{ST,PT,T2T}},
     As::Vector{SHType{T}},
     λ0::T;
     names::Vector{String} = Vector{String}(undef, 0),
@@ -13,7 +13,9 @@ function fitclproxies(
     Δr_default = 1.0,
     Δκ_λ_default = 0.05,
     default_ppm_padding = 0.5,
-    ) where {T,SST}
+    )::Tuple{Vector{MoleculeType{T,SpinSysParams{ST,PT,T2T}}},
+    MixtureSpinSys{T,ST,PT,T2T},
+    MixtureSinglets{T}} where {T,ST,PT,T2T}
 
     config_dict = Dict()
     if ispath(config_path)
@@ -23,14 +25,22 @@ function fitclproxies(
         config_dict = JSON3.read(read(config_path))
     end
 
-    cores = Vector{MoleculeType{T,SST}}(undef, length(As))
+    N = length(As)
+
+    Bs = Vector{MoleculeType{T,SpinSysParams{ST,PT,T2T}}}(undef, N)
+
+    srs = Vector{Vector{Vector{Function}}}(undef, N)
+    sis = Vector{Vector{Vector{Function}}}(undef, N)
+
+    ∇srs! = Vector{Vector{Vector{Function}}}(undef, N)
+    ∇sis! = Vector{Vector{Vector{Function}}}(undef, N)
 
     for n in eachindex(As)
         A = As[n]
 
         # fit surrogate, save into `core`.
-        cores[n] = fitclproxy(
-            SST,
+        Bs[n], srs[n], sis[n], ∇srs![n], ∇sis![n] = fitclproxy(
+            SpinSysParams{ST,PT,T2T},
             A,
             λ0,
             config_dict;
@@ -46,9 +56,29 @@ function fitclproxies(
         )
     end
 
-    return cores
-end
+    # alternative specification for derivatives.
+    shifts, phases, T2s, Δc_bars = setupSSvars(As, Bs)
+    mixSS = MixtureSpinSys(
+        srs,
+        sis,
+        ∇srs!,
+        ∇sis!,
+        shifts,
+        phases,
+        T2s,
+        Δc_bars,
+    )
 
+    MS = MixtureSinglets(
+        collect( Bs[n].κs_λ_singlets for n in eachindex(Bs) ),
+        collect( Bs[n].β_singlets for n in eachindex(Bs) ),
+        collect( Bs[n].d_singlets for n in eachindex(Bs) ),
+        collect( As[n].αs_singlets for n in eachindex(As) ),
+        collect( As[n].Ωs_singlets for n in eachindex(As) ),
+        λ0,
+    )
+    return Bs, mixSS, MS
+end
 
 function fitclproxy(
     ::Type{SST},
@@ -64,7 +94,7 @@ function fitclproxy(
     Δr_default = 1.0,
     Δκ_λ_default = 0.05,
     default_ppm_padding = 0.5,
-    )::MoleculeType{T,SST} where {T,SST}
+    ) where {T,SST}
 
     hz2ppmfunc = uu->(uu - A.ν_0ppm)*A.SW/A.fs
     ppm2hzfunc = pp->(A.ν_0ppm + pp*A.fs/A.SW)
@@ -127,7 +157,7 @@ function fitclproxy(
         u_max = ppm2hzfunc(max_ppm)
     end
 
-    qs = setupclmoleculepartitionitp(
+    qs, sr, si, ∇sr!, ∇si! = setupclmoleculepartitionitp(
         d_max,
         #SSParams_obj.κs_β,
         SSParams_obj.phase.cos_β,
@@ -154,7 +184,7 @@ function fitclproxy(
         λ0
     )
 
-    return core
+    return core, sr, si, ∇sr!, ∇si!
 end
 
 function setupclmoleculepartitionitp(
@@ -175,13 +205,30 @@ function setupclmoleculepartitionitp(
     Δκ_λ = 0.05,
     ) where T <: AbstractFloat
 
-    qs = Vector{Vector{Function}}(undef, length(αs)) # surrogates for lorentzian model.
+    N_sys = length(αs)
+
+    qs = Vector{Vector{Function}}(undef, N_sys) # surrogates for lorentzian model.
+    
+    sr = Vector{Vector{Function}}(undef, N_sys)
+    si = Vector{Vector{Function}}(undef, N_sys)
+
+    ∇sr! = Vector{Vector{Function}}(undef, N_sys)
+    ∇si! = Vector{Vector{Function}}(undef, N_sys)
+    
     #gs = Vector{Vector{Function}}(undef, length(αs)) # surrogates for FID model.
 
     for i in eachindex(part_inds_molecule) # over elements in a spin group.
 
         N_partition_elements = length(part_inds_molecule[i])
+
         qs[i] = Vector{Function}(undef, N_partition_elements)
+        
+        sr[i] = Vector{Function}(undef, N_partition_elements)
+        si[i] = Vector{Function}(undef, N_partition_elements)
+
+        ∇sr![i] = Vector{Function}(undef, N_partition_elements)
+        ∇si![i] = Vector{Function}(undef, N_partition_elements)
+
         #gs[i] = Vector{Function}(undef, N_partition_elements)
 
         for k = 1:N_partition_elements
@@ -196,11 +243,17 @@ function setupclmoleculepartitionitp(
             Δr = Δr, Δκ_λ = Δκ_λ)
 
             #qs[i][k] = (rr, ξξ)->evalq(real_sitp, imag_sitp, rr, ξξ, κs_β[i], Δc_bar[i][k])
-            qs[i][k] = (rr, ξξ)->evalq(real_sitp, imag_sitp, rr, ξξ, cos_β[i][k], sin_β[i][k])
+            qs[i][k] = (rr::T, ξξ::T)->evalq(real_sitp, imag_sitp, rr, ξξ, cos_β[i][k], sin_β[i][k])::Complex{T}
+
+            sr[i][k] = (rr::T, ξξ::T)->real_sitp(rr,ξξ)::T
+            si[i][k] = (rr::T, ξξ::T)->imag_sitp(rr,ξξ)::T
+
+            ∇sr![i][k] = (gg,rr,ξξ)->Interpolations.gradient!(gg, real_sitp, rr, ξξ)
+            ∇si![i][k] = (gg,rr,ξξ)->Interpolations.gradient!(gg, imag_sitp, rr, ξξ)
         end
     end
 
-    return qs
+    return qs, sr, si, ∇sr!, ∇si!
 end
 
 # function evalq(real_sitp, imag_sitp, r::T, ξ::T, b::Vector{T}, c)::Complex{T} where T <: AbstractFloat
@@ -265,6 +318,13 @@ function setupclpartitionitp(
     #imag_itp = Interpolations.interpolate(imag.(A), Interpolations.BSpline(Interpolations.Quadratic(Interpolations.Line(Interpolations.OnGrid()))))
     imag_sitp = Interpolations.scale(imag_itp, A_r, A_ξ)
     imag_setp = Interpolations.extrapolate(imag_sitp, 0.0) # zero outside interp range.
+
+
+    # @show α
+    # @show Ω
+    # @show A_r
+    # @show A_ξ
+    # @assert 1==2
 
     #return real_sitp, imag_sitp
     return real_setp, imag_setp

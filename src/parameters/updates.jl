@@ -1,12 +1,105 @@
 
+
+
+function updateparameters!(
+    θs::Vector{ST},
+    p,
+    θs_mapping::MoleculeParamsMapping,
+    ) where ST<:SharedParams
+
+    for n in eachindex(θs)
+
+        for i in eachindex(θs[n].var)
+
+            st_ind = θs_mapping.st[n][i]
+            
+            #fin_ind = θs_mapping.fin[n][i]
+            #θs[n].var[i] = p[begin+st_ind-1:begin+fin_ind-1]
+            θs[n].var[i] = p[begin+st_ind-1]
+        end
+    end
+
+    return nothing
+end
+
+function updateparameters!(
+    θs::Vector{CT},
+    p,
+    θs_mapping::MoleculeParamsMapping,
+    ) where CT<:CoherenceParams
+
+    for n in eachindex(θs)
+        x = θs[n]
+
+        for i in eachindex(x.var)
+
+            st_ind = θs_mapping.st[n][i]
+            fin_ind = θs_mapping.fin[n][i]
+
+            x.var[i][:] = p[begin+st_ind-1:begin+fin_ind-1]
+        end
+    end
+
+    return nothing
+end
+
+
+#####
+
+function resolveparameters!(
+    phases::Vector{CoherencePhase{T}},
+    Δc_bars::Vector{Vector{Vector{Vector{T}}}},
+    ) where T
+
+    for n in eachindex(phases)
+        x = phases[n]
+
+        @assert length(x_var) == length(x.cos_β) == length(x.sin_β) # same number of non-singlet spin systems.
+
+        for i in eachindex(x.cos_β)
+            for k in eachindex(x.cos_β[i])
+
+                β = dot(Δc_bars[n][i][k], x.var[i])
+
+                x.cos_β[i][k] = cos(β)
+                x.sin_β[i][k] = sin(β)
+            end
+        end
+    end
+
+    return nothing
+end
+
+function resolveparameters!(
+    shifts::Vector{CoherenceShift{T}},
+    Δc_bars::Vector{Vector{Vector{Vector{T}}}},
+    ) where T
+
+    for n in eachindex(shifts)
+        x = shifts[n]
+
+        @assert length(x_var) == length(x.d) # same number of non-singlet spin systems.
+
+        for i in eachindex(x.d)    
+
+            for k in eachindex(x.d[i])
+
+                x.d[i][k] = dot(Δc_bars[n][i][k], x.var[i])
+            end
+        end
+    end
+
+    return nothing
+end
+
 """
 ```
-updateparameters!(A::CoherencePhase{T})
+resolveparameters!(A::CoherencePhase{T})
 ```
 
 Updates the other fields of A using the contents of `A.var`.
 """
-function updateparameters!(A::CoherencePhase{T}, Δc_bar::Vector{Vector{Vector{T}}}) where T <: AbstractFloat
+function resolveparameters!(A::CoherencePhase{T}, Δc_bar::Vector{Vector{Vector{T}}}) where T <: AbstractFloat
     
     @assert length(Δc_bar) == length(A.var)
 
@@ -27,12 +120,12 @@ end
 
 """
 ```
-updateparameters!(A::CoherencePhase{T})
+resolveparameters!(A::CoherencePhase{T})
 ```
 
 Updates the other fields of A using the contents of `A.var`.
 """
-function updateparameters!(A::CoherenceShift{T}, Δc_bar::Vector{Vector{Vector{T}}}) where T <: AbstractFloat
+function resolveparameters!(A::CoherenceShift{T}, Δc_bar::Vector{Vector{Vector{T}}}) where T <: AbstractFloat
     
     @assert length(Δc_bar) == length(A.var)
 

@@ -118,7 +118,7 @@ function evalclsinglets(u_rad::T, d::Vector{T}, αs_singlets::Vector{T}, Ωs_sin
     return out
 end
 
-function evalclsinglets(u_rad::T, d::Vector{T},
+#= function evalclsinglets(u_rad::T, d::Vector{T},
     αs_singlets::Vector{T}, Ωs_singlets,
     βs_singlets, λ0::T, λ_multipliers::Vector{T},
     κ_α_singlets::Vector{T}) where T <: Real
@@ -134,4 +134,4 @@ function evalclsinglets(u_rad::T, d::Vector{T},
         out += κ_α_singlets[i]*αs_singlets[i]*cis(βs_singlets[i])/(λ+im*(τ-Ω))
     end
     return out
-end
+end =#

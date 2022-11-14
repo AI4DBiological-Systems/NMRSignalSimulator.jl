@@ -27,6 +27,36 @@ struct MoleculeType{T,SST} # parameters for surrogate model.
     λ0::T
 end
 
+# # used for derivatives.
+
+struct MixtureSinglets{T}
+    ξs::Vector{Vector{T}} # multiplier wrt λ0.
+    #λ_singlets::Vector{Vector{T}} # actual T2.
+    βs::Vector{Vector{T}}
+    ds::Vector{Vector{T}}
+
+    αs::Vector{Vector{T}}
+    Ωs::Vector{Vector{T}}
+
+    # misc.
+    λ0::T
+end
+
+struct MixtureSpinSys{T, ST,PT,T2T}
+    
+    # spline surrogate portion of qs, and their derivatives. For computing qs' derivatives.
+    srs::Vector{Vector{Vector{Function}}}
+    sis::Vector{Vector{Vector{Function}}}
+
+    ∇srs!::Vector{Vector{Vector{Function}}}
+    ∇sis!::Vector{Vector{Vector{Function}}}
+
+    shifts::Vector{ST}
+    phases::Vector{PT}
+    T2s::Vector{T2T}
+
+    Δc_bars::Vector{Vector{Vector{Vector{T}}}}
+end
 
 ### different parameterizations of the spin system FID parameters.
 
@@ -185,3 +215,17 @@ function getSpinSysParamsdatatype(
 
     return SpinSysParams{SharedShift{T}, CoherencePhase{T}, SharedT2{T}}
 end
+
+
+
+
+############# flatten.
+
+
+
+
+
+
+
+################ forward model.
+

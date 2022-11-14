@@ -2,7 +2,7 @@
 
 julia_version = "1.8.1"
 manifest_format = "2.0"
-project_hash = "225052f45bb21ecac307d5b8e009bdb8a3c1c61c"
+project_hash = "ffbe38264e0a83f953459ea3d2b337201479d376"
 
 [[deps.AbstractFFTs]]
 deps = ["ChainRulesCore", "LinearAlgebra"]
@@ -327,6 +327,12 @@ deps = ["ArrayInterfaceCore", "LinearAlgebra", "Requires", "Setfield", "SparseAr
 git-tree-sha1 = "bb61d9e5085784fe453f70c97b23964c5bf36942"
 uuid = "6a86dc24-6348-571c-b903-95158fe2bd41"
 version = "2.16.0"
+
+[[deps.FiniteDifferences]]
+deps = ["ChainRulesCore", "LinearAlgebra", "Printf", "Random", "Richardson", "SparseArrays", "StaticArrays"]
+git-tree-sha1 = "9788a26511ad46afd12197955c2b984d5faf83c8"
+uuid = "26cc04aa-876d-5657-8c51-4c34ba976000"
+version = "0.12.25"
 
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
@@ -1041,6 +1047,12 @@ deps = ["UUIDs"]
 git-tree-sha1 = "838a3a4188e2ded87a4f9f184b4b0d78a1e91cb7"
 uuid = "ae029012-a4dd-5104-9daa-d747884805df"
 version = "1.3.0"
+
+[[deps.Richardson]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "e03ca566bec93f8a3aeb059c8ef102f268a38949"
+uuid = "708f8203-808e-40c0-ba2d-98a6953ed40d"
+version = "1.4.0"
 
 [[deps.Rmath]]
 deps = ["Random", "Rmath_jll"]
