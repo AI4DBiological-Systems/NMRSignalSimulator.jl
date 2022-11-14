@@ -1,3 +1,5 @@
+using BenchmarkTools
+
 import NMRHamiltonian
 import NMRSpecifyRegions
 
@@ -6,6 +8,7 @@ import Tar
 
 using LinearAlgebra
 
+import Random
 
 # # for plotting.
 # import MakiePlots

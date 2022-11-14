@@ -6,7 +6,7 @@ function evalclproxysys(
     x::SpinSysParams{SharedShift{T}, CoherencePhase{T}, SharedT2{T}},
     )::Complex{T} where T
 
-    d = x.shift.d
+    d = x.shift.var
     κs_λ = x.T2.var
     #κs_β = x.κs_β
 
@@ -53,55 +53,6 @@ function evalclproxysys(
 
     return out
 end
-
-#= 
-function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}},
-    u_rad::T, x::SharedShift{T})::Complex{T} where T
-
-    d = x.d
-    κs_λ = x.κs_λ
-    #κs_β = x.κs_β
-
-    @assert length(d) == length(qs)
-
-    out = zero(Complex{T})
-
-    #u_rad = 2*π*u
-    for i in eachindex(qs)
-        r = u_rad - d[i]
-
-        for k in eachindex(qs[i])
-
-            out += κ_α[i][k]*qs[i][k](r, κs_λ[i])
-        end
-    end
-
-    return out
-end
-
-function evalκitpproxysys(κ_α::Vector{Vector{T}}, qs::Vector{Vector{Function}},
-    u_rad::T, x::CoherenceShift{T})::Complex{T} where T
-
-    d = x.d
-    κs_λ = x.κs_λ
-
-    @assert length(d) == length(qs)
-
-    out = zero(Complex{T})
-
-    #u_rad = 2*π*u
-    for i in eachindex(qs)
-
-        for k in eachindex(qs[i])
-            r = u_rad - d[i][k]
-
-            out += κ_α[i][k]*qs[i][k](r, κs_λ[i])
-        end
-    end
-
-    return out
-end =#
-
 
 ###################### front end.
 

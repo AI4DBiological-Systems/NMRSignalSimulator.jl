@@ -29,16 +29,21 @@ end
 
 # # used for derivatives.
 
+
+
 struct MixtureSinglets{T}
+    
+    # variables.
     ξs::Vector{Vector{T}} # multiplier wrt λ0.
-    #λ_singlets::Vector{Vector{T}} # actual T2.
     βs::Vector{Vector{T}}
     ds::Vector{Vector{T}}
 
+    # constants.
     αs::Vector{Vector{T}}
     Ωs::Vector{Vector{T}}
 
     # misc.
+    #λ_singlets::Vector{Vector{T}} # actual T2.
     λ0::T
 end
 
@@ -51,12 +56,15 @@ struct MixtureSpinSys{T, ST,PT,T2T}
     ∇srs!::Vector{Vector{Vector{Function}}}
     ∇sis!::Vector{Vector{Vector{Function}}}
 
+    # variables.
     shifts::Vector{ST}
     phases::Vector{PT}
     T2s::Vector{T2T}
 
+    # misc.
     Δc_bars::Vector{Vector{Vector{Vector{T}}}}
 end
+
 
 ### different parameterizations of the spin system FID parameters.
 
@@ -95,6 +103,7 @@ struct SharedT2{T} <: SharedParams
     var::Vector{T} # multiplier wrt some λ0. length: number of spin groups.
     #κs_λ::Vector{T} # multiplier wrt some λ0. length: number of spin groups.
     #λ::Vector{T} # actual decay. length: number of spin groups.
+    #ξ::Vector{Vector{T}} # [i][k] is i-th spin system, k-th resonance group.
 end
 
 function SharedT2(
@@ -113,6 +122,7 @@ end
 struct SharedShift{T} <: SharedParams
     var::Vector{T} # length: number of spin groups.
     #d::Vector{T} # length: number of spin groups.
+    #d::Vector{Vector{T}}
 end
 
 function SharedShift(

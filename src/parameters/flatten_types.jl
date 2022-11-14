@@ -120,6 +120,30 @@ function extractshifts(
     return out_d, out_β
 end
 
+function extractshifts(
+    Bs::Vector{MoleculeType{T, SpinSysParams{SharedShift{T}, CoherencePhase{T}, SharedT2{T}}}},
+    ) where T
+
+    out_d = Vector{Vector{T}}(undef, length(Bs))
+    out_β = Vector{Vector{Vector{T}}}(undef, length(Bs))
+    
+    for n in eachindex(Bs)
+        out_d[n] = Bs[n].ss_params.shift.var
+        out_β[n] = Vector{Vector{T}}(undef, length(Bs[n].ss_params.phase.var))
+
+        for i in eachindex(Bs[n].ss_params.phase.var)
+            
+            out_β[n][i] = Bs[n].ss_params.phase.var[i]
+
+            # out_d[n][i] = Vector{T}(undef, length(Bs[n].ss_params.shift.var))
+            # for k in eachindex(Bs[n].ss_params.shift.var[i])
+            #     out_d[n][i][k] = Bs[n].ss_params.shift.var[i]
+            # end
+        end
+    end
+
+    return out_d, out_β
+end
 
 # creates referenecs to the nested array objects in Bs, As.
 function setupSSvars(
@@ -146,11 +170,12 @@ function setupSSvars(
     return shifts, phases, T2s, Δc_bars
 end
 
+# for non-singlet spin systems.
 function getNvars(
     Vs::Vector{VT},
-    ) where VT <: MoleculeParams
+    )::Int where VT <: MoleculeParams
 
-    N_vars::Int = 0
+    N_vars = 0
 
     for n in eachindex(Vs) # molecule index.
         for i in eachindex(Vs[n].var) # spin system index.
@@ -163,4 +188,24 @@ function getNvars(
     end
 
     return N_vars
+end
+
+# number of resonance groups. For non-singlet spin systems.
+function getNgroups(
+    As::Vector{SHType{T}},
+    )::Int where T
+
+    N = 0
+
+    for n in eachindex(As) # molecule index.
+        for i in eachindex(As[n].Δc_bar) # spin system index.
+
+            for k in eachindex(As[n].Δc_bar[i]) # effective chemical shift index.
+
+                N += 1
+            end
+        end
+    end
+
+    return N
 end

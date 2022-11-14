@@ -1,7 +1,7 @@
 using NMRSignalSimulator
 using Test
 
-include("./helpers/updates.jl")
+#include("./helpers/updates.jl")
 
 @testset "NMRSignalSimulator.jl" begin
     # save the MEs to JLD, and load X, Bs, As, etc.

@@ -61,7 +61,7 @@ function evalclspinsystem(
 
     out = zero(Complex{T})
     for i in eachindex(αs)
-        r = u_rad - x.shift.d[i]
+        r = u_rad - x.shift.var[i]
 
         λ = x.T2.var[i]*λ0
         for k in eachindex(part_inds_molecule[i])
