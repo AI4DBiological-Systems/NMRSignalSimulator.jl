@@ -50,62 +50,144 @@ end
 
 ##### tests.
 # mutates shifts, phases, T2s.
-function testupdateparameters1!(shifts, phases, T2s)
 
-    mapping = getParamsMapping(shifts, phases, T2s)
+function testupdate!(MSS, MS::MixtureSinglets{T}) where T <: AbstractFloat
 
-    N_κs_d = getNvars(shifts)
-    N_κs_β = getNvars(phases)
-    N_κs_λ = getNvars(T2s)
+    # generate random input p.
+    N_κs_d = getNvars(MSS.shifts)
+    N_κs_β = getNvars(MSS.phases)
+    N_κs_λ = getNvars(MSS.T2s)
+    N_singlets = getNsinglets(MS)
 
-    p = randn(N_κs_d+N_κs_β+N_κs_λ)
+    N_SS_vars = N_κs_d+N_κs_β+N_κs_λ
+    N_singlet_vars = 3*N_singlets
 
-    updateparameters!(T2s, p, mapping.T2)
-    updateparameters!(shifts, p, mapping.shift)
-    updateparameters!(phases, p, mapping.phase)
+    p = randn(N_SS_vars + N_singlet_vars)
 
-    return p, mapping
+    # spin system update.
+    mapping = getParamsMapping(MSS.shifts, MSS.phases, MSS.T2s)
+    updatespinsystems!(MSS, p, mapping)
+
+    # singlets.
+    s_mapping = getsingletsParamsMapping(MS, offset_ind = N_SS_vars)
+    updatesinglets!(MS, p, s_mapping)
+    
+    # verify.
+    
+    discrepancy1, fin_ind = verifyupdatedvars(p, MSS.shifts; st_ind = 1)
+    discrepancy2, fin_ind = verifyupdatedvars(p, MSS.phases; st_ind = fin_ind + 1)
+    discrepancy3, fin_ind = verifyupdatedvars(p, MSS.T2s; st_ind = fin_ind + 1)
+    
+    discrepancy4, fin_ind = verifyupdatedvars(p, MS; st_ind = fin_ind+1)
+    
+    return discrepancy1 + discrepancy2 + discrepancy3 + discrepancy4, p
+    #return discrepancy1, discrepancy2, discrepancy3, discrepancy4, p
 end
 
+
+
 # based on the hardcoded ordering of getParamsMapping(): shift, phase, T2.
-function testupdateparameters2(
+# function verifyupdatedvars(
+#     p,
+#     shifts::Vector{CoherenceShift{T}};
+#     st_ind = 1,
+#     ) where T
+
+#     @assert length(shifts) == length(phases) == length(T2s)
+
+#     discrepancy = zero(T)
+#     l = st_ind
+
+#     for n in eachindex(shifts)
+#         for i in eachindex(shifts[n].var)
+#             for j in eachindex(shifts[n].var[i])
+#                 l += 1
+#                 discrepancy += abs(shifts[n].var[i][j] - p[begin+l-1])
+#             end
+#         end
+#     end
+
+#     return discrepancy, l
+# end
+
+function verifyupdatedvars(
     p,
-    shifts::Vector{CoherenceShift{T}},
-    phases,
-    T2s
-    ) where T
+    phases::Vector{PT};
+    st_ind = 1,
+    ) where PT <: CoherenceParams
 
-    @assert length(shifts) == length(phases) == length(T2s)
-
-    discrepancy = zero(T)
-
-    l = 0
-    for n in eachindex(shifts)
-        for i in eachindex(shifts[n].var)
-            for j in eachindex(shifts[n].var[i])
-                l += 1
-                discrepancy += abs(shifts[n].var[i][j] - p[l])
-            end
-        end
-    end
+    discrepancy = 0.0
+    l = st_ind
 
     for n in eachindex(phases)
         for i in eachindex(phases[n].var)
             for j in eachindex(phases[n].var[i])
+                
+                discrepancy += abs(phases[n].var[i][j] - p[begin+l-1])
                 l += 1
-                discrepancy += abs(phases[n].var[i][j] - p[l])
             end
         end
     end
+
+    return discrepancy, l-1
+end
+
+function verifyupdatedvars(
+    p,
+    T2s::Vector{ST};
+    st_ind = 1,
+    ) where ST <: SharedParams
+
+    discrepancy = 0.0
+    l = st_ind 
 
     for n in eachindex(T2s)
         for i in eachindex(T2s[n].var)
             for j in eachindex(T2s[n].var[i])
+                
+                discrepancy += abs(T2s[n].var[i][j] - p[begin+l-1])
                 l += 1
-                discrepancy += abs(T2s[n].var[i][j] - p[l])
             end
         end
     end
 
-    return discrepancy
+    return discrepancy, l-1
+end
+
+function verifyupdatedvars(
+    p,
+    MS::MixtureSinglets{T};
+    st_ind = 1,
+    ) where T
+
+    discrepancy = zero(T)
+    l = st_ind
+
+    for n in eachindex(MS.ds)
+        for i in eachindex(MS.ds[n])
+            
+            discrepancy += abs(MS.ds[n][i] - p[begin + l-1])
+            l += 1
+        end
+    end
+
+    # for n in eachindex(MS.βs)
+    #     for i in eachindex(MS.βs[n])
+            
+            
+    #         discrepancy += abs(MS.βs[n][i] - p[begin+l-1])
+    #         l += 1
+    #     end
+    # end
+
+    # for n in eachindex(MS.ξs)
+    #     for i in eachindex(MS.ξs[n])
+            
+            
+    #         discrepancy += abs(MS.ξs[n][i] - p[begin+l-1])
+    #         l += 1
+    #     end
+    # end
+
+    return discrepancy, l-1
 end

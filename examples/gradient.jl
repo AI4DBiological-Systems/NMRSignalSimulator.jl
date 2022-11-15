@@ -32,28 +32,27 @@ N_κs_β = NMRSignalSimulator.getNvars(phases)
 N_κs_λ = NMRSignalSimulator.getNvars(T2s)
 @assert sum(length( As[n].αs ) for n in eachindex(As)) == N_κs_λ
 
-# for coherence shift.
+N_singlets = NMRSignalSimulator.getNsinglets(MS)
 
+N_SS_vars = N_κs_d+N_κs_β+N_κs_λ
+N_singlet_vars = 3*N_singlets
+
+# spin system mapping.
 mapping = NMRSignalSimulator.getParamsMapping(shifts, phases, T2s)
 
+# singlet mapping.
+s_mapping = NMRSignalSimulator.getsingletsParamsMapping(MS,
+    offset_ind = N_SS_vars)
 
-# I am here. work on mappin for singlets, then test. then derivatives.
-
-@assert 1==2
-
-# ### custom parameters start.
-# # test loading parameters.
-# p = randn(N_κs_d+N_κs_β+N_κs_λ)
-# #p = collect(1:(N_κs_d+N_κs_β+N_κs_λ))
-
-# NMRSignalSimulator.updateparameters!(T2s, p, mapping.T2)
-# NMRSignalSimulator.updateparameters!(shifts, p, mapping.shift)
-# NMRSignalSimulator.updateparameters!(phases, p, mapping.phase)
-
-# p_test, maping_test = NMRSignalSimulator.testupdateparameters1!(shifts, phases, T2s)
-# discrepancy = NMRSignalSimulator.testupdateparameters2(p_test, shifts, phases, T2s)
+# # test on update for spin systems and singlets.
+# discrepancy, p = NMRSignalSimulator.testupdate!(MSS, MS)
 # @show discrepancy
-# ### custom parameters end.
+
+# next, forward model based on a wrapper of p, updates. test vs. qs.
+# then, derivatives.
+
+@assert 3==4
+
 
 # # forward model eval.
 # get q(u, κ_d, κ_β, κ_λ) and verify against q from Bs, As, from lorentzian.jl exmplae.

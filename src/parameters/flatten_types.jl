@@ -15,6 +15,56 @@ struct ParamsMapping
     T2::MoleculeParamsMapping
 end
 
+function getsingletsParamsMapping(
+    MS::MixtureSinglets{T};
+    offset_ind::Int = 0,
+    ) where T
+
+    ξs, βs, ds = MS.ξs, MS.βs, MS.ds
+
+    N = length(ξs)
+    @assert length(βs) == length(ds)
+
+    #st_ind = 0 + offset_ind
+    fin_ind = 0 + offset_ind
+    
+    # shift.
+    ds_st = Vector{Vector{Int}}(undef, N)
+    ds_fin = Vector{Vector{Int}}(undef, N)
+    for n in eachindex(ds)
+
+        if !isempty(ds[n])
+            ds_st[n], ds_fin[n], fin_ind = buildvarmapping(ds[n], fin_ind)
+        end
+    end
+
+    # phase.
+    βs_st = Vector{Vector{Int}}(undef, N)
+    βs_fin = Vector{Vector{Int}}(undef, N)
+    for n in eachindex(βs)
+
+        if !isempty(βs[n])
+            βs_st[n], βs_fin[n], fin_ind = buildvarmapping(βs[n], fin_ind)
+        end
+    end
+
+    # T2.
+    ξs_st = Vector{Vector{Int}}(undef, N)
+    ξs_fin = Vector{Vector{Int}}(undef, N)
+    for n in eachindex(ξs)
+
+        if !isempty(ξs[n])
+            ξs_st[n], ξs_fin[n], fin_ind = buildvarmapping(ξs[n], fin_ind)
+        end
+    end
+
+    return ParamsMapping(
+        MoleculeParamsMapping(ds_st, ds_fin),
+        MoleculeParamsMapping(βs_st, βs_fin),
+        MoleculeParamsMapping(ξs_st, ξs_fin),
+    )
+end
+
 function getParamsMapping(
     shifts::Vector{ST},
     phases::Vector{PT},
