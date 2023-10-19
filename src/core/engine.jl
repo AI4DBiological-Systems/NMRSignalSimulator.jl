@@ -233,8 +233,12 @@ function setupclmoleculepartitionitp(
             κ_λ_ub = itp_samps[i].κ_λ_ub
             λ0 = itp_samps[i].λ0
 
-            A_r = r_min:Δr:r_max
-            A_λ = (κ_λ_lb:Δκ_λ:κ_λ_ub) .* λ0
+            # # StepRangeLen is type-unstable in Julia v 1.9.
+            # A_r = r_min:Δr:r_max
+            # A_λ = (κ_λ_lb:Δκ_λ:κ_λ_ub) .* λ0
+
+            A_r = step2LinRange(r_min, Δr, r_max)
+            A_λ = step2LinRange(κ_λ_lb*λ0, Δκ_λ*λ0, κ_λ_ub*λ0)
 
             # loop through resonance groups.
             for k = 1:N_groups
@@ -333,16 +337,15 @@ function setupclpartitionitp(
     A_λ,
     ) where T <: AbstractFloat
 
-
     real_itp = Interpolations.interpolate(real.(A), Interpolations.BSpline(Interpolations.Cubic(Interpolations.Line(Interpolations.OnGrid()))))
     #real_itp = Interpolations.interpolate(real.(A), Interpolations.BSpline(Interpolations.Quadratic(Interpolations.Line(Interpolations.OnGrid()))))
     real_sitp = Interpolations.scale(real_itp, A_r, A_λ)
-    real_setp = Interpolations.extrapolate(real_sitp, 0.0) # zero outside interp range.
+    real_setp = Interpolations.extrapolate(real_sitp, zero(T)) # zero outside interp range.
 
     imag_itp = Interpolations.interpolate(imag.(A), Interpolations.BSpline(Interpolations.Cubic(Interpolations.Line(Interpolations.OnGrid()))))
     #imag_itp = Interpolations.interpolate(imag.(A), Interpolations.BSpline(Interpolations.Quadratic(Interpolations.Line(Interpolations.OnGrid()))))
     imag_sitp = Interpolations.scale(imag_itp, A_r, A_λ)
-    imag_setp = Interpolations.extrapolate(imag_sitp, 0.0) # zero outside interp range.
+    imag_setp = Interpolations.extrapolate(imag_sitp, zero(T)) # zero outside interp range.
     
     return real_setp, imag_setp
 end
@@ -360,10 +363,30 @@ function getitplocations(
     r_min = two_pi_T*(u_min - d_max)
     r_max = two_pi_T*(u_max + d_max)
 
-    # set up samples.
-    A_r = r_min:Δr:r_max # large range.
-    A_ξ = κ_λ_lb:Δκ_λ:κ_λ_ub
-    A_λ = A_ξ .* λ0
+    # # set up sample grid range.
+
+    # # StepRangeLen is type-unstable.
+    # A_r = r_min:Δr:r_max # large range.
+    # A_ξ = κ_λ_lb:Δκ_λ:κ_λ_ub
+    # A_λ = A_ξ .* λ0
+
+    # LinRange is type stable.
+    A_r = step2LinRange(r_min, Δr, r_max) # large range.
+    A_λ = step2LinRange(κ_λ_lb*λ0, Δκ_λ*λ0, κ_λ_ub*λ0)
 
     return r_min, r_max, A_r, A_λ
 end
+
+function step2LinRange(x1::T, s::T, x2::T)::LinRange{T,Int} where T
+    N_steps = floor(Int, (x2+s-x1)/s)
+    y1 = x1
+    y2 = convert(T, x1 + s*(N_steps-1))
+    return LinRange(y1, y2, N_steps)
+end
+# x1, s, x2 = (80692.28f0, 1.0f0, 87574.445f0)
+# r = x1:s:x2
+# N_steps = floor(Int, (x2+s-x1)/s)
+# y1 = x1
+# y2 = convert(T, x1 + s*(N_steps-1))
+# q = LinRange(y1,y2,N_steps)
+# @assert norm(collect(r) - collect(q)) < 1e-8@show

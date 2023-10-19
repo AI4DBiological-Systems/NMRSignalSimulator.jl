@@ -135,7 +135,7 @@ S_U = copy(q_U)
 discrepancy = norm(f_U-q_U)
 max_val, ind = findmax(discrepancy)
 println("relative l-2 discrepancy = ", norm(discrepancy)/norm(f_U))
-println("max l-2 discrepancy: ", max_val)
+println("max l-2 discrepancy: ", abs(f_U[ind]-q_U[ind])/abs(f_U[ind]), ", at $(P[ind]) ppm.")
 println()
 
 q_U_display = q_U
