@@ -153,6 +153,7 @@ PythonPlot.plot(P_display, real.(q_U_display), "x")
 PythonPlot.legend()
 PythonPlot.xlabel("ppm")
 PythonPlot.ylabel("real")
+PythonPlot.gca().invert_xaxis()
 PythonPlot.title("complex Lorentzian model (f) vs surrogate (q)")
 
 
