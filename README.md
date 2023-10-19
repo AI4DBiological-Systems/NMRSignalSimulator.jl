@@ -5,10 +5,12 @@ Constructs the surrogate and preliminary models for the frequency domain 1D 1H N
 [https://AI4DBiological-Systems.github.io/NMRSignalSimulator.jl/](https://AI4DBiological-Systems.github.io/NMRSignalSimulator.jl/)
 
 # Install
-First add the custom registry.
+Add the custom registries for dependencies, and then add the package.
 ```
 using Pkg
-pkg"registry add General https://github.com/AI4DBiological-Systems/PublicJuliaRegistry"
+Pkg.Registry.add(RegistrySpec(url = "https://github.com/RoyCCWang/RWPublicJuliaRegistry"))
+Pkg.Registry.add(RegistrySpec(url = "https://github.com/AI4DBiological-Systems/PublicJuliaRegistry"))
+
 pkg"add NMRSignalSimulator"
 ```
 # Citation
