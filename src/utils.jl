@@ -7,8 +7,8 @@ function Δcs2ζ(Δcs::T, ppm2hzfunc)::T where T
 Convert ppm to radial frequency.
 '''
 # # test.
-a = NMRSignalSimulator.Δcs2ζ(0.1, ppm2hzfunc)
-@show NMRSignalSimulator.ζ2Δcs(a, ν_0ppm, hz2ppmfunc)
+a = Δcs2ζ(0.1, ppm2hzfunc)
+@show ζ2Δcs(a, ν_0ppm, hz2ppmfunc)
 '''
 """
 function Δcs2ζ(Δcs::T, ppm2hzfunc)::T where T
@@ -24,8 +24,8 @@ function ζ2Δcs(ζ::T, ν_0ppm::T, hz2ppmfunc)::T where T
 Convert radial frequency to ppm.
 '''
 # # test.
-a = NMRSignalSimulator.Δcs2ζ(0.1, ppm2hzfunc)
-@show NMRSignalSimulator.ζ2Δcs(a, ν_0ppm, hz2ppmfunc)
+a = Δcs2ζ(0.1, ppm2hzfunc)
+@show ζ2Δcs(a, ν_0ppm, hz2ppmfunc)
 '''
 """
 function ζ2Δcs(ζ::T, ν_0ppm::T, hz2ppmfunc)::T where T

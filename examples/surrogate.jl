@@ -39,6 +39,7 @@ config = HAM.SHConfig{T}(
 unique_cs_atol = convert(T, 1e-6)
 
 molecule_entries = [
+    "Singlet - 0 ppm";
     "L-Serine";
     "alpha-D-Glucose";
     "beta-D-Glucose";
@@ -113,7 +114,7 @@ hz2ppmfunc = uu->(uu - ν_0ppm)*SW/fs
 ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 
 # test params.
-ΩS_ppm = collect( hz2ppmfunc.( SIG.combinevectors(A.Ωs) ./ convert(T, 2*π) ) for A in As )
+ΩS_ppm = collect( hz2ppmfunc.( SIG.combinevectors(A.Ωs) ./ SIG.twopi(T) ) for A in As )
 ΩS_ppm_flat = SIG.combinevectors(ΩS_ppm)
 P_max = maximum(ΩS_ppm_flat) + convert(T, 0.5)
 P_min = minimum(ΩS_ppm_flat) - convert(T, 0.5)
@@ -121,7 +122,7 @@ P_min = minimum(ΩS_ppm_flat) - convert(T, 0.5)
 P = LinRange(P_min, P_max, 80000)
 #P = LinRange(-0.2, 5.5, 80000)
 U = ppm2hzfunc.(P)
-U_rad = U .* convert(T, 2*π)
+U_rad = U .* SIG.twopi(T)
 
 ## parameters that affect qs.
 q = uu->SIG.evalclproxymixture(uu, As, Bs; w = w_oracle)

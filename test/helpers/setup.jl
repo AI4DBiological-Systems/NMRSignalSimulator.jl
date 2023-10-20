@@ -66,14 +66,14 @@ function testsetup(
     # test.
     w_oracle = ones(T, length(molecule_entries))
 
-    ΩS_ppm = collect( hz2ppmfunc.( SIG.combinevectors(A.Ωs) ./ convert(T, 2*π) ) for A in As )
+    ΩS_ppm = collect( hz2ppmfunc.( SIG.combinevectors(A.Ωs) ./ SIG.twopi(T) ) for A in As )
     ΩS_ppm_flat = SIG.combinevectors(ΩS_ppm)
     P_max = maximum(ΩS_ppm_flat) + convert(T, 0.5)
     P_min = minimum(ΩS_ppm_flat) - convert(T, 0.5)
 
     P = LinRange(P_min, P_max, 80000)
     U = ppm2hzfunc.(P)
-    U_rad = U .* convert(T, 2*π)
+    U_rad = U .* SIG.twopi(T)
 
     f = uu->SIG.evalclmixture(uu, As, Bs; w = w_oracle)
     q = uu->SIG.evalclproxymixture(uu, As, Bs; w = w_oracle)

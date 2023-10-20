@@ -115,7 +115,7 @@ function fitclproxy(
     d_max::Vector{T} = ppm2hzfunc.(Δcs_max) .- ppm2hzfunc(zero(T))
 
     # threshold and partition the resonance components.
-    Ωs_ppm = hz2ppmfunc.( combinevectors(A.Ωs) ./ convert(T, 2*π) )
+    Ωs_ppm = hz2ppmfunc.( combinevectors(A.Ωs) ./ twopi(T) )
     min_ppm = minimum(Ωs_ppm) - config.ppm_padding
     max_ppm = maximum(Ωs_ppm) + config.ppm_padding
     u_min = ppm2hzfunc(min_ppm)
@@ -167,22 +167,19 @@ function getitpsamples(
         # set up default, which is for the singlet case.
         itp_samps[i] = InterpolationSamples(T, length(N_groups))
 
-        if length(αs[i]) > 1
-            # a non-singlet system.
+        r_min, r_max, A_r, A_λ = getitplocations(d_max[i], C.u_min, C.u_max, config)
 
-            r_min, r_max, A_r, A_λ = getitplocations(d_max[i], C.u_min, C.u_max, config)
-
-            samples = Vector{Matrix{Complex{T}}}(undef, N_groups)
-            for k in eachindex(samples)
-                inds = parts[i][k]
-                α = αs[i][inds]
-                Ω = Ωs[i][inds]
-                samples[k] = computesamples(α, Ω, A_r, A_λ)
-            end
-
-            # overwrite the default.
-            itp_samps[i] = InterpolationSamples(config, samples, r_min, r_max)
+        samples = Vector{Matrix{Complex{T}}}(undef, N_groups)
+        for k in eachindex(samples)
+            inds = parts[i][k]
+            α = αs[i][inds]
+            Ω = Ωs[i][inds]
+            samples[k] = computesamples(α, Ω, A_r, A_λ)
         end
+
+        # overwrite the default.
+        itp_samps[i] = InterpolationSamples(config, samples, r_min, r_max)
+
     end
 
     return itp_samps
@@ -220,88 +217,41 @@ function setupclmoleculepartitionitp(
         ∇sr![i] = Vector{Function}(undef, N_groups)
         ∇si![i] = Vector{Function}(undef, N_groups)
 
-        if length(αs[i]) > 1
-            # a non-singlet system.
+        # parse.
+        samples = itp_samps[i].samples
+        r_min = itp_samps[i].r_min
+        Δr = itp_samps[i].Δr
+        r_max = itp_samps[i].r_max
+        κ_λ_lb = itp_samps[i].κ_λ_lb
+        Δκ_λ = itp_samps[i].Δκ_λ
+        κ_λ_ub = itp_samps[i].κ_λ_ub
+        λ0 = itp_samps[i].λ0
 
-            # parse.
-            samples = itp_samps[i].samples
-            r_min = itp_samps[i].r_min
-            Δr = itp_samps[i].Δr
-            r_max = itp_samps[i].r_max
-            κ_λ_lb = itp_samps[i].κ_λ_lb
-            Δκ_λ = itp_samps[i].Δκ_λ
-            κ_λ_ub = itp_samps[i].κ_λ_ub
-            λ0 = itp_samps[i].λ0
+        # # StepRangeLen is type-unstable in Julia v 1.9.
+        # A_r = r_min:Δr:r_max
+        # A_λ = (κ_λ_lb:Δκ_λ:κ_λ_ub) .* λ0
 
-            # # StepRangeLen is type-unstable in Julia v 1.9.
-            # A_r = r_min:Δr:r_max
-            # A_λ = (κ_λ_lb:Δκ_λ:κ_λ_ub) .* λ0
+        A_r = step2LinRange(r_min, Δr, r_max)
+        A_λ = step2LinRange(κ_λ_lb*λ0, Δκ_λ*λ0, κ_λ_ub*λ0)
 
-            A_r = step2LinRange(r_min, Δr, r_max)
-            A_λ = step2LinRange(κ_λ_lb*λ0, Δκ_λ*λ0, κ_λ_ub*λ0)
+        # loop through resonance groups.
+        for k = 1:N_groups
 
-            # loop through resonance groups.
-            for k = 1:N_groups
+            # get interpolation surrogates.
+            A = samples[k]
+            real_sitp, imag_sitp = setupclpartitionitp(A, A_r, A_λ)
+            
+            # construct simulator for this resonance group.
+            qs[i][k] = (rr::T, λλ::T)->evalq(real_sitp, imag_sitp, rr, λλ, cos_β[i][k], sin_β[i][k])::Complex{T}
 
-                # get interpolation surrogates.
-                A = samples[k]
-                real_sitp, imag_sitp = setupclpartitionitp(A, A_r, A_λ)
-                
-                # construct simulator for this resonance group.
-                qs[i][k] = (rr::T, λλ::T)->evalq(real_sitp, imag_sitp, rr, λλ, cos_β[i][k], sin_β[i][k])::Complex{T}
+            sr[i][k] = (rr::T, λλ::T)->real_sitp(rr,λλ)::T
+            si[i][k] = (rr::T, λλ::T)->imag_sitp(rr,λλ)::T
 
-                sr[i][k] = (rr::T, λλ::T)->real_sitp(rr,λλ)::T
-                si[i][k] = (rr::T, λλ::T)->imag_sitp(rr,λλ)::T
-
-                ∇sr![i][k] = (gg,rr,λλ)->Interpolations.gradient!(gg, real_sitp, rr, λλ)
-                ∇si![i][k] = (gg,rr,λλ)->Interpolations.gradient!(gg, imag_sitp, rr, λλ)
-            end
-
-        else
-            # a singlet system. Use zero phase lorentzians, since evalq() is used in evalmodel(), and it does the phase computation.
-            qs[i][begin] = (rr::T, λλ::T)->evalcomplexlorentzian(
-                rr,
-                λλ,
-                αs[i][begin],
-                Ωs[i][begin],
-                cos_β[i][1], sin_β[i][1],
-            )::Complex{T}
-
-            sr[i][begin] = (rr::T, λλ::T)->evalabsorptionlorentzian(
-                rr,
-                λλ,
-                αs[i][begin],
-                Ωs[i][begin],
-                #cos_β[i][1], sin_β[i][1],
-            )::T
-
-            si[i][begin] = (rr::T, λλ::T)->evaldispersionlorentzian(
-                rr,
-                λλ,
-                αs[i][begin],
-                Ωs[i][begin],
-                #cos_β[i][1], sin_β[i][1],
-            )::T
-
-            ∇sr![i][begin] = (gg, rr::T, λλ::T)->evalabsorptionlorentzianderivatives!(
-                gg,
-                rr,
-                λλ,
-                αs[i][begin],
-                Ωs[i][begin],
-                #cos_β[i][1], sin_β[i][1],
-            )
-
-            ∇si![i][begin] = (gg, rr::T, λλ::T)->evaldispersionlorentzianderivatives!(
-                gg,
-                rr,
-                λλ,
-                αs[i][begin],
-                Ωs[i][begin],
-                #cos_β[i][1], sin_β[i][1],
-            )
-
+            ∇sr![i][k] = (gg,rr,λλ)->Interpolations.gradient!(gg, real_sitp, rr, λλ)
+            ∇si![i][k] = (gg,rr,λλ)->Interpolations.gradient!(gg, imag_sitp, rr, λλ)
         end
+
+    
     end
 
     return qs, sr, si, ∇sr!, ∇si!
@@ -323,9 +273,9 @@ end
 function computesamples(α::Vector{T}, Ω::Vector{T}, A_r, A_λ)::Matrix{Complex{T}} where T <: AbstractFloat
 
     # complex.
-    # f = (rr,λλ)->NMRSignalSimulator.evalclpart(rr, α, Ω, λλ*λ0)
+    # f = (rr,λλ)->evalclpart(rr, α, Ω, λλ*λ0)
     # A = [f(x1,x2) for x1 in A_r, x2 in A_ξ]
-    f = (rr,λλ)->NMRSignalSimulator.evalclpart(rr, α, Ω, λλ)
+    f = (rr,λλ)->evalclpart(rr, α, Ω, λλ)
     A = [f(x1,x2) for x1 in A_r, x2 in A_λ]
 
     return A
@@ -359,9 +309,8 @@ function getitplocations(
     
     λ0, κ_λ_lb, κ_λ_ub, Δr, Δκ_λ = C.λ0, C.κ_λ_lb, C.κ_λ_ub, C.Δr, C.Δκ_λ
     
-    two_pi_T = convert(T, 2*π)
-    r_min = two_pi_T*(u_min - d_max)
-    r_max = two_pi_T*(u_max + d_max)
+    r_min = twopi(T)*(u_min - d_max)
+    r_max = twopi(T)*(u_max + d_max)
 
     # # set up sample grid range.
 
