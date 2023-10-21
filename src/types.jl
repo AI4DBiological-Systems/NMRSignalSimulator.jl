@@ -4,7 +4,6 @@
 
 """
 struct CLSurrogateConfig{T}
-    λ0::T = convert(T, 3.4)
     Δr::T = convert(T, 1.0)
     Δκ_λ::T = convert(T, 0.05)
     Δcs_max_scalar::T = convert(T, 0.2)
@@ -25,7 +24,6 @@ The extrapolation of the surrogate for frequency queries outisde this interval i
 - `Δr`, `Δκ_λ` -- the sampling increment for the frequency input r and T2 multiplier input κ_λ for generating samples to fit the surrogate. Smaller means the surrogate is more accurate, but slower to construct the surrogate.
 """
 @kwdef struct CLSurrogateConfig{T}
-    λ0::T = convert(T, 3.4)
     Δr::T = convert(T, 1.0) # the samples used to build the surrogate is taken every `Δr` radian on the frequency axis. Decrease for improved accuracy at the expense of computation resources.
     Δκ_λ::T = convert(T, 0.05) # the samples used to build thes urrogate for κ_λ are taken at this sampling spacing. Decrease for improved accuracy at the expense of computation resources.
     Δcs_max_scalar::T = convert(T, 0.2) # In units of ppm. interpolation border that is added to the lowest and highest resonance frequency component of the mixture being simulated.

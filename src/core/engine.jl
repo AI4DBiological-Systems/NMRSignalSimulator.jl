@@ -3,6 +3,7 @@
 ```
 fitclproxies(
     As::Vector{HAM.SHType{T}},
+    λ0::T,
     config::CLSurrogateConfig{T};
     names::Vector{String} = Vector{String}(undef, 0),
     ) where T <: AbstractFloat
@@ -14,10 +15,13 @@ Inputs:
 
 - `As` -- a 1-D array of compound resonance simulations. See `NMRHamiltonian.simulate`.
 
+- `λ0` -- the estimated T2* decay for the 0 ppm resonance component.
+
 - `config` -- the configuration for building the surrogate. See `CLSurrogateConfig`.
 """
 function fitclproxies(
     As::Vector{HAM.SHType{T}},
+    λ0::T,
     config::CLSurrogateConfig{T};
     ) where T <: AbstractFloat
     
@@ -27,6 +31,7 @@ function fitclproxies(
     return fitclproxies(
         SpinSysParams{CoherenceShift{T}, CoherencePhase{T}, SharedT2{T}},
         As,
+        λ0,
         config,
     )
 end
@@ -42,6 +47,7 @@ end
 function fitclproxies(
     ::Type{SpinSysParams{ST,PT,T2T}},
     As::Vector{HAM.SHType{T}},
+    λ0::T,
     config::CLSurrogateConfig{T};
     )::Tuple{Vector{MoleculeType{T,SpinSysParams{ST,PT,T2T}}},
     MixtureSpinSys{T,ST,PT,T2T},
@@ -66,6 +72,7 @@ function fitclproxies(
         Bs[n], srs[n], sis[n], ∇srs![n], ∇sis![n], itp_samps[n] = fitclproxy(
             SpinSysParams{ST,PT,T2T},
             A,
+            λ0,
             config,
         )
     end
@@ -81,7 +88,7 @@ function fitclproxies(
         phases,
         T2s,
         Δc_bars,
-        config.λ0,
+        λ0,
     )
 
     return Bs, mixSS, itp_samps
@@ -91,10 +98,9 @@ end
 function fitclproxy(
     ::Type{SST},
     A::HAM.SHType{T},
+    λ0::T,
     config::CLSurrogateConfig;
     ) where {T,SST}
-
-    λ0 = config.λ0
 
     hz2ppmfunc = uu->(uu - A.ν_0ppm)*A.SW/A.fs
     ppm2hzfunc = pp->(A.ν_0ppm + pp*A.fs/A.SW)
@@ -154,7 +160,7 @@ function getitpsamples(
     config::CLSurrogateConfig{T},
     )::Vector{InterpolationSamples{T}} where T <: AbstractFloat
 
-    parts, αs, Ωs, λ0 = C.parts, C.αs, C.Ωs, config.λ0
+    parts, αs, Ωs = C.parts, C.αs, C.Ωs
     N_sys = length(αs)
     
     itp_samps = Vector{InterpolationSamples{T}}(undef, N_sys)
@@ -193,7 +199,7 @@ function setupclmoleculepartitionitp(
     C::CLSurrogateSpinSysInputs,
     ) where T <: AbstractFloat
 
-    parts, αs, Ωs = C.parts, C.αs, C.Ωs
+    parts, αs = C.parts, C.αs
 
     N_sys = length(αs)
 

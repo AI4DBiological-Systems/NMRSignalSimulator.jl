@@ -14,6 +14,7 @@ T = Float32
 
 ### user inputs.
 fs, SW, ν_0ppm = HAM.getpresetspectrometer(T, "700")
+λ0 = convert(T, 3.4)
 
 ## pull the sample coupling values into dictionary structures.
 
@@ -58,8 +59,7 @@ molecule_entries = [
 
 w_oracle = ones(T, length(molecule_entries))
 Phys, As, MSPs = HAM.loadandsimulate(
-    T,
-    "700",
+    fs, SW, ν_0ppm,
     molecule_entries,
     H_params_path,
     molecule_mapping_file_path;
@@ -70,7 +70,6 @@ Phys, As, MSPs = HAM.loadandsimulate(
 
 ###
 proxy_config = SIG.CLSurrogateConfig{T}(
-    λ0 = convert(T, 3.4),
     Δr = convert(T, 1.0), # radial frequency resolution: smaller means slower to build surrogate, but more accurate.
     Δκ_λ = convert(T, 0.05), # T2 multiplier resolution. smaller means slower to build surrogate, but more accurate.
     Δcs_max_scalar = convert(T, 0.2), # In units of ppm. interpolation border that is added to the lowest and highest resonance frequency component of the mixture being simulated.
@@ -79,7 +78,7 @@ proxy_config = SIG.CLSurrogateConfig{T}(
     ppm_padding = convert(T , 0.5),
 )
 
-Bs, MSS, itp_samps = SIG.fitclproxies(As, proxy_config)
+Bs, MSS, itp_samps = SIG.fitclproxies(As, λ0, proxy_config)
 # Bs and MSS are linked. Modification to one of its fields will affect the other.
 
 

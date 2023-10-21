@@ -9,6 +9,7 @@ function testsetup(
     fs::T = convert(T, 14005.602240896402),
     SW::T = convert(T, 20.0041938620844),
     ν_0ppm::T = convert(T, 10656.011933076665),
+    λ0 = convert(T, 3.4),
     shift_proportion::T = convert(T, 0.9),
     ) where T
 
@@ -40,8 +41,7 @@ function testsetup(
 
     # Spin Hamiltonian simulation.
     Phys, As, MSPs = HAM.loadandsimulate(
-        T,
-        "700",
+        fs, SW, ν_0ppm,
         molecule_entries,
         H_params_path,
         molecule_mapping_file_path;
@@ -52,7 +52,6 @@ function testsetup(
     
     ###
     proxy_config = SIG.CLSurrogateConfig{T}(
-        λ0 = convert(T, 3.4),
         Δr = convert(T, 1.0), # radial frequency resolution: smaller means slower to build surrogate, but more accurate.
         Δκ_λ = convert(T, 0.05), # T2 multiplier resolution. smaller means slower to build surrogate, but more accurate.
         Δcs_max_scalar = convert(T, 0.2), # In units of ppm. interpolation border that is added to the lowest and highest resonance frequency component of the mixture being simulated.
@@ -61,7 +60,7 @@ function testsetup(
         ppm_padding = convert(T , 0.5),
     )
     
-    Bs, MSS, itp_samps = SIG.fitclproxies(As, proxy_config)
+    Bs, MSS, itp_samps = SIG.fitclproxies(As, λ0, proxy_config)
     
     # test.
     w_oracle = ones(T, length(molecule_entries))
