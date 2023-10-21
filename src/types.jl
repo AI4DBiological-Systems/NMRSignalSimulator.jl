@@ -117,9 +117,10 @@ function InterpolationSamples(
     s::Vector{Matrix{Complex{T}}},
     r_min::T,
     r_max::T,
+    λ0::T,
     )::InterpolationSamples{T} where T <: AbstractFloat
     #
-    return InterpolationSamples(s, r_min, C.Δr, r_max, C.κ_λ_lb, C.Δκ_λ, C.κ_λ_ub, C.λ0)
+    return InterpolationSamples(s, r_min, C.Δr, r_max, C.κ_λ_lb, C.Δκ_λ, C.κ_λ_ub, λ0)
 end
 
 # This is without the compensation amplitude parameter, κ_α, denoted κs_α in code.

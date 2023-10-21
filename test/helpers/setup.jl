@@ -44,8 +44,8 @@ function testsetup(
         fs, SW, ν_0ppm,
         molecule_entries,
         H_params_path,
-        molecule_mapping_file_path;
-        config = config,
+        molecule_mapping_file_path,
+        config;
         unique_cs_atol = unique_cs_atol
     )
     

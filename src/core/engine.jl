@@ -132,6 +132,7 @@ function fitclproxy(
     itp_samps = getitpsamples(
         d_max,
         C,
+        λ0,
         config,
     )
 
@@ -157,6 +158,7 @@ end
 function getitpsamples(
     d_max::Vector{T},
     C::CLSurrogateSpinSysInputs{T},
+    λ0::T,
     config::CLSurrogateConfig{T},
     )::Vector{InterpolationSamples{T}} where T <: AbstractFloat
 
@@ -173,7 +175,13 @@ function getitpsamples(
         # set up default, which is for the singlet case.
         itp_samps[i] = InterpolationSamples(T, length(N_groups))
 
-        r_min, r_max, A_r, A_λ = getitplocations(d_max[i], C.u_min, C.u_max, config)
+        r_min, r_max, A_r, A_λ = getitplocations(
+            d_max[i],
+            C.u_min,
+            C.u_max,
+            λ0,
+            config,
+        )
 
         samples = Vector{Matrix{Complex{T}}}(undef, N_groups)
         for k in eachindex(samples)
@@ -184,7 +192,7 @@ function getitpsamples(
         end
 
         # overwrite the default.
-        itp_samps[i] = InterpolationSamples(config, samples, r_min, r_max)
+        itp_samps[i] = InterpolationSamples(config, samples, r_min, r_max, λ0)
 
     end
 
@@ -310,10 +318,11 @@ function getitplocations(
     d_max::T,
     u_min::T,
     u_max::T,
+    λ0::T,
     C::CLSurrogateConfig{T},
     ) where T
     
-    λ0, κ_λ_lb, κ_λ_ub, Δr, Δκ_λ = C.λ0, C.κ_λ_lb, C.κ_λ_ub, C.Δr, C.Δκ_λ
+    κ_λ_lb, κ_λ_ub, Δr, Δκ_λ = C.κ_λ_lb, C.κ_λ_ub, C.Δr, C.Δκ_λ
     
     r_min = twopi(T)*(u_min - d_max)
     r_max = twopi(T)*(u_max + d_max)
