@@ -29,7 +29,7 @@ a = Δcs2ζ(0.1, ppm2hzfunc)
 '''
 """
 function ζ2Δcs(ζ::T, ν_0ppm::T, hz2ppmfunc)::T where T
-    return hz2ppmfunc(ζ/(2*π) + ν_0ppm)
+    return hz2ppmfunc(ζ/twopi(T) + ν_0ppm)
 end
 
 
@@ -87,7 +87,7 @@ function fetchbounds(
 
             #r_lb = 2*π*(u_min - d_max[i])
             #r_ub = 2*π*(u_max + d_max[i])
-            ζ_max = d_max[i]*2*π*shift_proportion
+            ζ_max = d_max[i]*twopi(T)*shift_proportion
 
             for l = mapping.shift.st[n][i]:mapping.shift.fin[n][i]
                 lbs[l] = -ζ_max #r_lb
