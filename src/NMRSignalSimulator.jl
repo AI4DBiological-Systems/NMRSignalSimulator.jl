@@ -6,10 +6,10 @@ using LinearAlgebra
 import Interpolations, OffsetArrays
 
 import NMRHamiltonian # consider removing this dependency, or split the data structure into a separate package.
-HAM = NMRHamiltonian
+const HAM = NMRHamiltonian
 
 # inherit dependencies.
-JSON3 = NMRHamiltonian.JSON3
+const JSON3 = NMRHamiltonian.JSON3
 
 
 # constant values.
@@ -44,6 +44,9 @@ include("./core/IO.jl")
 
 include("analysis.jl") # view the parameters of the surrogate.
 
+include("FID/engine.jl")
+include("FID/itp_evals")
+include("FID/FID.jl")
 
 #include("test_helpers.jl")
 export 
@@ -79,7 +82,7 @@ getindices,
 getactivesystems,
 
 # parameter range
-OperationRange,
+CLOperationRange,
 fetchbounds,
 MoleculeParamsMapping,
 ParamsMapping,

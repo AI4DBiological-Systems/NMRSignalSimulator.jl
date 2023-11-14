@@ -3,7 +3,7 @@
 function recoverclproxies(
     itp_samps_set::Vector{Vector{InterpolationSamples{T}}},
     ss_params_set::Vector{SpinSysParams{ST,PT,T2T}},
-    op_range_set::Vector{OperationRange{T}},
+    op_range_set::Vector{CLOperationRange{T}},
     As::Vector{HAM.SHType{T}},
     λ0::T,
     )::Tuple{Vector{MoleculeType{T,SpinSysParams{ST,PT,T2T}}},
@@ -15,7 +15,7 @@ Takes in deserialized quantities to output a surrogate model and its correspondi
 function recoverclproxies(
     itp_samps_set::Vector{Vector{InterpolationSamples{T}}},
     ss_params_set::Vector{SpinSysParams{ST,PT,T2T}},
-    op_range_set::Vector{OperationRange{T}},
+    op_range_set::Vector{CLOperationRange{T}},
     As::Vector{HAM.SHType{T}},
     λ0::T,
     )::Tuple{Vector{MoleculeType{T,SpinSysParams{ST,PT,T2T}}},
@@ -62,7 +62,7 @@ end
 function recoverclproxy(
     itp_samps::Vector{InterpolationSamples{T}},
     ss_params::SpinSysParams,
-    op_range::OperationRange{T},
+    op_range::CLOperationRange{T},
     A::HAM.SHType{T},
     λ0::T,
     ) where T <: AbstractFloat

@@ -146,7 +146,7 @@ function fitclproxy(
     core = MoleculeType(
         qs,
         ss_params,
-        OperationRange(u_min, u_max, d_max, config),
+        CLOperationRange(u_min, u_max, d_max, config),
         λ0,
     )
 

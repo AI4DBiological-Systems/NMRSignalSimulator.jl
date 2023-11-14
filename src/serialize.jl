@@ -13,7 +13,7 @@ SerializationTrait(::Type{T}) where T = CustomSerialization()
 SerializationTrait(::Type{T}) where T <: MoleculeParams = BasicSerialization()
 
 # specific types that can be serialized via the basic template.
-SerializationTrait(::Type{OperationRange{T}}) where T = BasicSerialization()
+SerializationTrait(::Type{CLOperationRange{T}}) where T = BasicSerialization()
 #SerializationTrait(::Type{InterpolationSamplesSerialSafe{T}}) where T = BasicSerialization()
 #SerializationTrait(::Type{InterpolationSamples{T}}) where T = CustomSerialization() # JSON needs explicit separation of real and imaginary numbers.
 
@@ -305,7 +305,7 @@ end
 # ```
 # using Test
 
-# op1 = NMRSignalSimulator.OperationRange(rand(), rand(), randn(4), rand(), rand(), rand(), rand())
+# op1 = NMRSignalSimulator.CLOperationRange(rand(), rand(), randn(4), rand(), rand(), rand(), rand())
 # S_op_range = NMRSignalSimulator.serializetype(op1)
 
 # op2 = NMRSignalSimulator.deserializetype(typeof(op1), S_op_range)

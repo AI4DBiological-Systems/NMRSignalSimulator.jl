@@ -76,7 +76,7 @@ getactivesystems
 
 ## Parameter range
 ```@docs
-OperationRange
+CLOperationRange
 ```
 
 ```@docs

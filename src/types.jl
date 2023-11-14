@@ -2,6 +2,54 @@
 
 ### model.
 
+# # free-induction decay (FID).
+@kwdef struct FIDSurrogateConfig{T}
+    #Δt::T = convert(T, 1.0) # the samples used to build the surrogate is taken every `Δr` radian on the frequency axis. Decrease for improved accuracy at the expense of computation resources.
+    Δt::T = convert(T, 0.01) # the samples used to build thes urrogate for κ_λ are taken at this sampling spacing. Decrease for improved accuracy at the expense of computation resources.
+    #Δcs_max_scalar::T = convert(T, 0.2) # In units of ppm. interpolation border that is added to the lowest and highest resonance frequency component of the mixture being simulated.
+    t_lb::T = zero(T)
+    t_ub::T = convert(T, 3.0) # interpolation upper limit for κ_λ.
+
+    #ppm_padding::T = convert(T , 0.5)
+end
+
+abstract type OperationRange end
+
+struct FIDOperationRange{T} <: OperationRange
+    t_lb::T
+    t_ub::T
+    Δt::T
+end
+
+struct FIDInterpolationSamples{T <: AbstractFloat}
+
+    samples::Vector{Vector{Complex{T}}} # [resonance group index][sample index]
+
+    t_lb::T
+    Δt::T
+    t_ub::T
+
+    #λ0::T
+end
+
+# default to invalid values. At deserialization, check value for λ0. If is negative, then we know it is the singlet case; no interpolation surrogates are used.
+function FIDInterpolationSamples(::Type{T}, N_groups::Int) where T
+    return FIDInterpolationSamples(
+        collect( ones(Complex{T}, 1) for _ = 1:N_groups ),
+        (-ones(T, 3))...
+    )
+end
+
+function FIDInterpolationSamples(
+    C::FIDSurrogateConfig{T},
+    s::Vector{Matrix{Complex{T}}},
+    )::FIDInterpolationSamples{T} where T <: AbstractFloat
+    #
+    return FIDInterpolationSamples(s, C.t_lb, C.Δt, C.t_ub)
+end
+
+
+# # complex Lorentzian (CL).
 """
 struct CLSurrogateConfig{T}
     Δr::T = convert(T, 1.0)
@@ -46,7 +94,7 @@ end
 
 """
 ```
-struct OperationRange{T}
+struct CLOperationRange{T}
     u_min::T # in Hz.
     u_max::T # in Hz.
     
@@ -68,7 +116,7 @@ r_max = 2*π*(u_max + d_max[i])
 Lower and upper bounds on `λ` are `κ_λ_lb` and `κ_λ_ub`, respectively.
 Able to serialize/deserialize.
 """
-struct OperationRange{T}
+struct CLOperationRange{T} <: OperationRange
     u_min::T # in Hz.
     u_max::T # in Hz.
     
@@ -82,8 +130,8 @@ struct OperationRange{T}
 end
 
 
-function OperationRange(u_min::T, u_max::T, d_max::Vector{T}, C::CLSurrogateConfig{T})::OperationRange{T} where T <: AbstractFloat
-    return OperationRange(u_min, u_max, d_max, C.κ_λ_lb, C.κ_λ_ub, C.Δr, C.Δκ_λ)
+function CLOperationRange(u_min::T, u_max::T, d_max::Vector{T}, C::CLSurrogateConfig{T})::CLOperationRange{T} where T <: AbstractFloat
+    return CLOperationRange(u_min, u_max, d_max, C.κ_λ_lb, C.κ_λ_ub, C.Δr, C.Δκ_λ)
 end
 
 # for one spin system.
@@ -124,7 +172,7 @@ function InterpolationSamples(
 end
 
 # This is without the compensation amplitude parameter, κ_α, denoted κs_α in code.
-struct MoleculeType{T,SST} # parameters for surrogate model.
+struct MoleculeType{T,SST, OT <: OperationRange} # parameters for surrogate model.
 
     # simulator for each resonance group. [i][k] is i-th spin system, k-th group.
     qs::Vector{Vector{Function}} # spin group, partition element index. range is complex numbers.
@@ -133,7 +181,7 @@ struct MoleculeType{T,SST} # parameters for surrogate model.
     ss_params::SST # include singlets. SST <: SpinSysParams
     
     # operation range of spline surrogate.
-    op_range::OperationRange{T}
+    op_range::OT
 
     # base T2. formula: λ = ξ*λ0.
     λ0::T

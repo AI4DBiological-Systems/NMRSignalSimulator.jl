@@ -37,11 +37,11 @@ end
 ```
 function fetchbounds(
     p::MixtureModelParameters,
-    Bs::Vector{MoleculeType{T, SST}};
+    Bs::Vector{MoleculeType{T, SST, OT}};
     shift_proportion = 0.9, # between 0 to 1. Control the returned shift bounds as a proportion of the maximum allowed shift bounds used when the surrogates were created.
     phase_lb = convert(T, -π),
     phase_ub = convert(T, π),
-)::Tuple{Vector{T},Vector{T}} where {T,SST}
+)::Tuple{Vector{T},Vector{T}} where {T,SST,OT}
 ```
 
 Returns a `Vector` for lower bound and `Vector` for upper bound for each parameter variable. The order (first elements to last elements) of the returned vectors are: Shift (ζ), phase (κ_β), then T2 (κ_λ) parameters.
@@ -50,7 +50,7 @@ Input:
 
 - `p` -- model parameters. Used to determine the size of the output.
 
-- `Bs` -- Surrogate model. This function uses the `OperationRange` field from each element of `Bs`.
+- `Bs` -- Surrogate model. This function uses the `CLOperationRange` field from each element of `Bs`.
 
 Optional inputs:
 
@@ -63,11 +63,11 @@ Optional inputs:
 """
 function fetchbounds(
     p::MixtureModelParameters,
-    Bs::Vector{MoleculeType{T, SST}};
+    Bs::Vector{MoleculeType{T, SST, OT}};
     shift_proportion = 0.9,
     phase_lb = convert(T, -π),
     phase_ub = convert(T, π),
-    )::Tuple{Vector{T},Vector{T}} where {T,SST}
+    )::Tuple{Vector{T},Vector{T}} where {T,SST, OT}
 
     @assert zero(T) < shift_proportion < one(T)
 
