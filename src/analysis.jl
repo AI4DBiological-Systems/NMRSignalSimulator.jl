@@ -178,7 +178,7 @@ end
 """
 ```
 exportphysicalparams(
-    MSS::MixtureSpinSys,
+    MSS::CLMixtureSpinSys,
     Phys::Vector{HAM.PhysicalParamsType{T}}, # template.
     fs::T,
     SW::T,
@@ -191,7 +191,7 @@ Outputs: out_shift, out_phase, out_T2.
 The fields `cs_sys` and `cs_singlets` for `out_shift`, `out_phase`, and `out_T2` does not contain chemical shift. It contains the shift difference (in ppm), phase variable κ_β (in radians), and the T2 variable ξ (a multiplier, dimensionless), respectively.
 """
 function exportphysicalparams(
-    MSS::MixtureSpinSys,
+    MSS::CLMixtureSpinSys,
     Phys::Vector{HAM.PhysicalParamsType{T}}, # template.
     fs::T,
     SW::T,

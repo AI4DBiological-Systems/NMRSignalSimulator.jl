@@ -45,7 +45,6 @@ include("./core/IO.jl")
 include("analysis.jl") # view the parameters of the surrogate.
 
 include("FID/engine.jl")
-include("FID/itp_evals")
 include("FID/FID.jl")
 
 #include("test_helpers.jl")

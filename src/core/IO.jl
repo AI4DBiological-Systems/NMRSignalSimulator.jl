@@ -6,8 +6,8 @@ function recoverclproxies(
     op_range_set::Vector{CLOperationRange{T}},
     As::Vector{HAM.SHType{T}},
     λ0::T,
-    )::Tuple{Vector{MoleculeType{T,SpinSysParams{ST,PT,T2T}}},
-    MixtureSpinSys{T,ST,PT,T2T}} where {T,ST,PT,T2T}
+    )::Tuple{Vector{MoleculeType{T,SpinSysParams{ST,PT,T2T},CLOperationRange{T}}},
+    CLMixtureSpinSys{T,ST,PT,T2T}} where {T,ST,PT,T2T}
 ```
 
 Takes in deserialized quantities to output a surrogate model and its corresponding mixture spin system data structure.
@@ -18,12 +18,12 @@ function recoverclproxies(
     op_range_set::Vector{CLOperationRange{T}},
     As::Vector{HAM.SHType{T}},
     λ0::T,
-    )::Tuple{Vector{MoleculeType{T,SpinSysParams{ST,PT,T2T}}},
-    MixtureSpinSys{T,ST,PT,T2T}} where {T,ST,PT,T2T}
+    )::Tuple{Vector{MoleculeType{T,SpinSysParams{ST,PT,T2T},CLOperationRange{T}}},
+    CLMixtureSpinSys{T,ST,PT,T2T}} where {T,ST,PT,T2T}
 
     N = length(As)
 
-    Bs = Vector{MoleculeType{T,SpinSysParams{ST,PT,T2T}}}(undef, N)
+    Bs = Vector{MoleculeType{T,SpinSysParams{ST,PT,T2T},CLOperationRange{T}}}(undef, N)
 
     srs = Vector{Vector{Vector{Function}}}(undef, N)
     sis = Vector{Vector{Vector{Function}}}(undef, N)
@@ -44,7 +44,7 @@ function recoverclproxies(
 
     # alternative specification for derivatives.
     shifts, phases, T2s, Δc_bars = setupSSvars(As, Bs)
-    mixSS = MixtureSpinSys(
+    mixSS = CLMixtureSpinSys(
         srs,
         sis,
         ∇srs!,

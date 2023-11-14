@@ -4,13 +4,9 @@
 
 # # free-induction decay (FID).
 @kwdef struct FIDSurrogateConfig{T}
-    #Δt::T = convert(T, 1.0) # the samples used to build the surrogate is taken every `Δr` radian on the frequency axis. Decrease for improved accuracy at the expense of computation resources.
-    Δt::T = convert(T, 0.01) # the samples used to build thes urrogate for κ_λ are taken at this sampling spacing. Decrease for improved accuracy at the expense of computation resources.
-    #Δcs_max_scalar::T = convert(T, 0.2) # In units of ppm. interpolation border that is added to the lowest and highest resonance frequency component of the mixture being simulated.
+    Δt::T = convert(T, 1e-5)
     t_lb::T = zero(T)
-    t_ub::T = convert(T, 3.0) # interpolation upper limit for κ_λ.
-
-    #ppm_padding::T = convert(T , 0.5)
+    t_ub::T = convert(T, 3.0)
 end
 
 abstract type OperationRange end
@@ -42,7 +38,7 @@ end
 
 function FIDInterpolationSamples(
     C::FIDSurrogateConfig{T},
-    s::Vector{Matrix{Complex{T}}},
+    s::Vector{Vector{Complex{T}}},
     )::FIDInterpolationSamples{T} where T <: AbstractFloat
     #
     return FIDInterpolationSamples(s, C.t_lb, C.Δt, C.t_ub)

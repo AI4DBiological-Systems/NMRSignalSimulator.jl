@@ -18,7 +18,7 @@ function testsetup(
     hz2ppmfunc = uu->(uu - ν_0ppm)*SW/fs
     ppm2hzfunc = pp->(ν_0ppm + pp*fs/SW)
 
-    root_data_path = getdatapath() # coupling values data repository root path
+    root_data_path = DS.getdatapath(DS.NMR2023()) # coupling values data repository root path
 
     H_params_path = joinpath(root_data_path, "coupling_info") # folder of coupling values. # replace with your own values in actual usage.
     
@@ -75,7 +75,7 @@ function testsetup(
     U_rad = U .* SIG.twopi(T)
 
     f = uu->SIG.evalclmixture(uu, As, Bs; w = w_oracle)
-    q = uu->SIG.evalclproxymixture(uu, As, Bs; w = w_oracle)
+    q = uu->SIG.evalclproxymixture(uu, Bs; w = w_oracle)
 
     f_U = f.(U_rad)
     q_U = q.(U_rad)
@@ -217,8 +217,8 @@ function testserialization(
     )
 
     # verify forward eval using As, Bs.
-    q = uu->SIG.evalclproxymixture(uu, As, Bs; w = w)
-    q2 = uu->SIG.evalclproxymixture(uu, As2, Bs2; w = w)
+    q = uu->SIG.evalclproxymixture(uu, Bs; w = w)
+    q2 = uu->SIG.evalclproxymixture(uu, Bs2; w = w)
 
     q_U = q.(U_rad)
     q2_U = q2.(U_rad)

@@ -4,10 +4,13 @@ using SparseArrays
 using DataDeps, Tar, CodecZlib
 
 using LinearAlgebra
+using FFTW
 
 import Random
 
-import PythonPlot
+import PythonPlot as PLT
+import PublicationDatasets as DS
+import NMRDataSetup as DSU
 
 using BenchmarkTools
 import Statistics

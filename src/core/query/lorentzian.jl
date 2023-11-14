@@ -3,17 +3,11 @@
 
 #### top-level
 
-function evalclmolecule(u_rad, A::HAM.SHType{T}, B::MoleculeType{T,SST})::Complex{T} where {T <: Real, SST}
+function evalclmolecule(u_rad, A::HAM.SHType{T}, B::MoleculeType{T,SST,CLOperationRange{T}})::Complex{T} where {T <: Real, SST}
 
-    #u_rad = 2*π*u
+    out_sys = evalclspinsystem(u_rad, A.αs, A.Ωs, B.ss_params, A.Δc_bar, A.parts)
 
-    out_sys = evalclspinsystem(u_rad, A.αs, A.Ωs, B.ss_params,
-    B.λ0, A.Δc_bar, A.parts)
-
-    # out_singlets = evalclsinglets(u_rad, B.ζ_singlets, A.αs_singlets, A.Ωs_singlets,
-    # B.β_singlets, B.λ0, B.κs_λ_singlets)
-
-    return out_sys #+ out_singlets
+    return out_sys
 end
 
 """
@@ -21,7 +15,7 @@ end
 function evalclmixture(
     u_rad,
     As::Vector{HAM.SHType{T}},
-    Bs::Vector{MoleculeType{T,SST}};
+    Bs::Vector{MoleculeType{T,SST,CLOperationRange{T}}};
     w::Vector{T} = ones(T, length(As)),
 )::Complex{T} where {T <: Real, SST}
 ```
@@ -36,11 +30,9 @@ Inputs:
 function evalclmixture(
     u_rad,
     As::Vector{HAM.SHType{T}},
-    Bs::Vector{MoleculeType{T,SST}};
+    Bs::Vector{MoleculeType{T,SST,CLOperationRange{T}}};
     w::Vector{T} = ones(T, length(As)),
     )::Complex{T} where {T <: Real, SST}
-
-    #u_rad = 2*π*u
 
     out = zero(Complex{T})
     for n in eachindex(As)
@@ -68,41 +60,10 @@ function evalclpart(r,
     return out
 end
 
-function evalclspinsystem(
-    u_rad,
-    αs::Vector{Vector{T}},
-    Ωs::Vector{Vector{T}},
-    x::SpinSysParams{SharedShift{T}, CoherencePhase{T}, SharedT2{T}},
-    λ0::T,
-    c,
-    parts)::Complex{T} where T <: Real
-
-
-    #u_rad = 2*π*u
-
-    out = zero(Complex{T})
-    for i in eachindex(αs)
-        r = u_rad - x.shift.var[i]
-
-        λ = x.T2.λ[i]
-        for k in eachindex(parts[i])
-            inds = parts[i][k]
-
-            out += evalclpart(r, αs[i][inds],
-                Ωs[i][inds], λ)*cis(dot(x.phase.var[i], c[i][k]))
-        end
-    end
-
-    return out
-end
-
 function evalclspinsystem(u_rad,
     αs::Vector{Vector{T}}, Ωs::Vector{Vector{T}},
     x::SpinSysParams{CoherenceShift{T}, CoherencePhase{T}, SharedT2{T}},
-    λ0::T,
     c, parts)::Complex{T} where T <: Real
-
-    #u_rad = 2*π*u
 
     out = zero(Complex{T})
     for i in eachindex(αs)
@@ -120,3 +81,31 @@ function evalclspinsystem(u_rad,
 
     return out
 end
+
+
+# function evalclspinsystem(
+#     u_rad,
+#     αs::Vector{Vector{T}},
+#     Ωs::Vector{Vector{T}},
+#     x::SpinSysParams{SharedShift{T}, CoherencePhase{T}, SharedT2{T}},
+#     c,
+#     parts)::Complex{T} where T <: Real
+
+
+#     #u_rad = 2*π*u
+
+#     out = zero(Complex{T})
+#     for i in eachindex(αs)
+#         r = u_rad - x.shift.var[i]
+
+#         λ = x.T2.λ[i]
+#         for k in eachindex(parts[i])
+#             inds = parts[i][k]
+
+#             out += evalclpart(r, αs[i][inds],
+#                 Ωs[i][inds], λ)*cis(dot(x.phase.var[i], c[i][k]))
+#         end
+#     end
+
+#     return out
+# end

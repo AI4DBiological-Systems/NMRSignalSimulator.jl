@@ -2,4 +2,7 @@
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 CodecZlib = "944b1d66-785c-5afd-91f1-9de20f533193"
 DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
+FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
+NMRDataSetup = "ebb73dff-5abd-42b1-a10e-869024f50034"
+PublicationDatasets = "17766f69-17be-4aec-8093-a6905606c372"
 Tar = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"

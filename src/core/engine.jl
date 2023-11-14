@@ -49,13 +49,13 @@ function fitclproxies(
     As::Vector{HAM.SHType{T}},
     λ0::T,
     config::CLSurrogateConfig{T};
-    )::Tuple{Vector{MoleculeType{T,SpinSysParams{ST,PT,T2T}}},
-    MixtureSpinSys{T,ST,PT,T2T},
+    )::Tuple{Vector{MoleculeType{T,SpinSysParams{ST,PT,T2T}, CLOperationRange{T}}},
+    CLMixtureSpinSys{T,ST,PT,T2T},
     Vector{Vector{InterpolationSamples{T}}}} where {T,ST,PT,T2T}
 
     N = length(As)
 
-    Bs = Vector{MoleculeType{T,SpinSysParams{ST,PT,T2T}}}(undef, N)
+    Bs = Vector{MoleculeType{T,SpinSysParams{ST,PT,T2T},CLOperationRange{T}}}(undef, N)
 
     srs = Vector{Vector{Vector{Function}}}(undef, N)
     sis = Vector{Vector{Vector{Function}}}(undef, N)
@@ -79,7 +79,7 @@ function fitclproxies(
 
     # alternative specification for derivatives.
     shifts, phases, T2s, Δc_bars = setupSSvars(As, Bs)
-    mixSS = MixtureSpinSys(
+    mixSS = CLMixtureSpinSys(
         srs,
         sis,
         ∇srs!,

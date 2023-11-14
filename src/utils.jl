@@ -179,38 +179,38 @@ end
 ##### tests.
 # mutates shifts, phases, T2s.
 
-function testupdate!(MSS, MS::MixtureSinglets{T}) where T <: AbstractFloat
+# function testupdate!(MSS, MS::MixtureSinglets{T}) where T <: AbstractFloat
 
-    # generate random input p.
-    N_κs_ζ = getNvars(MSS.shifts)
-    N_κs_β = getNvars(MSS.phases)
-    N_κs_λ = getNvars(MSS.T2s)
-    N_singlets = getNsinglets(MS)
+#     # generate random input p.
+#     N_κs_ζ = getNvars(MSS.shifts)
+#     N_κs_β = getNvars(MSS.phases)
+#     N_κs_λ = getNvars(MSS.T2s)
+#     N_singlets = getNsinglets(MS)
 
-    N_SS_vars = N_κs_ζ+N_κs_β+N_κs_λ
-    N_singlet_vars = 3*N_singlets
+#     N_SS_vars = N_κs_ζ+N_κs_β+N_κs_λ
+#     N_singlet_vars = 3*N_singlets
 
-    p = randn(N_SS_vars + N_singlet_vars)
+#     p = randn(N_SS_vars + N_singlet_vars)
 
-    # spin system update.
-    mapping = ParamsMapping(MSS.shifts, MSS.phases, MSS.T2s)
-    updatespinsystems!(MSS, p, mapping)
+#     # spin system update.
+#     mapping = ParamsMapping(MSS.shifts, MSS.phases, MSS.T2s)
+#     updatespinsystems!(MSS, p, mapping)
 
-    # singlets.
-    s_mapping = getsingletsParamsMapping(MS, offset_ind = N_SS_vars)
-    updatesinglets!(MS, p, s_mapping)
+#     # singlets.
+#     s_mapping = getsingletsParamsMapping(MS, offset_ind = N_SS_vars)
+#     updatesinglets!(MS, p, s_mapping)
     
-    # verify.
+#     # verify.
     
-    discrepancy1, fin_ind = verifyupdatedvars(p, MSS.shifts; st_ind = 1)
-    discrepancy2, fin_ind = verifyupdatedvars(p, MSS.phases; st_ind = fin_ind + 1)
-    discrepancy3, fin_ind = verifyupdatedvars(p, MSS.T2s; st_ind = fin_ind + 1)
+#     discrepancy1, fin_ind = verifyupdatedvars(p, MSS.shifts; st_ind = 1)
+#     discrepancy2, fin_ind = verifyupdatedvars(p, MSS.phases; st_ind = fin_ind + 1)
+#     discrepancy3, fin_ind = verifyupdatedvars(p, MSS.T2s; st_ind = fin_ind + 1)
     
-    discrepancy4, fin_ind = verifyupdatedvars(p, MS; st_ind = fin_ind+1)
+#     discrepancy4, fin_ind = verifyupdatedvars(p, MS; st_ind = fin_ind+1)
     
-    return discrepancy1 + discrepancy2 + discrepancy3 + discrepancy4, p
-    #return discrepancy1, discrepancy2, discrepancy3, discrepancy4, p
-end
+#     return discrepancy1 + discrepancy2 + discrepancy3 + discrepancy4, p
+#     #return discrepancy1, discrepancy2, discrepancy3, discrepancy4, p
+# end
 
 
 
@@ -282,43 +282,43 @@ function verifyupdatedvars(
     return discrepancy, l-1
 end
 
-function verifyupdatedvars(
-    p,
-    MS::MixtureSinglets{T};
-    st_ind = 1,
-    ) where T
+# function verifyupdatedvars(
+#     p,
+#     MS::MixtureSinglets{T};
+#     st_ind = 1,
+#     ) where T
 
-    discrepancy = zero(T)
-    l = st_ind
+#     discrepancy = zero(T)
+#     l = st_ind
 
-    for n in eachindex(MS.ζs)
-        for i in eachindex(MS.ζs[n])
+#     for n in eachindex(MS.ζs)
+#         for i in eachindex(MS.ζs[n])
             
-            discrepancy += abs(MS.ζs[n][i] - p[begin + l-1])
-            l += 1
-        end
-    end
+#             discrepancy += abs(MS.ζs[n][i] - p[begin + l-1])
+#             l += 1
+#         end
+#     end
 
-    # for n in eachindex(MS.βs)
-    #     for i in eachindex(MS.βs[n])
-            
-            
-    #         discrepancy += abs(MS.βs[n][i] - p[begin+l-1])
-    #         l += 1
-    #     end
-    # end
-
-    # for n in eachindex(MS.ξs)
-    #     for i in eachindex(MS.ξs[n])
+#     # for n in eachindex(MS.βs)
+#     #     for i in eachindex(MS.βs[n])
             
             
-    #         discrepancy += abs(MS.ξs[n][i] - p[begin+l-1])
-    #         l += 1
-    #     end
-    # end
+#     #         discrepancy += abs(MS.βs[n][i] - p[begin+l-1])
+#     #         l += 1
+#     #     end
+#     # end
 
-    return discrepancy, l-1
-end
+#     # for n in eachindex(MS.ξs)
+#     #     for i in eachindex(MS.ξs[n])
+            
+            
+#     #         discrepancy += abs(MS.ξs[n][i] - p[begin+l-1])
+#     #         l += 1
+#     #     end
+#     # end
+
+#     return discrepancy, l-1
+# end
 
 
 

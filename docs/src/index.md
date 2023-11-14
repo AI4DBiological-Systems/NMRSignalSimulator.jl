@@ -40,9 +40,9 @@ See the *Julia Basics*, *A compiled list of physical chemistry parameters*, and 
 # Terminology
 The data structure for storing the surrogate model in NMRSignalSimulator is represented in index range orders by nested arrays. Let `T` be your choice of floating point data type, e.g., `Float64`. In the demo, the main data structure variables are named:
 
-- `Bs`, of type `Vector{MoleculeType{T, SpinSysParams{CoherenceShift{T}, CoherencePhase{T}, SharedT2{T}}}}`,
+- `Bs`, of type `Vector{MoleculeType{T, SpinSysParams{CoherenceShift{T}, CoherencePhase{T}, SharedT2{T}}, OT}}`. `OT <: OperationRange` is `FIDOperationRange` for a free-induction decay time-domain model or `CLOperationRange` for a complex Lorentzian frequency-domain model.
 
-- `MSS`  of type `MixtureSpinSys{T, CoherenceShift{T}, CoherencePhase{T}, SharedT2{T}}`
+- `MSS`  of type `CLMixtureSpinSys{T, CoherenceShift{T}, CoherencePhase{T}, SharedT2{T}}`
 
 - `model_param` of type `MixtureModelParameters{T, CoherenceShift{T}, CoherencePhase{T}, SharedT2{T}}`.
 

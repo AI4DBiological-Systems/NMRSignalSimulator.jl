@@ -110,7 +110,7 @@ end
 
 # update MSS' var fields with contents in p.
 function updatespinsystems!(
-    MSS::MixtureSpinSys{T,SST},
+    MSS::CLMixtureSpinSys{T,SST},
     p,
     mapping::ParamsMapping,
     ) where {T,SST}
@@ -125,7 +125,7 @@ end
 # update p with contents of MSS' var fields.
 function exportspinsystems!(
     p,
-    MSS::MixtureSpinSys{T,SST},
+    MSS::CLMixtureSpinSys{T,SST},
     mapping::ParamsMapping,
     ) where {T,SST}
 
@@ -140,7 +140,7 @@ end
 
 # update MSS variables using the contents in MSS' var fields.
 function resolvespinsystems!(
-    MSS::MixtureSpinSys{T,SST},
+    MSS::CLMixtureSpinSys{T,SST},
     ) where {T,SST}
 
     resolveparameters!(MSS.T2s, MSS.λ0)

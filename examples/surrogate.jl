@@ -4,21 +4,22 @@ include("a.jl")
 import Random
 Random.seed!(25)
 
-include("./helpers/data.jl")
 
-PythonPlot.close("all")
+PLT.close("all")
 fig_num = 1
 
-T = Float32
-#T = Float64
+#T = Float32
+T = Float64
 
 ### user inputs.
 fs, SW, ν_0ppm = HAM.getpresetspectrometer(T, "700")
+#fs, SW, ν_0ppm = 9615.38461538462, 16.0196917451925, 6752.905945857455
+
 λ0 = convert(T, 3.4)
 
 ## pull the sample coupling values into dictionary structures.
 
-root_data_path = getdatapath() # coupling values data repository root path
+root_data_path = DS.getdatapath(DS.NMR2023()) # coupling values data repository root path
 
 H_params_path = joinpath(root_data_path, "coupling_info") # folder of coupling values. # replace with your own values in actual usage.
 
@@ -51,6 +52,7 @@ molecule_entries = [
     #"L-Glutathione oxidized";       
     #"Uridine";
     "L-Glutamine";
+    "L-Histidine";
     #"L-Valine";
     "DSS";
 ]
@@ -124,7 +126,7 @@ U = ppm2hzfunc.(P)
 U_rad = U .* SIG.twopi(T)
 
 ## parameters that affect qs.
-q = uu->SIG.evalclproxymixture(uu, As, Bs; w = w_oracle)
+q = uu->SIG.evalclproxymixture(uu, Bs; w = w_oracle)
 
 f_U = f.(U_rad)
 q_U = q.(U_rad)
@@ -132,29 +134,30 @@ q_U = q.(U_rad)
 # for downstream examples.
 S_U = copy(q_U)
 
-discrepancy = norm(f_U-q_U)
-max_val, ind = findmax(discrepancy)
-println("relative l-2 discrepancy = ", norm(discrepancy)/norm(f_U))
-println("max l-2 discrepancy: ", abs(f_U[ind]-q_U[ind])/abs(f_U[ind]), ", at $(P[ind]) ppm.")
+discrepancies = abs.(f_U-q_U)
+max_val, ind = findmax(discrepancies)
+println("Spline approximation for surrogate model:")
+println("relative l-2 discrepancy = ", norm(f_U-q_U)/norm(f_U))
+println("max l-2 discrepancy: ", max_val, ", at ppm $(P[ind]).")
 println()
+
 
 q_U_display = q_U
 f_U_display = f_U
 P_display = P
 
 ## visualize.
-PythonPlot.figure(fig_num)
+PLT.figure(fig_num)
 fig_num += 1
 
-PythonPlot.plot(P_display, real.(f_U_display), label = "f")
-PythonPlot.plot(P_display, real.(q_U_display), label = "q")
-PythonPlot.plot(P_display, real.(q_U_display), "x")
+PLT.plot(P_display, real.(f_U_display), label = "f")
+PLT.plot(P_display, real.(q_U_display), label = "q")
+PLT.plot(P_display, real.(q_U_display), "x")
 
-PythonPlot.legend()
-PythonPlot.xlabel("ppm")
-PythonPlot.ylabel("real")
-PythonPlot.gca().invert_xaxis()
-PythonPlot.title("complex Lorentzian model (f) vs surrogate (q)")
-
+PLT.legend()
+PLT.xlabel("ppm")
+PLT.ylabel("real")
+PLT.gca().invert_xaxis()
+PLT.title("complex Lorentzian model (f) vs surrogate (q)")
 
 nothing

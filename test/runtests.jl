@@ -1,10 +1,10 @@
 
 using Test
 
-using DataDeps, Tar, CodecZlib
-#import FiniteDifferences
 
 using LinearAlgebra
+
+import PublicationDatasets as DS
 
 import NMRSignalSimulator
 SIG = NMRSignalSimulator
@@ -26,7 +26,6 @@ deserializitpsamples = NMRSignalSimulator.deserializitpsamples
 
 
 include("../examples/helpers/utils.jl")
-include("../examples/helpers/data.jl")
 
 include("./helpers/setup.jl")
 include("./helpers/utils.jl")

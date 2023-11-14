@@ -1,6 +1,6 @@
+# based on core/engine.jl.
 
-
-function fitfixproxies(
+function fitfidproxies(
     As::Vector{HAM.SHType{T}},
     λ0::T,
     config::FIDSurrogateConfig{T};
@@ -8,13 +8,25 @@ function fitfixproxies(
 
     SST = SpinSysParams{CoherenceShift{T}, CoherencePhase{T}, SharedT2{T}}
 
-    cores = Vector{MoleculeType{T,SST}}(undef, length(As))
+    N = length(As)
+    Cs = Vector{MoleculeType{T,SST,FIDOperationRange{T}}}(undef, N)
+    itp_samps = Vector{Vector{FIDInterpolationSamples{T}}}(undef, N)
+
     for n in eachindex(As)
 
-        cores[n] = fitfidproxy(SST, As[n], λ0, config)
+        Cs[n], itp_samps[n] = fitfidproxy(SST, As[n], λ0, config)
     end
 
-    return cores
+    shifts, phases, T2s, Δc_bars = setupSSvars(As, Cs)
+    mixSS = FIDMixtureSpinSys(
+        shifts,
+        phases,
+        T2s,
+        Δc_bars,
+        λ0,
+    )
+
+    return Cs, mixSS, itp_samps
 end
 
 function fitfidproxy(
@@ -25,7 +37,7 @@ function fitfidproxy(
     ) where {T,SST}
 
     #hz2ppmfunc = uu->(uu - A.ν_0ppm)*A.SW/A.fs
-    ppm2hzfunc = pp->(A.ν_0ppm + pp*A.fs/A.SW)
+    #ppm2hzfunc = pp->(A.ν_0ppm + pp*A.fs/A.SW)
 
     # allocate
     N_coherence_vars_sys, N_resonance_groups_sys = getNcoherencesys(A.Δc_bar)
@@ -37,10 +49,10 @@ function fitfidproxy(
     )
 
     # prepare configuration parameters.
-    Δcs_max::Vector{T} = collect(
-        config.Δcs_max_scalar for i in eachindex(A.N_spins_sys)
-    )
-    d_max::Vector{T} = ppm2hzfunc.(Δcs_max) .- ppm2hzfunc(zero(T))
+    # Δcs_max::Vector{T} = collect(
+    #     config.Δcs_max_scalar for i in eachindex(A.N_spins_sys)
+    # )
+    # d_max::Vector{T} = ppm2hzfunc.(Δcs_max) .- ppm2hzfunc(zero(T))
 
     C = CLSurrogateSpinSysInputs(A.parts, A.αs, A.Ωs, zero(T), zero(T))
     
@@ -57,15 +69,15 @@ function fitfidproxy(
     core = MoleculeType(
         qs,
         ss_params,
-        CLOperationRange(u_min, u_max, d_max, config),
+        FIDOperationRange(config.t_lb, config.Δt, config.t_ub),
         λ0,
     )
 
-    return core
+    return core, itp_samps
 end
 
-function setupFIDmoleculepartitionitp(
-    itp_samps::Vector{InterpolationSamples{T}},
+function setupfidmoleculepartitionitp(
+    itp_samps::Vector{FIDInterpolationSamples{T}},
     cos_β::Vector{Vector{T}},
     sin_β::Vector{Vector{T}},
     C::CLSurrogateSpinSysInputs,
@@ -96,8 +108,8 @@ function setupFIDmoleculepartitionitp(
             real_sitp, imag_sitp = setupfidpartitionitp(A, A_t)
             
             # construct simulator for this resonance group.
-            qs[i][k] = (tt::T, rr::T, λλ::T)->evalqfid(
-                real_sitp, imag_sitp, tt, rr, λλ, cos_β[i][k], sin_β[i][k],
+            qs[i][k] = (tt::T, rr::T)->evalqfid(
+                real_sitp, imag_sitp, tt, rr, cos_β[i][k], sin_β[i][k],
             )::Complex{T}
         end
     end
@@ -105,11 +117,14 @@ function setupFIDmoleculepartitionitp(
     return qs
 end
 
-function evalqfid(real_sitp, imag_sitp, t::T, r::T, λ::T, cos_β, sin_β)::Complex{T} where T <: AbstractFloat
+# doesn't include eps(-λ*t).
+function evalqfid(real_sitp, imag_sitp, t::T, r::T, cos_β, sin_β)::Complex{T} where T <: AbstractFloat
 
-    a = real_sitp(r,λ)
-    b = imag_sitp(r,λ)
-    return Complex(a,b)*exp(-λ*t)*Complex(cos_β, sin_β)*cis(r*t)
+    # Complex(a,b) approximates sum( α[l]*cis(Ω[l]*t) for l in eachindex(α) ) # see evalfidpartitionelement()
+
+    a = real_sitp(t)
+    b = imag_sitp(t)
+    return Complex(a,b)*Complex(cos_β, sin_β)*cis(r*t)
 end
 
 
@@ -134,8 +149,9 @@ function getfiditpsamples(
         #A_r, A_λ = getfiditplocations(d_max[i], λ0, config)
         A_t = getfiditplocations(config)
 
-        samples = Vector{Matrix{Complex{T}}}(undef, N_groups)
+        samples = Vector{Vector{Complex{T}}}(undef, N_groups)
         for k in eachindex(samples)
+
             inds = parts[i][k]
             α = αs[i][inds]
             Ω = Ωs[i][inds]
@@ -164,11 +180,29 @@ function computefidsamples(α::Vector{T}, Ω::Vector{T}, A_t)::Vector{Complex{T}
 
     # complex.
     # create complex-valued oracle and get values from it.
-    f = tt->evalFIDpartitionelement(tt, α, Ω)
+    f = tt->evalfidpartitionelement(tt, α, Ω)
     #A = [f(x1,x2) for x1 in A_r, x2 in A_ξ]
     A = collect( f(t) for t in A_t)
 
     return A
+end
+
+function setupfidpartitionitp(
+    A::Vector{Complex{T}},
+    A_t,
+    ) where T <: AbstractFloat
+
+    real_itp = Interpolations.interpolate(real.(A), Interpolations.BSpline(Interpolations.Cubic(Interpolations.Line(Interpolations.OnGrid()))))
+    #real_itp = Interpolations.interpolate(real.(A), Interpolations.BSpline(Interpolations.Quadratic(Interpolations.Line(Interpolations.OnGrid()))))
+    real_sitp = Interpolations.scale(real_itp, A_t)
+    real_setp = Interpolations.extrapolate(real_sitp, zero(T)) # zero outside interp range.
+
+    imag_itp = Interpolations.interpolate(imag.(A), Interpolations.BSpline(Interpolations.Cubic(Interpolations.Line(Interpolations.OnGrid()))))
+    #imag_itp = Interpolations.interpolate(imag.(A), Interpolations.BSpline(Interpolations.Quadratic(Interpolations.Line(Interpolations.OnGrid()))))
+    imag_sitp = Interpolations.scale(imag_itp, A_t)
+    imag_setp = Interpolations.extrapolate(imag_sitp, zero(T)) # zero outside interp range.
+    
+    return real_setp, imag_setp
 end
 
 # # I am here. need to do a version of importmodel!() for FID's MoleculeType.

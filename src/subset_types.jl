@@ -42,7 +42,7 @@ struct AllVars <: VariableSetTrait end
 """
 struct AllVars <: VariableSetTrait end
 
-function getNvars(::AllVars, MSS::MixtureSpinSys)::Int
+function getNvars(::AllVars, MSS::CLMixtureSpinSys)::Int
     return getNvars(MSS)
 end
 

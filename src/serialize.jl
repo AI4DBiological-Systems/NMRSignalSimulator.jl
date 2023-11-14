@@ -141,15 +141,15 @@ end
 """
 ```
 function serializclproxies(
-    Bs::Vector{MoleculeType{T,SpinSysParams{ST,PT,T2T}}},
-) where {T,ST,PT,T2T}
+    Bs::Vector{MoleculeType{T,SpinSysParams{ST,PT,T2T},OT}},
+) where {T,ST,PT,T2T,OT}
 ```
     
     Returns a dictionary containing the surrogate model.
 """
 function serializclproxies(
-    Bs::Vector{MoleculeType{T,SpinSysParams{ST,PT,T2T}}},
-    ) where {T,ST,PT,T2T}
+    Bs::Vector{MoleculeType{T,SpinSysParams{ST,PT,T2T},OT}},
+    ) where {T,ST,PT,T2T,OT}
 
     if isempty(Bs)
         println("input is an empty collection. Cannot serialize.")
