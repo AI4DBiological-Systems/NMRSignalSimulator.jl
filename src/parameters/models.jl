@@ -93,7 +93,7 @@ function importmodel!(p::MixtureModelParameters, x)
     return importmodel!(p)
 end
 
-function resetvarflat!(p::MixtureModelParameters{T, ST, PT, T2T}) where {T, ST, PT, T2T}
+function resetvarflat!(p::MixtureModelParameters{T, ST}) where {T, ST}
 
     fill!(p.var_flat, zero(T))
     

@@ -1,4 +1,5 @@
 
+abstract type MixtureSpinSys end
 
 #abstract type MoleculeParamsMapping end
 
@@ -19,7 +20,7 @@ struct MixtureSinglets{T}
 end
 
 # each vector here have length equal to the number of compound entries.
-struct CLMixtureSpinSys{T, ST,PT,T2T}
+struct CLMixtureSpinSys{T, ST,PT,T2T} <: MixtureSpinSys
     
     # The range of the functions here are all the real number line. This is in contrast to qs, which maps to the complex numbers.
     # Therefore, we need to do cis(phase angle) after using the functions here. see constructdesignmatrix!(), BatchEvalBuffer{T}. in b_models.jl.
@@ -42,7 +43,7 @@ end
 
 # We don't need the explicit surrogate functions for the FID model, since we don't implement the derivatives for the time-domain fit.
 # For now, this data structure is used for updating the model parameters via importmodel!().
-struct FIDMixtureSpinSys{T, ST,PT,T2T}
+struct FIDMixtureSpinSys{T, ST,PT,T2T} <: MixtureSpinSys
 
     # variables.
     shifts::Vector{ST}
@@ -120,37 +121,33 @@ function getT2range(A::ParamsMapping)
 end
 
 # alternative to MoleculeType, for mixtures.
-struct MixtureModelParameters{T,ST,PT,T2T}
+struct MixtureModelParameters{T,ST <: MixtureSpinSys}
 
-    # variable parameters for singlets and non-singlet spin systems.
     # parameters used for computing shift (ζ), phase (β), T2 (λ).
     var_flat::Vector{T} # flat storage.
     
-    # non-singlet spin systems.
-    MSS::CLMixtureSpinSys{T,ST,PT,T2T}
+    MSS::ST # spin system parameters.
     systems_mapping::ParamsMapping # for addressing the flat storage.
 
-    # singlets.
-    #MS::MixtureSinglets{T}
-    #singlets_mapping::ParamsMapping
-    
     w::Vector{T}
 end
 
 """
 ```
 function MixtureModelParameters(
-    MSS::CLMixtureSpinSys{T,ST,PT,T2T};
+    MSS::MT;
     w = ones(T, getNentries(MS)),
-) where {T,ST,PT,T2T}
+    )::MixtureModelParameters{T,MT} where {T <: AbstractFloat, MT <: MixtureSpinSys}
 ```
 
 Convinence constructor for `MixtureModelParameters()`. Does not create a copy of of the inputs.
 """
 function MixtureModelParameters(
-    MSS::CLMixtureSpinSys{T,ST,PT,T2T};
-    w = ones(T, getNentries(MS)),
-    ) where {T,ST,PT,T2T}
+    MSS::MT,
+    w::Vector{T},
+    )::MixtureModelParameters{T,MT} where {T <: AbstractFloat, MT <: MixtureSpinSys}
+
+    @assert length(w) == getNentries(MSS)
 
     # set up.
     shifts, phases, T2s = MSS.shifts, MSS.phases, MSS.T2s
@@ -158,7 +155,7 @@ function MixtureModelParameters(
     N_κs_ζ = getNvars(shifts)
     N_κs_β = getNvars(phases)
     N_κs_λ = getNvars(T2s)
-    N_SS_vars = N_κs_ζ + N_κs_β + N_κs_λ
+    #N_SS_vars = N_κs_ζ + N_κs_β + N_κs_λ
 
     #N_singlet_vars = getNvars(MS)
     N_singlet_vars = 0
@@ -176,14 +173,7 @@ function MixtureModelParameters(
     @assert length(w) == getNentries(MSS)
 
     # allocate.
-    out = MixtureModelParameters(
-        var_flat,
-        MSS,
-        systems_mapping,
-        #MS,
-        #singlets_mapping,
-        w,
-    )
+    out = MixtureModelParameters(var_flat, MSS, systems_mapping, w)
 
     # initialize var_flat with the parameters from MSS and MS.
     exportmodel!(out)
@@ -191,7 +181,7 @@ function MixtureModelParameters(
     return out
 end
 
-function ParamsMapping(MSS::CLMixtureSpinSys)
+function ParamsMapping(MSS::MixtureSpinSys)
     return ParamsMapping(MSS.shifts, MSS.phases, MSS.T2s)
 end
 
@@ -374,7 +364,6 @@ function setupSSvars(
     return shifts, phases, T2s, Δc_bars
 end
 
-# for non-singlet spin systems.
 function getNvars(
     Vs::Vector{VT},
     )::Int where VT <: MoleculeParams
@@ -413,26 +402,19 @@ function getNvars(model_params::MixtureModelParameters)::Int
     return getNvars(model_params.MSS)
 end
 
-function getNvars(MSS::CLMixtureSpinSys)::Int
+function getNvars(MSS::MixtureSpinSys)::Int
 
-    N_κs_ζ = getNvars(MSS.shifts)
-    N_κs_β = getNvars(MSS.phases)
-    N_κs_λ = getNvars(MSS.T2s)
-    N_SS_vars = N_κs_ζ + N_κs_β + N_κs_λ
-    
-    #N_singlet_vars = getNvars(MS)
-
-    return N_SS_vars #+ N_singlet_vars
+    return getNvars(MSS.shifts) + getNvars(MSS.phases) + getNvars(MSS.T2s)
 end
 
 """
 ```
-function getNentries(MSS::CLMixtureSpinSys)::Int
+function getNentries(MSS::MixtureSpinSys)::Int
 ```
 
 Returns the number of molecule entries associated with `MSS`
 """
-function getNentries(MSS::CLMixtureSpinSys)::Int
+function getNentries(MSS::MixtureSpinSys)::Int
 
     return length(MSS.Δc_bars)
 end
@@ -449,7 +431,7 @@ function getNentries(model_params::MixtureModelParameters)::Int
     return getNentries(model_params.MSS)
 end
 
-# number of resonance groups. For non-singlet spin systems.
+# number of resonance groups. for all spin systems.
 function getNgroups(
     As::Vector{HAM.SHType{T}},
     )::Int where T
@@ -459,7 +441,7 @@ function getNgroups(
     for n in eachindex(As) # molecule index.
         for i in eachindex(As[n].Δc_bar) # spin system index.
 
-            for k in eachindex(As[n].Δc_bar[i]) # effective chemical shift index.
+            for _ in eachindex(As[n].Δc_bar[i]) # effective chemical shift index.
 
                 N += 1
             end

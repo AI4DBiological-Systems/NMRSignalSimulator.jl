@@ -51,7 +51,10 @@ Random.seed!(25)
 
         #type_SSParams = NMRSignalSimulator.getSpinSysParamsdatatype(NMRSignalSimulator.SharedShift{Float64})
         
-        model_params, As, Bs, itp_samps, lbs, ubs, U_rad, f_U, MSS = testsetup(molecule_entries, w_oracle)
+        model_params, As, Bs, itp_samps, lbs, ubs, U_rad, f_U, MSS = testsetup(
+            molecule_entries,
+            w_oracle,
+        )
         
         # backup current parameters.
         #SIG.exportmodel!(model_params)

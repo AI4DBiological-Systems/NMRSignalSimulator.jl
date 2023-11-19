@@ -1,7 +1,6 @@
 using BenchmarkTools
 using Test
 using SparseArrays
-using DataDeps, Tar, CodecZlib
 
 using LinearAlgebra
 using FFTW

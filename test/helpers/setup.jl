@@ -5,7 +5,6 @@ function testsetup(
     molecule_entries::Vector{String},
     w_oracle::Vector{T};
     rel_discrepancy_tol::T = convert(T, 1e-1),
-    zero_tol::T = convert(T, 1e-12),
     fs::T = convert(T, 14005.602240896402),
     SW::T = convert(T, 20.0041938620844),
     ν_0ppm::T = convert(T, 10656.011933076665),
@@ -37,7 +36,7 @@ function testsetup(
         tol_radius_1D = convert(T, 0.1), # strictly between 0 and 1. The lower, the better the approximation, but would a larger partition (i.e. more resonance groups).
         nuc_factor = convert(T, 1.5),
     )
-    unique_cs_atol = convert(T, 1e-6)
+    unique_cs_digits = 6
 
     # Spin Hamiltonian simulation.
     Phys, As, MSPs = HAM.loadandsimulate(
@@ -46,7 +45,7 @@ function testsetup(
         H_params_path,
         molecule_mapping_file_path,
         config;
-        unique_cs_atol = unique_cs_atol
+        unique_cs_digits = unique_cs_digits,
     )
     
     
@@ -86,7 +85,7 @@ function testsetup(
 
 
     # prepare return quantities.
-    model_params = SIG.MixtureModelParameters(MSS; w = copy(w_oracle))
+    model_params = SIG.MixtureModelParameters(MSS, copy(w_oracle))
 
     lbs, ubs = SIG.fetchbounds(model_params, Bs; shift_proportion = shift_proportion)
 
@@ -112,7 +111,7 @@ function testserializationouter(
     ) where T
 
     # # Set up
-    model_params = SIG.MixtureModelParameters(MSS; w = w)
+    model_params = SIG.MixtureModelParameters(MSS, w)
     lbs, ubs = SIG.fetchbounds(model_params, Bs; shift_proportion = shift_proportion)
 
     # fill in non-default values.

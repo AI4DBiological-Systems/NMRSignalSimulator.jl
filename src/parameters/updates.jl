@@ -8,7 +8,7 @@
 ###### update and export routines for parameters.
 
 function updateparameters!(
-    θs::Vector{ST},
+    θs::Vector{ST}, # mutates.
     p,
     θs_mapping::MoleculeParamsMapping,
     ) where ST<:SharedParams
@@ -33,11 +33,8 @@ function updateparameters!(
 end
 
 # reverse of updateparameters!()
-# don't loop over θs_mapping.st or θs_mapping.fin because they might have undefined references.
-# instead, loop over θs, which has empty collections instead of undefined references.
-# TODO: change θs_mapping.st and θs_mapping.fin such that they don't have this issue later.
 function exportparameters!(
-    p,
+    p, # mutates.
     θs::Vector{ST},
     θs_mapping::MoleculeParamsMapping,
     ) where ST<:SharedParams
@@ -49,14 +46,6 @@ function exportparameters!(
             st_ind = θs_mapping.st[n][i]
             
             p[st_ind] = θs[n].var[i]
-            # fin_ind = θs_mapping.fin[n][i]
-            # @show (fin_ind - st_ind +1)
-            # @show length(θs[n].var[i])
-            # @assert (fin_ind - st_ind +1) == #length(θs[n].var[i])
-
-            # for j in eachindex(θs[n].var[i])
-            #     p[st_ind+j-1] = θs[n].var[i][j]
-            # end
         end
     end
 
@@ -64,7 +53,7 @@ function exportparameters!(
 end
 
 function updateparameters!(
-    θs::Vector{CT},
+    θs::Vector{CT}, # mutates.
     p,
     θs_mapping::MoleculeParamsMapping,
     ) where CT<:CoherenceParams
@@ -86,7 +75,7 @@ end
 
 # reverse of updateparameters!()
 function exportparameters!(
-    p,
+    p, # mutates.
     θs::Vector{CT},
     θs_mapping::MoleculeParamsMapping,
     ) where CT<:CoherenceParams
@@ -110,10 +99,10 @@ end
 
 # update MSS' var fields with contents in p.
 function updatespinsystems!(
-    MSS::CLMixtureSpinSys{T,SST},
+    MSS::MixtureSpinSys, # mutates.
     p,
     mapping::ParamsMapping,
-    ) where {T,SST}
+    )
 
     updateparameters!(MSS.T2s, p, mapping.T2)
     updateparameters!(MSS.shifts, p, mapping.shift)
@@ -124,10 +113,10 @@ end
 
 # update p with contents of MSS' var fields.
 function exportspinsystems!(
-    p,
-    MSS::CLMixtureSpinSys{T,SST},
+    p, # mutates.
+    MSS::MixtureSpinSys,
     mapping::ParamsMapping,
-    ) where {T,SST}
+    )
 
     exportparameters!(p, MSS.T2s, mapping.T2)
     exportparameters!(p, MSS.shifts, mapping.shift)
@@ -139,9 +128,7 @@ end
 ##### resolve non=singlet spin systems.
 
 # update MSS variables using the contents in MSS' var fields.
-function resolvespinsystems!(
-    MSS::CLMixtureSpinSys{T,SST},
-    ) where {T,SST}
+function resolvespinsystems!(MSS::MixtureSpinSys)
 
     resolveparameters!(MSS.T2s, MSS.λ0)
     resolveparameters!(MSS.shifts, MSS.Δc_bars)
@@ -153,7 +140,7 @@ end
 function resolveparameters!(
     phases::Vector{CoherencePhase{T}},
     Δc_bars::Vector{Vector{Vector{Vector{T}}}},
-    ) where T
+    ) where T <: AbstractFloat
 
     for n in eachindex(phases)
         x = phases[n]
@@ -179,7 +166,7 @@ end
 function resolveparameters!(
     shifts::Vector{CoherenceShift{T}},
     Δc_bars::Vector{Vector{Vector{Vector{T}}}},
-    ) where T
+    ) where T <: AbstractFloat
 
     for n in eachindex(shifts)
         x = shifts[n]
@@ -196,11 +183,11 @@ function resolveparameters!(
     return nothing
 end
 
-function resolveparameters!(shifts::Vector{SharedShift{T}}, args...) where T
+function resolveparameters!(::Vector{SharedShift{T}}, args...) where T <: AbstractFloat
     return nothing
 end
 
-function resolveparameters!(T2s::Vector{SharedT2{T}}, λ0::T, args...) where T
+function resolveparameters!(T2s::Vector{SharedT2{T}}, λ0::T, args...) where T <: AbstractFloat
     
     for n in eachindex(T2s)
         @assert length(T2s[n].var) == length(T2s[n].λ)

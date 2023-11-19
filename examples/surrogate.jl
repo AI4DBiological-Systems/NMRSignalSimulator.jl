@@ -38,22 +38,22 @@ config = HAM.SHConfig{T}(
     tol_radius_1D = convert(T, 0.1), # strictly between 0 and 1. The lower, the better the approximation, but would a larger partition (i.e. more resonance groups).
     nuc_factor = convert(T, 1.5),
 )
-unique_cs_atol = convert(T, 1e-6)
+unique_cs_digits = 6
 
 molecule_entries = [
-    "Singlet - 0 ppm";
+    #"Singlet - 0 ppm";
     "L-Serine";
-    "alpha-D-Glucose";
-    "beta-D-Glucose";
-    "Ethanol";
-    #"L-Methionine";     
-    "L-Phenylalanine";
-    #"L-Glutathione reduced";
-    #"L-Glutathione oxidized";       
-    #"Uridine";
-    "L-Glutamine";
-    "L-Histidine";
-    #"L-Valine";
+    # "alpha-D-Glucose";
+    # "beta-D-Glucose";
+    # "Ethanol";
+    # #"L-Methionine";     
+    # "L-Phenylalanine";
+    # #"L-Glutathione reduced";
+    # #"L-Glutathione oxidized";       
+    # #"Uridine";
+    # "L-Glutamine";
+    # "L-Histidine";
+    # #"L-Valine";
     "DSS";
 ]
 ### end user input.
@@ -66,7 +66,7 @@ Phys, As, MSPs = HAM.loadandsimulate(
     H_params_path,
     molecule_mapping_file_path,
     config;
-    unique_cs_atol = unique_cs_atol
+    unique_cs_digits = unique_cs_digits,
 )
 
 
@@ -92,7 +92,7 @@ n_select = 1
 sys_select = 1
 
 # create model parameters.
-model_params = SIG.MixtureModelParameters(MSS; w = copy(w_oracle))
+model_params = SIG.MixtureModelParameters(MSS, copy(w_oracle))
 
 # create random phase parameters.
 x_oracle = copy(model_params.var_flat)
@@ -102,8 +102,8 @@ fin = model_params.systems_mapping.phase.fin[n_select][sys_select]
 x_oracle[st:fin] = randn(T, fin-st+1)
 
 # load into model parameters data structure, then update model. model_params is linked to the surrogate model Bs and MSS.
-model_params.var_flat[:] = x_oracle
-SIG.importmodel!(model_params)
+#model_params.var_flat[:] = x_oracle
+SIG.importmodel!(model_params, x_oracle)
 ###  end modification of phase.
 
 

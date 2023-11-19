@@ -25,7 +25,10 @@ FID_proxy_config = SIG.FIDSurrogateConfig{T}(
     t_ub = convert(T, 3.0),
 )
 
-Cs, FID_MSS, FID_itp_samps = SIG.fitfidproxies(As, λ0, FID_proxy_config)
+Cs, MSS_FID, itp_samps_FID = SIG.fitfidproxies(As, λ0, FID_proxy_config)
+
+model_params_FID = SIG.MixtureModelParameters(MSS_FID, copy(w_oracle))
+SIG.importmodel!(model_params_FID, x_oracle)
 
 
 ### plot.
@@ -61,7 +64,7 @@ PLT.figure(fig_num)
 fig_num += 1
 
 PLT.plot(t_range, real.(ifft_q_t), linewidth = "2.5", label = "ifft(q)")
-PLT.plot(t_range, real.(g_t), label = "g")
+PLT.plot(t_range, real.(g_t), "--", label = "g")
 
 PLT.legend()
 PLT.xlabel("t")
@@ -73,7 +76,7 @@ PLT.figure(fig_num)
 fig_num += 1
 
 PLT.plot(t_range, imag.(ifft_q_t), linewidth = "2.5", label = "ifft(q)")
-PLT.plot(t_range, imag.(g_t), label = "g")
+PLT.plot(t_range, imag.(g_t), "--", label = "g")
 
 PLT.legend()
 PLT.xlabel("t")
@@ -85,7 +88,7 @@ PLT.figure(fig_num)
 fig_num += 1
 
 PLT.plot(t_range, abs.(ifft_q_t), linewidth = "2.5", label = "ifft(q)")
-PLT.plot(t_range, abs.(g_t), label = "g")
+PLT.plot(t_range, abs.(g_t), "--", label = "g")
 
 PLT.legend()
 PLT.xlabel("t")
