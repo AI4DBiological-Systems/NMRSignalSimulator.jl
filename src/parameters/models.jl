@@ -272,3 +272,41 @@ function evalsystems(
 end
 
 
+##### conversion between:
+# coherence shift, coherence phase, shared T2 
+# coherence shift, coherence phase, coherence T2.
+
+
+function getNvars(mapping::ParamsMapping)    
+    return mapping.T2.fin[end][end] # assumes index starts at 1.
+end
+
+# no error-checking.
+function shared2coherenceT2(
+    src_mapping::ParamsMapping,
+    dest_mapping::ParamsMapping,
+    p::Vector{T},
+    ) where T <: AbstractFloat
+
+    out = zeros(T, getNvars(dest_mapping))
+
+    # the shift and phase variables are assumed to be of the same mapping.
+    phase_fin = src_mapping.phase.fin[end][end]
+    for i = 1:phase_fin
+        out[i] = p[i]
+    end
+
+    for n in eachindex(src_mapping.T2.st)
+        for i in eachindex(src_mapping.T2.st[n])
+
+            k = src_mapping.T2.st[n][i]
+            st, fin = dest_mapping.T2.st[n][i], dest_mapping.T2.fin[n][i]
+            
+            for i in st:fin
+                out[i] = p[k] # fill coherence T2's i-th spin system with shared T2's i-th system.
+            end
+        end
+    end
+
+    return out
+end

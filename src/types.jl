@@ -219,9 +219,7 @@ abstract type CoherenceParams <: MoleculeParams end
 
 struct SharedT2{T} <: SharedParams
     var::Vector{T} # multiplier wrt some λ0. length: number of spin groups.
-    #κs_λ::Vector{T} # multiplier wrt some λ0. length: number of spin groups.
-    λ::Vector{T} # actual decay. length: number of spin groups.
-    #ξ::Vector{Vector{T}} # [i][k] is i-th spin system, k-th resonance group.
+    λ::Vector{T} # actual T2. length: number of spin groups.
 end
 
 function SharedT2(
@@ -236,6 +234,23 @@ function SharedT2(
 
     return SharedT2(κs_λ, λ)
     #return SharedT2(κs_λ)
+end
+
+struct CoherenceT2{T} <: CoherenceParams
+    var::Vector{Vector{T}} # [spin system][coherence dimension], multiplier.
+    λ::Vector{Vector{T}} # [spin system][resonance group]. actual T2.
+end
+
+function CoherenceT2(
+    λ0::T,
+    N_coherence_vars_sys::Vector{Int},
+    N_resonance_groups_sys::Vector{Int},
+    )::CoherenceT2{T} where T <: AbstractFloat
+
+    κs_λ = collect( ones(T, N_coherence_vars_sys[i]) for i in eachindex(N_coherence_vars_sys))
+    λ = collect( λ0 .* ones(T, N_resonance_groups_sys[i]) for i in eachindex(N_resonance_groups_sys))
+
+    return CoherenceT2(κs_λ, λ)
 end
 
 struct SharedShift{T} <: SharedParams
@@ -340,6 +355,22 @@ function setupSSParamsparams(
         CoherenceShift(T, N_coherence_vars_sys, N_resonance_groups_sys),
         CoherencePhase(T, N_coherence_vars_sys, N_resonance_groups_sys),
         SharedT2(λ0, N_sys),
+    )
+end
+
+function setupSSParamsparams(
+    ::Type{SpinSysParams{CoherenceShift{T}, CoherencePhase{T}, CoherenceT2{T}}},
+    N_coherence_vars_sys::Vector{Int},
+    N_resonance_groups_sys::Vector{Int},
+    λ0,
+    )::SpinSysParams{CoherenceShift{T}, CoherencePhase{T}, CoherenceT2{T}} where T <: AbstractFloat
+
+    N_sys = length(N_coherence_vars_sys)
+
+    return SpinSysParams(
+        CoherenceShift(T, N_coherence_vars_sys, N_resonance_groups_sys),
+        CoherencePhase(T, N_coherence_vars_sys, N_resonance_groups_sys),
+        CoherenceT2(λ0, N_coherence_vars_sys, N_resonance_groups_sys),
     )
 end
 

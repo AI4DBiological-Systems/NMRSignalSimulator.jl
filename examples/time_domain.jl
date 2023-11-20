@@ -25,10 +25,20 @@ FID_proxy_config = SIG.FIDSurrogateConfig{T}(
     t_ub = convert(T, 3.0),
 )
 
-Cs, MSS_FID, itp_samps_FID = SIG.fitfidproxies(As, λ0, FID_proxy_config)
+# # shared T2.
+# Cs, MSS_FID, itp_samps_FID = SIG.fitfidproxies(As, λ0, FID_proxy_config)
+# model_params_FID = SIG.MixtureModelParameters(MSS_FID, copy(w_oracle))
+# SIG.importmodel!(model_params_FID, x_oracle)
 
+# coherence T2.
+Cs, MSS_FID, itp_samps_FID = SIG.fitfidproxies(SIG.UseCoherenceT2(), As, λ0, FID_proxy_config)
 model_params_FID = SIG.MixtureModelParameters(MSS_FID, copy(w_oracle))
-SIG.importmodel!(model_params_FID, x_oracle)
+x_oracle_coherenceT2 = SIG.shared2coherenceT2(
+    model_params.systems_mapping,
+    model_params_FID.systems_mapping,
+    x_oracle,
+)
+SIG.importmodel!(model_params_FID, x_oracle_coherenceT2)
 
 
 ### plot.

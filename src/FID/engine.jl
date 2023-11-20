@@ -1,13 +1,45 @@
 # based on core/engine.jl.
 
+struct UseSharedT2 end
+struct UseCoherenceT2 end
+
+function fitfidproxies(As::Vector{HAM.SHType{T}}, λ0::T, config::FIDSurrogateConfig{T}) where T <: AbstractFloat
+
+    return fitfidproxies(UseSharedT2(), As, λ0, config)
+end
+
 function fitfidproxies(
+    ::UseSharedT2,
     As::Vector{HAM.SHType{T}},
     λ0::T,
-    config::FIDSurrogateConfig{T};
+    config::FIDSurrogateConfig{T},
     ) where T <: AbstractFloat
 
     SST = SpinSysParams{CoherenceShift{T}, CoherencePhase{T}, SharedT2{T}}
 
+    return fitfidproxies(SST, As, λ0, config)
+end
+
+
+function fitfidproxies(
+    ::UseCoherenceT2,
+    As::Vector{HAM.SHType{T}},
+    λ0::T,
+    config::FIDSurrogateConfig{T},
+    ) where T <: AbstractFloat
+
+    SST = SpinSysParams{CoherenceShift{T}, CoherencePhase{T}, CoherenceT2{T}}
+
+    return fitfidproxies(SST, As, λ0, config)
+end
+
+function fitfidproxies(
+    ::Type{SST},
+    As::Vector{HAM.SHType{T}},
+    λ0::T,
+    config::FIDSurrogateConfig{T},
+    ) where {T <: AbstractFloat, SST}
+    
     N = length(As)
     Cs = Vector{MoleculeType{T,SST,FIDOperationRange{T}}}(undef, N)
     itp_samps = Vector{Vector{FIDInterpolationSamples{T}}}(undef, N)

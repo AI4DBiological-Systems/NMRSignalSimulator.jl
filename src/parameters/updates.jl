@@ -130,7 +130,7 @@ end
 # update MSS variables using the contents in MSS' var fields.
 function resolvespinsystems!(MSS::MixtureSpinSys)
 
-    resolveparameters!(MSS.T2s, MSS.λ0)
+    resolveparameters!(MSS.T2s, MSS.λ0, MSS.Δc_bars)
     resolveparameters!(MSS.shifts, MSS.Δc_bars)
     resolveparameters!(MSS.phases, MSS.Δc_bars)
 
@@ -184,6 +184,27 @@ function resolveparameters!(
 end
 
 function resolveparameters!(::Vector{SharedShift{T}}, args...) where T <: AbstractFloat
+    return nothing
+end
+
+function resolveparameters!(
+    T2s::Vector{CoherenceT2{T}},
+    λ0::T,
+    Δc_bars::Vector{Vector{Vector{Vector{T}}}},
+    ) where T <: AbstractFloat
+
+    for n in eachindex(T2s)
+        x = T2s[n]
+
+        for i in eachindex(x.λ)    
+
+            for k in eachindex(x.λ[i])
+
+                x.λ[i][k] = -dot(Δc_bars[n][i][k], x.var[i]) * λ0 # negative sign since Δc_bars sum to -1, and x.λ should be positive.
+            end
+        end
+    end
+
     return nothing
 end
 
