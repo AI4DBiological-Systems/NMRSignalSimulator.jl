@@ -228,8 +228,8 @@ function serializitpsamples(
 Returns a dictionary of the interpolation samples used to fit the surrogate.
 """
 function serializitpsamples(
-    itp_samps_set::Vector{Vector{InterpolationSamples{T}}},
-    ) where T
+    itp_samps_set::Vector{Vector{IT}},
+    ) where {T, IT <: Union{FIDInterpolationSamples{T}, InterpolationSamples{T}}}
 
     if isempty(itp_samps_set)
         println("input is an empty collection. Cannot serialize.")

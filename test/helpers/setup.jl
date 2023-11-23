@@ -223,5 +223,15 @@ function testserialization(
     q2_U = q2.(U_rad)
     @test norm(q_U - q2_U) < zero_tol
 
+    #
+    f = uu->SIG.evalclmixture(uu, As, Bs; w = w)
+    f2 = uu->SIG.evalclmixture(uu, As2, Bs2; w = w)
+
+    f_U = f.(U_rad)
+    f2_U = f2.(U_rad)
+    discrepancy = norm(f_U - q_U)
+    discrepancy2 = norm(f2_U - q2_U)
+    @test abs(discrepancy-discrepancy2) < zero_tol
+
     return nothing
 end

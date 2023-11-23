@@ -56,10 +56,19 @@ molecule_entries = [
     # #"L-Valine";
     "DSS";
 ]
+molecule_entries = [
+    "alpha-D-Glucose";
+    "beta-D-Glucose";
+    "Glycine";
+    "L-Serine";
+    "DSS";
+    "Singlet - 4.9 ppm";
+]
 ### end user input.
 
 
-w_oracle = ones(T, length(molecule_entries))
+#w_oracle = ones(T, length(molecule_entries))
+w_oracle = rand(T, length(molecule_entries))
 Phys, As, MSPs = HAM.loadandsimulate(
     fs, SW, ν_0ppm,
     molecule_entries,
@@ -82,7 +91,6 @@ proxy_config = SIG.CLSurrogateConfig{T}(
 
 Bs, MSS, itp_samps = SIG.fitclproxies(As, λ0, proxy_config)
 # Bs and MSS are linked. Modification to one of its fields will affect the other.
-
 
 
 # # Modify the phase of a spin system. Fill it with random numbers.
@@ -159,5 +167,22 @@ PLT.xlabel("ppm")
 PLT.ylabel("real")
 PLT.gca().invert_xaxis()
 PLT.title("complex Lorentzian model (f) vs surrogate (q)")
+
+# test serialization.
+
+using Serialization
+
+blah = SIG.exportmixtureproxy(Bs)
+serialize("tmp", blah)
+ss_params_set2, op_range_set2, λ02 = deserialize("tmp")
+Bs2, MSS2 = SIG.recoverclproxies(itp_samps, ss_params_set2, op_range_set2, As, λ02)
+
+serialize("tmp", Bs)
+Bs2 = deserialize("tmp")
+q2 = uu->SIG.evalclproxymixture(uu, Bs2; w = w_oracle)
+q2_U = q.(U_rad)
+
+@assert norm(q_U - q2_U) < 1e-12
+rm("tmp")
 
 nothing
