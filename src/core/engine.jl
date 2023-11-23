@@ -53,6 +53,7 @@ function fitclproxies(
     CLMixtureSpinSys{T,ST,PT,T2T},
     Vector{Vector{InterpolationSamples{T}}}} where {T,ST,PT,T2T}
 
+    @assert !isempty(As)
     N = length(As)
 
     Bs = Vector{MoleculeType{T,SpinSysParams{ST,PT,T2T},CLOperationRange{T}}}(undef, N)
@@ -65,15 +66,39 @@ function fitclproxies(
 
     itp_samps = Vector{Vector{InterpolationSamples{T}}}(undef, N)
 
+    # get global frequency interval, over which the surrogate must be valid.
+    A = As[begin]
+    hz2ppmfunc = uu->(uu - A.ν_0ppm)*A.SW/A.fs
+    ppm2hzfunc = pp->(A.ν_0ppm + pp*A.fs/A.SW)
+
+    Ωs_ppm = collect(
+        Iterators.flatten(
+            hz2ppmfunc.( combinevectors(A.Ωs) ./ twopi(T) )
+            for A in As
+        )
+    )
+    min_ppm = minimum(Ωs_ppm) - config.ppm_padding
+    max_ppm = maximum(Ωs_ppm) + config.ppm_padding
+    u_min = ppm2hzfunc(min_ppm)
+    u_max = ppm2hzfunc(max_ppm)
+
     for n in eachindex(As)
         A = As[n]
+
+        # 
+        if config.use_compound_freqs
+            u_min = convert(T, NaN)
+            u_max = convert(T, NaN)
+        end
 
         # fit surrogate, save into `core`.
         Bs[n], srs[n], sis[n], ∇srs![n], ∇sis![n], itp_samps[n] = fitclproxy(
             SpinSysParams{ST,PT,T2T},
             A,
             λ0,
-            config,
+            config;
+            u_min = u_min,
+            u_max = u_max,
         )
     end
 
@@ -100,6 +125,8 @@ function fitclproxy(
     A::HAM.SHType{T},
     λ0::T,
     config::CLSurrogateConfig;
+    u_min = convert(T, NaN),
+    u_max = convert(T, NaN),
     ) where {T,SST}
 
     hz2ppmfunc = uu->(uu - A.ν_0ppm)*A.SW/A.fs
@@ -121,11 +148,13 @@ function fitclproxy(
     d_max::Vector{T} = ppm2hzfunc.(Δcs_max) .- ppm2hzfunc(zero(T))
 
     # threshold and partition the resonance components.
-    Ωs_ppm = hz2ppmfunc.( combinevectors(A.Ωs) ./ twopi(T) )
-    min_ppm = minimum(Ωs_ppm) - config.ppm_padding
-    max_ppm = maximum(Ωs_ppm) + config.ppm_padding
-    u_min = ppm2hzfunc(min_ppm)
-    u_max = ppm2hzfunc(max_ppm)
+    if !isfinite(u_min) || !isfinite(u_max)
+        Ωs_ppm = hz2ppmfunc.( combinevectors(A.Ωs) ./ twopi(T) )
+        min_ppm = minimum(Ωs_ppm) - config.ppm_padding
+        max_ppm = maximum(Ωs_ppm) + config.ppm_padding
+        u_min = ppm2hzfunc(min_ppm)
+        u_max = ppm2hzfunc(max_ppm)
+    end
 
     C = CLSurrogateSpinSysInputs(A.parts, A.αs, A.Ωs, u_min, u_max)
     

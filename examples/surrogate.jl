@@ -40,27 +40,28 @@ config = HAM.SHConfig{T}(
 )
 unique_cs_digits = 6
 
-molecule_entries = [
-    #"Singlet - 0 ppm";
-    "L-Serine";
-    # "alpha-D-Glucose";
-    # "beta-D-Glucose";
-    # "Ethanol";
-    # #"L-Methionine";     
-    # "L-Phenylalanine";
-    # #"L-Glutathione reduced";
-    # #"L-Glutathione oxidized";       
-    # #"Uridine";
-    # "L-Glutamine";
-    # "L-Histidine";
-    # #"L-Valine";
-    "DSS";
-]
+# molecule_entries = [
+#     #"Singlet - 0 ppm";
+#     "L-Serine";
+#     # "alpha-D-Glucose";
+#     # "beta-D-Glucose";
+#     # "Ethanol";
+#     # #"L-Methionine";     
+#     # "L-Phenylalanine";
+#     # #"L-Glutathione reduced";
+#     # #"L-Glutathione oxidized";       
+#     # #"Uridine";
+#     # "L-Glutamine";
+#     # "L-Histidine";
+#     # #"L-Valine";
+#     "DSS";
+# ]
 molecule_entries = [
     "alpha-D-Glucose";
     "beta-D-Glucose";
     "Glycine";
     "L-Serine";
+    "L-Histidine";
     "DSS";
     "Singlet - 4.9 ppm";
 ]
@@ -69,6 +70,7 @@ molecule_entries = [
 
 #w_oracle = ones(T, length(molecule_entries))
 w_oracle = rand(T, length(molecule_entries))
+w_oracle[end] = 16.0 # make solvent very large.
 Phys, As, MSPs = HAM.loadandsimulate(
     fs, SW, ν_0ppm,
     molecule_entries,
@@ -108,6 +110,15 @@ x_oracle = copy(model_params.var_flat)
 st = model_params.systems_mapping.phase.st[n_select][sys_select]
 fin = model_params.systems_mapping.phase.fin[n_select][sys_select]
 x_oracle[st:fin] = randn(T, fin-st+1)
+
+# make the solvent heavy-tailed.
+#x_oracle[end] = 0.8
+x_oracle[end] = 2.4
+
+# flip phase for solvent.
+st = model_params.systems_mapping.phase.st[end][1]
+fin = model_params.systems_mapping.phase.fin[end][1]
+x_oracle[st:fin] = ones(T, 1) .* -π/2
 
 # load into model parameters data structure, then update model. model_params is linked to the surrogate model Bs and MSS.
 #model_params.var_flat[:] = x_oracle
@@ -159,8 +170,8 @@ PLT.figure(fig_num)
 fig_num += 1
 
 PLT.plot(P_display, real.(f_U_display), label = "f")
-PLT.plot(P_display, real.(q_U_display), label = "q")
-PLT.plot(P_display, real.(q_U_display), "x")
+PLT.plot(P_display, real.(q_U_display), "--", label = "q")
+#PLT.plot(P_display, real.(q_U_display), "x")
 
 PLT.legend()
 PLT.xlabel("ppm")

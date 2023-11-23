@@ -54,6 +54,7 @@ struct CLSurrogateConfig{T}
     κ_λ_lb::T = convert(T, 0.5)
     κ_λ_ub::T = convert(T, 2.5)
 
+    use_compound_freqs::Bool = false
     default_ppm_padding::T = convert(T , 0.5)
 end
 
@@ -65,6 +66,9 @@ u_min, u_max are in Hz, Δcs_max_scalar is in ppm. `u_min` is set to the smalles
 `Δcs_max_scalar` is in units of ppm. It is the border that is added to u_min and u_max (once they are converted to ppm) to get the final frequency interval for which the surrogate of a spin system is fitted to.
 The extrapolation of the surrogate for frequency queries outisde this interval is set to return zero, so the surrogate is the zero signal outside this interval for that spin system.
 
+- `use_compound_freqs`, if set to `true`, the surrogate for each compound is valid only over +/- `Δcs_max_scalar` (ppm units) from the comopund's minimum and maximum resonance frequencies.
+If set to `false`, the surrogate for all compounds is valid between the minimum and maximum resonance frequencies of the entire mixture.
+
 - `Δr`, `Δκ_λ` -- the sampling increment for the frequency input r and T2 multiplier input κ_λ for generating samples to fit the surrogate. Smaller means the surrogate is more accurate, but slower to construct the surrogate.
 """
 @kwdef struct CLSurrogateConfig{T}
@@ -73,6 +77,9 @@ The extrapolation of the surrogate for frequency queries outisde this interval i
     Δcs_max_scalar::T = convert(T, 0.2) # In units of ppm. interpolation border that is added to the lowest and highest resonance frequency component of the mixture being simulated.
     κ_λ_lb::T = convert(T, 0.5) # interpolation lower limit for κ_λ.
     κ_λ_ub::T = convert(T, 2.5) # interpolation upper limit for κ_λ.
+
+    use_compound_freqs::Bool = false # if true, do not fit surrogate over the ensemble of frequency interval of the entire mixture, only individual compounds.
+    # if true, save memory and faster to fit.
 
     ppm_padding::T = convert(T , 0.5)
 end
