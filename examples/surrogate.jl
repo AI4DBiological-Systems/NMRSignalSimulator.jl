@@ -34,9 +34,10 @@ molecule_mapping_file_path = joinpath(
 
 config = HAM.SHConfig{T}(
     coherence_tol = convert(T, 0.01),
-    relative_α_threshold = convert(T, 0.005),
-    tol_radius_1D = convert(T, 0.1), # strictly between 0 and 1. The lower, the better the approximation, but would a larger partition (i.e. more resonance groups).
-    nuc_factor = convert(T, 1.5),
+    relative_α_threshold = convert(T, 0.001),
+    max_deviation_from_mean = convert(T, 0.05),
+    acceptance_factor = convert(T, 0.99),
+    total_α_threshold = zero(T),
 )
 unique_cs_digits = 6
 
