@@ -1,5 +1,9 @@
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+Cobweb = "ec354790-cf28-43e8-bb59-b484409b7bad"
+DisplayAs = "0b91fe84-8a4c-11e9-3e1d-67c38462b6d6"
 FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
 NMRDataSetup = "ebb73dff-5abd-42b1-a10e-869024f50034"
+PlotlyDocumenter = "9b90f1cd-2639-4507-8b17-2fbe371ceceb"
+PlotlyLight = "ca7969ec-10b3-423e-8d99-40f33abb42bf"
 PublicationDatasets = "17766f69-17be-4aec-8093-a6905606c372"

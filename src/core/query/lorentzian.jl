@@ -11,14 +11,12 @@ function evalclmolecule(u_rad, A::HAM.SHType{T}, B::MoleculeType{T,SST,CLOperati
 end
 
 """
-```
-function evalclmixture(
-    u_rad,
-    As::Vector{HAM.SHType{T}},
-    Bs::Vector{MoleculeType{T,SST,CLOperationRange{T}}};
-    w::Vector{T} = ones(T, length(As)),
-)::Complex{T} where {T <: Real, SST}
-```
+    function evalclmixture(
+        u_rad,
+        As::Vector{HAM.SHType{T}},
+        Bs::Vector{MoleculeType{T,SST,CLOperationRange{T}}};
+        w::Vector{T} = ones(T, length(As)),
+    )::Complex{T} where {T <: Real, SST}
 
 Evaluates the preliminary model at radial frequency (in radians) `u_rad`.
 Inputs:

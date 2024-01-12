@@ -58,7 +58,7 @@ evalclmixture,
 evalclproxymixture,
 
 # constructors
-getSpinSysParamsdatatype,
+#getSpinSysParamsdatatype,
 MixtureModelParameters,
 ParamsMapping,
 

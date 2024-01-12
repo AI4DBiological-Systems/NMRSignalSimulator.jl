@@ -133,12 +133,10 @@ struct MixtureModelParameters{T,ST <: MixtureSpinSys}
 end
 
 """
-```
-function MixtureModelParameters(
-    MSS::MT;
-    w = ones(T, getNentries(MS)),
+    function MixtureModelParameters(
+        MSS::MT;
+        w = ones(T, getNentries(MS)),
     )::MixtureModelParameters{T,MT} where {T <: AbstractFloat, MT <: MixtureSpinSys}
-```
 
 Convinence constructor for `MixtureModelParameters()`. Does not create a copy of of the inputs.
 """

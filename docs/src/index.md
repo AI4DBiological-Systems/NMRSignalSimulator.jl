@@ -34,7 +34,7 @@ See the demo page for an example walk-through of how to use this library with NM
 
 # Information to get started
 
-See the *Julia Basics*, *A compiled list of physical chemistry parameters*, and *Terminology* from the [NMRHamiltonian](https://github.com/AI4DBiological-Systems/NMRHamiltonian.jl) documentation.
+See the *Julia Basics*, *A compiled list of physical chemistry parameters*, and *Terminology* from the [NMRHamiltonian.jl](https://github.com/AI4DBiological-Systems/NMRHamiltonian.jl) documentation website.
 
 
 # Terminology
@@ -58,7 +58,7 @@ Code author:
 - Roy Chih Chung Wang
 
 Supervisors:
-- Dave Campbell (Carleton University, Bank of Canada)
+- Dave Campbell (Carleton University)
 - Miroslava Čuperlović-Culf (National Research Council of Canada)
 
 # Funding

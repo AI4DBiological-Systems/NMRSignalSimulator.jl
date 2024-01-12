@@ -2,9 +2,7 @@
 
 ### import model from p.var_flat. variables: shift (ζ), phase (β), T2 (λ).
 """
-```
-function importmodel!(p::MixtureModelParameters)::Nothing
-```
+    function importmodel!(p::MixtureModelParameters)::Nothing
 
 Updates `p.MSS` with the contents of `p.var_flat`.
 """
@@ -19,9 +17,7 @@ function importmodel!(p::MixtureModelParameters)
 end
 
 """
-```
-function importmodel!(p::MixtureModelParameters, x, inds::SubsetVarsIndices)::Nothing
-```
+    function importmodel!(p::MixtureModelParameters, x, inds::SubsetVarsIndices)::Nothing
 
 Only update the entries as specified by inds.
 """
@@ -48,9 +44,7 @@ end
 
 # set the other parameters to the default value. inefficient, but avoids uninitialized errors.
 """
-```
-function importmodelreset!(p::MixtureModelParameters, x, inds::SubsetVarsIndices)::Nothing
-```
+    function importmodelreset!(p::MixtureModelParameters, x, inds::SubsetVarsIndices)::Nothing
 
 This is a version of `importmodel!(p::MixtureModelParameters, x, inds::SubsetVarsIndices)::Nothing` that resets the other variables not mentioned in `inds`.
 
@@ -69,9 +63,7 @@ function importmodelreset!(p::MixtureModelParameters, x, ::AllVars)
 end
 
 """
-```
-function importmodel!(p::MixtureModelParameters, x, ::AllVars)::Nothing
-```
+    function importmodel!(p::MixtureModelParameters, x, ::AllVars)::Nothing
 
 Calls importmodel!(p, x).
 """
@@ -80,9 +72,7 @@ function importmodel!(p::MixtureModelParameters, x, ::AllVars)
 end
 
 """
-```
-function importmodel!(p::MixtureModelParameters, x)::Nothing
-```
+    function importmodel!(p::MixtureModelParameters, x)::Nothing
 
 Update the model `p` using the contents of `x`.
 """
@@ -106,9 +96,7 @@ function resetvarflat!(p::MixtureModelParameters{T, ST}) where {T, ST}
 end
 
 """
-```
-function exportmodel!(p::MixtureModelParameters)::Nothing
-```
+    function exportmodel!(p::MixtureModelParameters)::Nothing
 
 Flattens the model parameters into `p.var_flat`.
 """

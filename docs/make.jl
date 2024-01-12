@@ -4,7 +4,13 @@ using NMRSignalSimulator
 makedocs(
     sitename = "NMRSignalSimulator",
     format = Documenter.HTML(),
-    modules = [NMRSignalSimulator]
+    pages=[
+        "Overview" => "index.md",
+        "Public API" => "api.md",
+        "Demo: resonance groups" => "generated/glutamine.md",
+        #"Demo: frequency-domain surrogate" => "generated/surrogate.md",
+
+    ],
 )
 
 makedocs(
@@ -14,7 +20,7 @@ makedocs(
     pages=[
         "Overview" => "index.md",
         "Public API" => "api.md",
-        "Demo: code walk-through" => "demo_code.md",
+        "Demo: resonance groups" => "generated/glutamine.md",
     ],
 )
 

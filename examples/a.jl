@@ -1,6 +1,4 @@
 using BenchmarkTools
-using Test
-using SparseArrays
 
 using LinearAlgebra
 using FFTW
@@ -11,7 +9,6 @@ import PythonPlot as PLT
 import PublicationDatasets as DS
 import NMRDataSetup as DSU
 
-using BenchmarkTools
 import Statistics
 
 using Revise

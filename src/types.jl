@@ -47,18 +47,17 @@ end
 
 # # complex Lorentzian (CL).
 """
-struct CLSurrogateConfig{T}
-    Δr::T = convert(T, 1.0)
-    Δκ_λ::T = convert(T, 0.05)
-    Δcs_max_scalar::T = convert(T, 0.2)
-    κ_λ_lb::T = convert(T, 0.5)
-    κ_λ_ub::T = convert(T, 2.5)
+    struct CLSurrogateConfig{T}
+        Δr::T = convert(T, 1.0)
+        Δκ_λ::T = convert(T, 0.05)
+        Δcs_max_scalar::T = convert(T, 0.2)
+        κ_λ_lb::T = convert(T, 0.5)
+        κ_λ_ub::T = convert(T, 2.5)
 
-    use_compound_freqs::Bool = false
-    default_ppm_padding::T = convert(T , 0.5)
-end
+        use_compound_freqs::Bool = false
+        default_ppm_padding::T = convert(T , 0.5)
+    end
 
-- `default_ppm_padding` -- 
 - `κ_λ_lb`, `κ_λ_ub` -- the default lower and upper bounds, respectively, for the κ_λ input of the surrogate.
 
 - `Δcs_max_scalar`, `default_ppm_padding` -- specifies the surrogate's default frequency operating range, [u_min - delta_u, u_max + delta_u], where delta_u is Δcs_max_scalar expressed in Hz.

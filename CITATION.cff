@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Wang"
+  given-names: "Roy Chih Chung"
+  orcid: "https://orcid.org/0000-0002-1391-4536"
+title: "AI4DBiological-Systems/NMRSignalSimulator.jl"
+version: 0.7.3
+doi: 10.26434/chemrxiv-2023-0s196
+date-released: 2024-01-11
+url: "https://github.com/AI4DBiological-Systems/NMRSignalSimulator.jl"

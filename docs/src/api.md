@@ -20,9 +20,6 @@ evalclproxymixture
 ```
 
 ## Constructors
-```@docs
-getSpinSysParamsdatatype
-```
 
 ```@docs
 MixtureModelParameters

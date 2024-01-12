@@ -1,13 +1,11 @@
 
 """
-```
-fitclproxies(
-    As::Vector{HAM.SHType{T}},
-    λ0::T,
-    config::CLSurrogateConfig{T};
-    names::Vector{String} = Vector{String}(undef, 0),
+    fitclproxies(
+        As::Vector{HAM.SHType{T}},
+        λ0::T,
+        config::CLSurrogateConfig{T};
+        names::Vector{String} = Vector{String}(undef, 0),
     ) where T <: AbstractFloat
-```
 
 Create surrogate for NMR spectrum, given the simulated resonance comopnent results from NMRHamiltonian.
 
