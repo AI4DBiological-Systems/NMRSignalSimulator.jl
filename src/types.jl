@@ -388,15 +388,6 @@ function getNcoherencesys(Δc_bar::Vector{Vector{Vector{T}}})::Tuple{Vector{Int}
     return N_coherence_vars_sys, N_resonance_groups_sys
 end
 
-"""
-```
-function getSpinSysParamsdatatype(
-    ::Type{CoherenceShift{T}}
-    )::DataType where T <: AbstractFloat
-```
-
-Convinence constructor for SpinSysParams{CoherenceShift{T}, CoherencePhase{T}, SharedT2{T}}
-"""
 function getSpinSysParamsdatatype(
     ::Type{CoherenceShift{T}}
     )::DataType where T <: AbstractFloat
@@ -404,15 +395,6 @@ function getSpinSysParamsdatatype(
     return SpinSysParams{CoherenceShift{T}, CoherencePhase{T}, SharedT2{T}}
 end
 
-"""
-```
-function getSpinSysParamsdatatype(
-    ::Type{SharedShift{T}}
-    )::DataType where T <: AbstractFloat
-```
-
-Convinence constructor for SpinSysParams{SharedShift{T}, CoherencePhase{T}, SharedT2{T}}
-"""
 function getSpinSysParamsdatatype(
     ::Type{SharedShift{T}}
     )::DataType where T <: AbstractFloat
