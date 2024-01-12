@@ -2,7 +2,7 @@
 Constructs the surrogate and preliminary models for the frequency domain 1D 1H NMR for pulse sequences that are equivalent to the 90 degrees y pulse.
 
 # Documentation
-[https://AI4DBiological-Systems.github.io/NMRSignalSimulator.jl/](https://AI4DBiological-Systems.github.io/NMRSignalSimulator.jl/)
+There is an overview of this package and demo on plotting resonance groups at [https://AI4DBiological-Systems.github.io/NMRSignalSimulator.jl/](https://AI4DBiological-Systems.github.io/NMRSignalSimulator.jl/). For details about our model, please see the citation section.
 
 # Install
 Add the custom registries for dependencies, and then add the package.
