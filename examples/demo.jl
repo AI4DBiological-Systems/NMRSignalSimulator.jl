@@ -198,7 +198,7 @@ Cobweb.save(
     #"../docs/src/generated/plot_1.html",
     "plot_1.html", # Literate.jl operates at the destination's folder. this'll show up in the generated/ folder.
 )#hide
-# You can view the rendered plot [here](plot_1.html) #hide
+# You can view the rendered plot [here](plot_1.html)
 
 
 # ## Visualize the 2.4 ppm to 2.5 ppm region of L-glutamine.
@@ -267,7 +267,7 @@ Cobweb.save(
     #"../docs/src/generated/plot_1.html",
     "plot_2.html", # Literate.jl operates at the destination's folder. this'll show up in the generated/ folder.
 )#hide
-# You can view the rendered plot [here](plot_2.html) #hide
+# You can view the rendered plot [here](plot_2.html)
 
 
 
@@ -337,5 +337,5 @@ Cobweb.save(
     #"../docs/src/generated/plot_1.html",
     "plot_3.html", # Literate.jl operates at the destination's folder. this'll show up in the generated/ folder.
 )#hide
-# You can view the rendered plot [here](plot_3.html) #hide
+# You can view the rendered plot [here](plot_3.html)
 
