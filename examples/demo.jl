@@ -197,7 +197,7 @@ Cobweb.save(
     Cobweb.Page(ph),
     #"../docs/src/generated/plot_1.html",
     "plot_1.html", # Literate.jl operates at the destination's folder. this'll show up in the generated/ folder.
-)#hide
+);#hide
 # You can view the rendered plot [here](plot_1.html)
 
 
@@ -266,7 +266,7 @@ Cobweb.save(
     Cobweb.Page(ph),
     #"../docs/src/generated/plot_1.html",
     "plot_2.html", # Literate.jl operates at the destination's folder. this'll show up in the generated/ folder.
-)#hide
+); #hide
 # You can view the rendered plot [here](plot_2.html)
 
 
@@ -336,6 +336,6 @@ Cobweb.save(
     Cobweb.Page(ph),
     #"../docs/src/generated/plot_1.html",
     "plot_3.html", # Literate.jl operates at the destination's folder. this'll show up in the generated/ folder.
-)#hide
+); #hide
 # You can view the rendered plot [here](plot_3.html)
 
