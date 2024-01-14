@@ -32,14 +32,6 @@ fig_num = 1
 T = Float64;
 ````
 
-````
-    CondaPkg Found dependencies: /home/roy/.julia/environments/v1.9/CondaPkg.toml
-    CondaPkg Found dependencies: /home/roy/.julia/packages/PythonCall/wXfah/CondaPkg.toml
-    CondaPkg Found dependencies: /home/roy/.julia/packages/PythonPlot/KcWMF/CondaPkg.toml
-    CondaPkg Dependencies already up to date
-
-````
-
 # User inputs for simulation
 Let's use a preset from a BMRB experiment at 700 MHz.
 
@@ -254,7 +246,7 @@ Cobweb.save(
 "plot_1.html"
 ````
 
-You can view the rendered plot [here](plot_1.html) #hide
+You can view the rendered plot [here](plot_1.html)
 
 ## Visualize the 2.4 ppm to 2.5 ppm region of L-glutamine.
 
@@ -327,7 +319,7 @@ Cobweb.save(
 "plot_2.html"
 ````
 
-You can view the rendered plot [here](plot_2.html) #hide
+You can view the rendered plot [here](plot_2.html)
 
 ## Visualize the 3.72 ppm to 3.79 ppm region of L-glutamine.
 
@@ -400,7 +392,7 @@ Cobweb.save(
 "plot_3.html"
 ````
 
-You can view the rendered plot [here](plot_3.html) #hide
+You can view the rendered plot [here](plot_3.html)
 
 ---
 
